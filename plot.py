@@ -2,13 +2,13 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+
 class Plot:
     def __init__(self):
         self.grid = np.loadtxt("field.csv", delimiter=",")
 
     def saveMap(self):
-
-        cmap = mpl.colors.ListedColormap(['green', 'black', 'blue', 'darkblue', 'red', 'yellow', 'red', 'yellow', 'yellow', 'red', 'orange'])
+        cmap = mpl.colors.ListedColormap(['green', 'black', 'blue', 'darkblue', 'red', 'yellow', 'red', 'yellow', 'yellow', 'red', 'lightgray'])
         plt.imshow(self.grid, interpolation="none", cmap=cmap)
         self.__saveImage("tmp.png", plt.gcf())
 
