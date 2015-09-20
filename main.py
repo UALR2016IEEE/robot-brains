@@ -1,5 +1,7 @@
 import argparse
-import plot as plot
+import grid
+import math
+import numpy as np
 
 
 def main():
@@ -13,12 +15,19 @@ def main():
         print("Using verbose output")
     if args.test:
         print("Using mock sensors and map")
+        g = grid.Grid(mock=True)
+        g.plotGrid()
+        hits = np.ndarray(shape=(0, 2))
+        for i in range(100):
+            hits = np.concatenate((hits, g.getRadialDistances(87, 18, 0, math.radians(360), math.radians(10))))
+
+        g.getPlot().plotHits(hits)
+
     if args.server:
         print("Hosting web server at http://localhost:8080")
     if args.plot:
         print("Plotting output to matplotlib")
-        p = plot.Plot()
-        p.saveMap()
+
 
 if __name__ == "__main__":
     main()
