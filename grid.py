@@ -1,6 +1,5 @@
 import math
 import random
-import plot as plot
 import numpy as np
 
 
@@ -31,6 +30,7 @@ class Grid:
 
             # Choose offroad positions - whether victims are top/bottom [0 = top, 1 = bottom]
             vOffroadPositions = sorted([0, 1], key=lambda k: random.random())
+            vObstaclePositions = random.randint(0, 1), random.randint(0, 1)
 
             # set colors of city victims
             if vColorsCity:
@@ -63,10 +63,24 @@ class Grid:
                 self.grid[self.grid == 80] = self.objects['VICTIM_RED']
                 self.grid[self.grid == 90] = self.objects['VICTIM_YELLOW']
 
-            self.p = plot.Plot(self.grid)
+            # select obstacle positions - blank the extra two
+            if vObstaclePositions[0]:
+                y, x = np.argwhere(self.grid == 4)[0]
+                self.grid[y:y + 4, x:x + 4] = self.objects['FLOOR']
+            else:
+                y, x = np.argwhere(self.grid == 4)[16]
+                self.grid[y:y + 4, x:x + 4] = self.objects['FLOOR']
 
-    def plotGrid(self):
-        self.p.saveMap()
+            # select obstacle positions - blank the extra two
+            if vObstaclePositions[1]:
+                y, x = np.argwhere(self.grid == 5)[0]
+                self.grid[y:y + 4, x:x + 4] = self.objects['FLOOR']
+            else:
+                y, x = np.argwhere(self.grid == 5)[4]
+                self.grid[y:y + 4, x:x + 4] = self.objects['FLOOR']
+
+    def getGrid(self):
+        return self.grid
 
     def getRadialDistances(self, py, px, angle, angleRange, resolution, display=False):
         snaps = int(angleRange / resolution)
@@ -83,9 +97,6 @@ class Grid:
 
             hits.append([distance, currentAngle])
             currentAngle = self.wrap(currentAngle + resolution, 0.0, 2.0 * math.pi)
-
-        if display:
-            self.p.plotHits(hits)
 
         return hits
 
@@ -122,6 +133,3 @@ class Grid:
         # Q4 - y rounds down, x rounds down
         if math.pi * 3.0 / 2.0 <= angle < math.pi * 2.0:
             return self.roundDown(math.sin(angle) * distance) + sy, self.roundDown(math.cos(angle) * distance) + sx
-
-    def getPlot(self):
-        return self.p

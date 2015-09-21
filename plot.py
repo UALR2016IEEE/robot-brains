@@ -8,12 +8,28 @@ class Plot:
     def __init__(self, grid):
         np.set_printoptions(threshold=99999, linewidth=99999, precision=3, suppress=True)
         self.grid = grid
+        self.imGrid = np.ndarray(shape=grid.shape, dtype=np.uint32)
+
+        self.imGrid[self.grid == 0] = 0xff008000
+        self.imGrid[self.grid == 1] = 0xff000000
+        self.imGrid[self.grid == 2] = 0xff0000A0
+        self.imGrid[self.grid == 3] = 0xffA52A2A
+        self.imGrid[self.grid == 4] = 0xff0000FF
+        self.imGrid[self.grid == 5] = 0xff800080
+        self.imGrid[self.grid == 6] = 0xffFF0000
+        self.imGrid[self.grid == 7] = 0xffFFFF00
+        self.imGrid[self.grid == 10] = 0xffFFFF00
+        self.imGrid[self.grid == 11] = 0xffFF0000
+        self.imGrid[self.grid == 12] = 0xffC0C0C0
 
     def saveMap(self):
         cmap = mpl.colors.ListedColormap(['green', 'black', 'navy', 'brown', 'blue', 'purple', 'red', 'yellow', 'red', 'yellow', 'yellow', 'red', 'lightgray'])
         plt.clf()
         plt.imshow(self.grid, interpolation="none", cmap=cmap)
         self.__saveImage("tmp.png", plt.gcf())
+
+    def getMap(self):
+        return self.imGrid
 
     @staticmethod
     def __saveImage(fileName, fig=None):
@@ -33,8 +49,6 @@ class Plot:
 
         intervals = int(maxDist / 10)
 
-        print('Intervals', intervals)
-
         # draw concentric target circles
         for i in range(1, intervals + 1):
             xx, yy = np.mgrid[:maxDist * 2 + 1, :maxDist * 2 + 1]
@@ -49,6 +63,8 @@ class Plot:
         for hit in hits:
             cy, cx = int((math.sin(hit[1]) * hit[0]) + maxDist), int((math.cos(hit[1]) * hit[0]) + maxDist)
             graph[cy][cx] = 2
+            
+        return graph
 
-        plt.imshow(graph, interpolation="none", cmap=cmap)
-        self.__saveImage("tmp2.png", plt.gcf())
+        # plt.imshow(graph, interpolation="none", cmap=cmap)
+        # self.__saveImage("tmp2.png", plt.gcf())
