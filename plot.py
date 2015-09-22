@@ -2,14 +2,26 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+import multiprocessing
 
 
-class Plot:
-    def __init__(self, grid):
+class Plot(multiprocessing.Process):
+    def __init__(self, grid, condition):
         np.set_printoptions(threshold=99999, linewidth=99999, precision=3, suppress=True)
+        multiprocessing.Process.__init__(self)
+        self.queue = multiprocessing.Queue()
+        self.daemon = True
+        self.condition = condition
         self.grid = grid
+        self.samples = []
         self.imGrid = np.ndarray(shape=grid.shape, dtype=np.uint32)
 
+        self.initGrid()
+        process = multiprocessing.Process(target=self.run, args=())
+        process.daemon = True  # Daemonize process
+        process.start()
+
+    def initGrid(self):
         self.imGrid[self.grid == 0] = 0xff008000
         self.imGrid[self.grid == 1] = 0xff000000
         self.imGrid[self.grid == 2] = 0xff0000A0
@@ -22,6 +34,16 @@ class Plot:
         self.imGrid[self.grid == 11] = 0xffFF0000
         self.imGrid[self.grid == 12] = 0xffC0C0C0
 
+    def run(self):
+        print('Grid process running.')
+        while True:
+            val = self.queue.get()
+            print('Plot thread val', val)
+            if val is None:  # If you send `None`, the thread will exit.
+                return
+            if val[0] == 'hits':
+                self.samples = self.plotHits(val[1])
+
     def saveMap(self):
         cmap = mpl.colors.ListedColormap(['green', 'black', 'navy', 'brown', 'blue', 'purple', 'red', 'yellow', 'red', 'yellow', 'yellow', 'red', 'lightgray'])
         plt.clf()
@@ -30,6 +52,12 @@ class Plot:
 
     def getMap(self):
         return self.imGrid
+
+    def getSamples(self):
+        return self.samples
+
+    def addToQueue(self, val):
+        self.queue.put(val)
 
     @staticmethod
     def __saveImage(fileName, fig=None):
@@ -66,5 +94,3 @@ class Plot:
             
         return graph
 
-        # plt.imshow(graph, interpolation="none", cmap=cmap)
-        # self.__saveImage("tmp2.png", plt.gcf())

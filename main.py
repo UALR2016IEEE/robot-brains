@@ -3,8 +3,8 @@ import grid
 import plot
 import sys
 import gui
-import threading
 from PySide import QtGui
+import multiprocessing
 
 
 def main():
@@ -20,18 +20,11 @@ def main():
         print("Using mock sensors and map")
 
         app = QtGui.QApplication(sys.argv)
+        condition = multiprocessing.Condition()
+        g = grid.Grid(condition)
+        p = plot.Plot(g.getGrid(), condition)
 
-        g = grid.Grid(mock=True)
-        p = plot.Plot(g.getGrid())
-
-        gu = gui.Gui(grid=p.getMap())
-
-        print('hitting')
-        # hits = np.ndarray(shape=(0, 2))
-        # for i in range(100):
-        #     hits = np.concatenate((hits, g.getRadialDistances(50, 50, 0, math.radians(360), math.radians(10))))
-
-        print('done hitting')
+        gu = gui.Gui(grid=g, plot=p, condition=condition)
 
         sys.exit(app.exec_())
 

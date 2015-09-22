@@ -1,12 +1,17 @@
 import math
 import random
 import numpy as np
+import multiprocessing
 
 
-class Grid:
-    def __init__(self, mock=False):
-        self.mock = mock
+class Grid(multiprocessing.Process):
+    def __init__(self, condition):
+        multiprocessing.Process.__init__(self)
+        self.queue = multiprocessing.Queue()
+        self.daemon = True
+        self.condition = condition
         self.grid = []
+        self.samples = np.ndarray(shape=(0, 2))
         self.objects = {
             'FLOOR': 0,
             'WALL': 1,
@@ -21,68 +26,98 @@ class Grid:
             'START': 12
         }
 
-        if self.mock:
-            self.grid = np.loadtxt("field.csv", delimiter=",")
+        self.initGrid()
+        print('Grid initialized')
 
-            # Choose victims - colorsLeft are left top/bottom colors, colorsRight are right top/bottom colors [0 = red, 1 = yellow]
-            vColorsCity = random.randint(0, 1)
-            vColorsOffroad = random.randint(0, 1)
+        process = multiprocessing.Process(target=self.run, args=())
+        process.daemon = True  # Daemonize process
+        process.start()
 
-            # Choose offroad positions - whether victims are top/bottom [0 = top, 1 = bottom]
-            vOffroadPositions = sorted([0, 1], key=lambda k: random.random())
-            vObstaclePositions = random.randint(0, 1), random.randint(0, 1)
+    def initGrid(self):
+        self.grid = np.loadtxt("field.csv", delimiter=",")
 
-            # set colors of city victims
-            if vColorsCity:
-                self.grid[self.grid == 60] = self.objects['VICTIM_YELLOW']
-                self.grid[self.grid == 70] = self.objects['VICTIM_RED']
-            else:
-                self.grid[self.grid == 60] = self.objects['VICTIM_RED']
-                self.grid[self.grid == 70] = self.objects['VICTIM_YELLOW']
+        # Choose victims - colorsLeft are left top/bottom colors, colorsRight are right top/bottom colors [0 = red, 1 = yellow]
+        vColorsCity = random.randint(0, 1)
+        vColorsOffroad = random.randint(0, 1)
 
-            # select offroad victim positions - blank the extra two
-            if vOffroadPositions[0]:
-                y, x = np.argwhere(self.grid == 80)[0]
-                self.grid[y][x] = self.objects['FLOOR']
-            else:
-                y, x = np.argwhere(self.grid == 80)[1]
-                self.grid[y][x] = self.objects['FLOOR']
+        # Choose offroad positions - whether victims are top/bottom [0 = top, 1 = bottom]
+        vOffroadPositions = sorted([0, 1], key=lambda k: random.random())
+        vObstaclePositions = random.randint(0, 1), random.randint(0, 1)
 
-            if vOffroadPositions[1]:
-                y, x = np.argwhere(self.grid == 90)[0]
-                self.grid[y][x] = self.objects['FLOOR']
-            else:
-                y, x = np.argwhere(self.grid == 90)[1]
-                self.grid[y][x] = self.objects['FLOOR']
+        # set colors of city victims
+        if vColorsCity:
+            self.grid[self.grid == 60] = self.objects['VICTIM_YELLOW']
+            self.grid[self.grid == 70] = self.objects['VICTIM_RED']
+        else:
+            self.grid[self.grid == 60] = self.objects['VICTIM_RED']
+            self.grid[self.grid == 70] = self.objects['VICTIM_YELLOW']
 
-            # set color of offroad victims
-            if vColorsOffroad:
-                self.grid[self.grid == 80] = self.objects['VICTIM_YELLOW']
-                self.grid[self.grid == 90] = self.objects['VICTIM_RED']
-            else:
-                self.grid[self.grid == 80] = self.objects['VICTIM_RED']
-                self.grid[self.grid == 90] = self.objects['VICTIM_YELLOW']
+        # select offroad victim positions - blank the extra two
+        if vOffroadPositions[0]:
+            y, x = np.argwhere(self.grid == 80)[0]
+            self.grid[y][x] = self.objects['FLOOR']
+        else:
+            y, x = np.argwhere(self.grid == 80)[1]
+            self.grid[y][x] = self.objects['FLOOR']
 
-            # select obstacle positions - blank the extra two
-            if vObstaclePositions[0]:
-                y, x = np.argwhere(self.grid == 4)[0]
-                self.grid[y:y + 4, x:x + 4] = self.objects['FLOOR']
-            else:
-                y, x = np.argwhere(self.grid == 4)[16]
-                self.grid[y:y + 4, x:x + 4] = self.objects['FLOOR']
+        if vOffroadPositions[1]:
+            y, x = np.argwhere(self.grid == 90)[0]
+            self.grid[y][x] = self.objects['FLOOR']
+        else:
+            y, x = np.argwhere(self.grid == 90)[1]
+            self.grid[y][x] = self.objects['FLOOR']
 
-            # select obstacle positions - blank the extra two
-            if vObstaclePositions[1]:
-                y, x = np.argwhere(self.grid == 5)[0]
-                self.grid[y:y + 4, x:x + 4] = self.objects['FLOOR']
-            else:
-                y, x = np.argwhere(self.grid == 5)[4]
-                self.grid[y:y + 4, x:x + 4] = self.objects['FLOOR']
+        # set color of offroad victims
+        if vColorsOffroad:
+            self.grid[self.grid == 80] = self.objects['VICTIM_YELLOW']
+            self.grid[self.grid == 90] = self.objects['VICTIM_RED']
+        else:
+            self.grid[self.grid == 80] = self.objects['VICTIM_RED']
+            self.grid[self.grid == 90] = self.objects['VICTIM_YELLOW']
+
+        # select obstacle positions - blank the extra two
+        if vObstaclePositions[0]:
+            y, x = np.argwhere(self.grid == 4)[0]
+            self.grid[y:y + 4, x:x + 4] = self.objects['FLOOR']
+        else:
+            y, x = np.argwhere(self.grid == 4)[16]
+            self.grid[y:y + 4, x:x + 4] = self.objects['FLOOR']
+
+        # select obstacle positions - blank the extra two
+        if vObstaclePositions[1]:
+            y, x = np.argwhere(self.grid == 5)[0]
+            self.grid[y:y + 4, x:x + 4] = self.objects['FLOOR']
+        else:
+            y, x = np.argwhere(self.grid == 5)[4]
+            self.grid[y:y + 4, x:x + 4] = self.objects['FLOOR']
+
+    def run(self):
+        print('Grid process running.')
+        while True:
+            val = self.queue.get()
+            print('Grid thread val', val)
+            if val is None:  # If you send `None`, the thread will exit.
+                return
+            if val == 'sample':
+                with self.condition:
+                    self.samples = np.ndarray(shape=(0, 2))
+                    self.samples = np.concatenate((self.samples, self.getRadialDistances(50, 50, 0, math.radians(360), math.radians(10))))
+                    print('samples', self.samples[0:5])
+                    self.condition.notify_all()
 
     def getGrid(self):
         return self.grid
 
-    def getRadialDistances(self, py, px, angle, angleRange, resolution, display=False):
+    def addToQueue(self, val):
+        self.queue.put(val)
+
+    def getQueue(self):
+        return self.queue
+
+    def getSamples(self):
+        return self.samples
+
+    def getRadialDistances(self, py, px, angle, angleRange, resolution):
         snaps = int(angleRange / resolution)
         currentAngle = self.wrap(angle - angleRange / 2.0 + random.random() * resolution, 0.0, 2.0 * math.pi)
         hits = []
