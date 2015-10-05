@@ -1,16 +1,34 @@
 __author__ = 'StaticVOiDance'
 
+import multiprocessing
+
 
 class Point:
     def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
+        self._x = multiprocessing.Value(float, x)
+        self._y = multiprocessing.Value(float, y)
+
+    @property
+    def x(self):
+        return self._x.value
+
+    @x.setter
+    def x(self, value):
+        self._x.value = value
+
+    @property
+    def y(self):
+        return self._y.value
+
+    @y.setter
+    def y(self, value):
+        self._y.value = value
 
     def __getitem__(self, item):
         if item == 0:
             return self.x
         elif item == 1:
-            return  self.y
+            return self.y
         else:
             raise ValueError('Invalid coordinate id')
 

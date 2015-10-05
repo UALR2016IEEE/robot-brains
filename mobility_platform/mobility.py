@@ -1,6 +1,8 @@
 __author__ = 'StaticVOiDance'
 
 
+import types
+
 class _Base:
     def __init__(self, cid: str=None):
         pass
@@ -25,4 +27,6 @@ class _Base:
 
     def rotate(self, angle: float):
         pass
+
+
 
