@@ -1,4 +1,2 @@
-__author__ = 'StaticVOiDance'
-
-from .controller import _BaseController
-from .navigation import _BaseNavigation
+import navigation_platform.controller
+import navigation_platform.navigation

@@ -1,9 +1,7 @@
 import time
 
-__author__ = 'StaticVOiDance'
 
-
-class _Base:
+class Base:
     def __init__(self, cid: {str, type(None)}=None):
         pass
 
@@ -20,9 +18,5 @@ class _Base:
             lidar_data = yield False
         yield True
 
-
-
     def attempt_recover(self) -> bool:
         return
-
-

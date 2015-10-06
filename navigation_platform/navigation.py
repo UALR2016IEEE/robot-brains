@@ -1,11 +1,8 @@
 import types
-
-__author__ = 'StaticVOiDance'
-
 from utils import Point
 
 
-class _BaseNavigation:
+class Base:
     def __init__(self, cid: str=None):
         self.components = {}
 
@@ -29,7 +26,7 @@ class _BaseNavigation:
                 self.components.pop(key)
 
 
-class Navigation(_Base):
+class Navigation(Base):
     def __init__(self, cid: str=None):
         if cid:
             self.connect(cid)

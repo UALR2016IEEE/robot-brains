@@ -1,12 +1,10 @@
-__author__ = 'StaticVOiDance'
-
 import navigation_platform.navigation as navlib
 import multiprocessing
 from utils import Point
 
 
-class _BaseController(multiprocessing.Process):
-    def __init__(self, navigation: navlib._Base):
+class Base(multiprocessing.Process):
+    def __init__(self, navigation: navlib.Base):
         self.nav = navigation
         self.pos = Point()
         self.halt = multiprocessing.Value(bool, False)

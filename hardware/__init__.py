@@ -1,1 +1,1 @@
-__author__ = 'StaticVOiDance'
+import hardware.lidar
