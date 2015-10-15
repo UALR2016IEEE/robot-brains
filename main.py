@@ -7,8 +7,9 @@ def main():
 
 if __name__ == "__main__":
     args = sys.argv
+    print('args', args)
     if len(args) > 0:
-        if args[0] == 'mock':
+        if 'mock' in args:
             import mock
             mock.mock()
         else:

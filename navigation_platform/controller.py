@@ -9,7 +9,7 @@ class Base(multiprocessing.Process):
         self.pos = Point()
         self.halt = multiprocessing.Value(bool, False)
         self.components = multiprocessing.Queue()
-        self.SLAM = multiprocessing.Proceses.__init__(self, target=self.nav_inf,
+        self.SLAM = multiprocessing.Process.__init__(self, target=self.nav_inf,
                                                       args=(self.nav, self.pos, self.halt, self.components))
 
     def start(self):
