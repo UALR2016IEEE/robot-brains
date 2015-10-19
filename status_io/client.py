@@ -21,7 +21,7 @@ class IOHandler(multiprocessing.Process):
         self.data.put(item)
 
     def io_inf(self, q, halt):
-        host, port = 'localhost', 9999
+        host, port = 'localhost', 9998
         try:
             client = multiprocessing.connection.Client((host, port))
             print("connected to", host, "on", port, 'halt', halt.value)
