@@ -17,7 +17,7 @@ class IOHandler(multiprocessing.Process):
         self.halt.value = True
 
     def send_data(self, item):
-        print('received to send', item)
+        print('received to send', item[0])
         self.data.put(item)
 
     def io_inf(self, q, halt):

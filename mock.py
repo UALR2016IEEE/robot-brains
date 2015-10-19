@@ -3,7 +3,8 @@ import mobility_platform.mobility
 import recovery_platform.recovery
 import status_io.client
 import simulate.controller
-import numpy as np
+import math
+import time
 
 
 def mock():
@@ -20,6 +21,10 @@ def mock():
 
     # send the map to the server
     io.send_data(('grid-colors', controller.grid.get_pygame_grid()))
+
+    for i in range(0, 722, 2):
+        io.send_data(('robot-pos', (480, 480, math.radians(i % 360))))
+        time.sleep(0.05)
 
     # if aquire:
     # nav_control.add_component(rec.aquire_align)
