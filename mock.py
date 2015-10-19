@@ -19,12 +19,15 @@ def mock():
     controller = simulate.controller.Controller()
     controller.init_grid()
 
+    # io commands
+    # io.send_data(('grid-colors', controller.grid.get_pygame_grid())) // sends grid to server
+    # io.send_data(('robot-pos', (px, py, r))) // positions robot at px, py with rotation r on server (r in radians)
+
     # send the map to the server
     io.send_data(('grid-colors', controller.grid.get_pygame_grid()))
 
-    for i in range(0, 722, 2):
-        io.send_data(('robot-pos', (480, 480, math.radians(i % 360))))
-        time.sleep(0.05)
+    px, py, r = 480, 480, math.radians(180)
+    io.send_data(('robot-pos', (px, py, r)))
 
     # if aquire:
     # nav_control.add_component(rec.aquire_align)
