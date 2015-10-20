@@ -14,7 +14,7 @@ def mock():
     # nav_control = navigation_platform.controller.Base(nav)
     # rec = recovery_platform.recovery.Base()
 
-    px, py, r = 400, 100, 0
+    px, py, r = 440, 100, math.radians(270)
 
     io = status_io.client.IOHandler()
     io.start()
@@ -31,14 +31,77 @@ def mock():
 
     st = time.time()
 
-    for i in range(300):
-        px += 1
-        scan = lidar.scan(py, px, r)
-        io.send_data(('robot-pos', (px, py, r)))
-        io.send_data(('lidar-points', (px, py, r, scan)))
+    for i in range(625):
+        if not io.halt.value:
+            py += 1
+            scan = lidar.scan(py, px, r)
+            io.send_data(('robot-pos', (px, py, r)))
+            io.send_data(('lidar-points', (px, py, r, scan)))
         # while time.time() - st < 0.1:
         #     pass
         # st = time.time()
+
+    for i in range(45):
+        if not io.halt.value:
+            r -= math.radians(2)
+            scan = lidar.scan(py, px, r)
+            io.send_data(('robot-pos', (px, py, r)))
+            io.send_data(('lidar-points', (px, py, r, scan)))
+            while time.time() - st < 0.1:
+                pass
+            st = time.time()
+
+    for i in range(250):
+        if not io.halt.value:
+            px -= 1
+            scan = lidar.scan(py, px, r)
+            io.send_data(('robot-pos', (px, py, r)))
+            io.send_data(('lidar-points', (px, py, r, scan)))
+            # while time.time() - st < 0.1:
+            #     pass
+            # st = time.time()
+
+    for i in range(45):
+        if not io.halt.value:
+            r += math.radians(2)
+            scan = lidar.scan(py, px, r)
+            io.send_data(('robot-pos', (px, py, r)))
+            io.send_data(('lidar-points', (px, py, r, scan)))
+            while time.time() - st < 0.1:
+                pass
+            st = time.time()
+
+    for i in range(125):
+        if not io.halt.value:
+            py += 1
+            scan = lidar.scan(py, px, r)
+            io.send_data(('robot-pos', (px, py, r)))
+            io.send_data(('lidar-points', (px, py, r, scan)))
+            # while time.time() - st < 0.1:
+            #     pass
+            # st = time.time()
+
+    for i in range(45):
+        if not io.halt.value:
+            r -= math.radians(2)
+            scan = lidar.scan(py, px, r)
+            io.send_data(('robot-pos', (px, py, r)))
+            io.send_data(('lidar-points', (px, py, r, scan)))
+            while time.time() - st < 0.1:
+                pass
+            st = time.time()
+
+    for i in range(125):
+        if not io.halt.value:
+            px -= 1
+            scan = lidar.scan(py, px, r)
+            io.send_data(('robot-pos', (px, py, r)))
+            io.send_data(('lidar-points', (px, py, r, scan)))
+            # while time.time() - st < 0.1:
+            #     pass
+            # st = time.time()
+
+    io.stop()
 
     # io commands
     # io.send_data(('grid-colors', controller.grid.get_pygame_grid())) // sends grid to server

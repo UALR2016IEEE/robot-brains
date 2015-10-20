@@ -20,6 +20,8 @@ class Base:
         current_angle = self.wrap(angle - self.angle_range / 2.0 + random.random() * self.resolution, 0.0, 2.0 * math.pi)
         hits = np.ndarray(shape=(snaps, 3))
 
+        nonblocking = [0, 12]
+
         for snap in range(snaps):
             distance = 0
             cy, cx = py, px
@@ -27,11 +29,11 @@ class Base:
             dx = math.cos(current_angle)
             dy = math.sin(current_angle)
 
-            while self.map[int(cy), int(cx)] == 0:
+            while self.map[int(cy), int(cx)] in nonblocking:
                 cy, cx = dy + cy, dx + cx
 
             hits[snap, 0] = math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy))
-            hits[snap, 1] = current_angle
+            hits[snap, 1] = self.wrap(current_angle - angle, 0.0, 2.0 * math.pi)
             hits[snap, 2] = 1.0
             current_angle = self.wrap(current_angle + self.resolution, 0.0, 2.0 * math.pi)
 

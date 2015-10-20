@@ -25,8 +25,8 @@ class IOHandler(multiprocessing.Process):
 
     def io_inf(self, q, halt):
         host, port = 'localhost', 9998
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client.connect((host, port))
             print("connected to", host, "on", port, 'halt', halt.value)
             while not halt.value:
@@ -39,3 +39,5 @@ class IOHandler(multiprocessing.Process):
                     client.sendall(packet)
         except ConnectionError:
             print('connection error with server, closed')
+            halt.value = True
+        client.close()
