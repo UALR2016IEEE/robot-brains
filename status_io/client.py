@@ -1,5 +1,8 @@
 import multiprocessing
 import multiprocessing.connection
+import socket
+import pickle
+import struct
 
 
 class IOHandler(multiprocessing.Process):
@@ -23,12 +26,16 @@ class IOHandler(multiprocessing.Process):
     def io_inf(self, q, halt):
         host, port = 'localhost', 9998
         try:
-            client = multiprocessing.connection.Client((host, port))
+            client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client.connect((host, port))
             print("connected to", host, "on", port, 'halt', halt.value)
             while not halt.value:
                 while not q.empty():
                     data = q.get()
                     # print('processing queue', data)
-                    client.send(data)
+                    packet = pickle.dumps(data, protocol=4)
+                    length = struct.pack('!I', len(packet))
+                    packet = length + packet
+                    client.sendall(packet)
         except ConnectionError:
             print('connection error with server, closed')
