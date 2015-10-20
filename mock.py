@@ -1,6 +1,7 @@
 import navigation_platform
 import mobility_platform.mobility
 import recovery_platform.recovery
+import hardware.lidar
 import status_io.client
 import simulate.controller
 import math
@@ -12,6 +13,9 @@ def mock():
     # nav = navigation_platform.navigation.Base()
     # nav_control = navigation_platform.controller.Base(nav)
     # rec = recovery_platform.recovery.Base()
+
+    px, py, r = 400, 100, 0
+
     io = status_io.client.IOHandler()
     io.start()
 
@@ -19,15 +23,31 @@ def mock():
     controller = simulate.controller.Controller()
     controller.init_grid()
 
+    # send the map to the server
+    io.send_data(('grid-colors', controller.grid.get_pygame_grid()))
+    io.send_data(('robot-pos', (px, py, r)))
+
+    lidar = hardware.lidar.Base(controller)
+
+    st = time.time()
+
+    for i in range(300):
+        px += 1
+        scan = lidar.scan(py, px, r)
+        io.send_data(('robot-pos', (px, py, r)))
+        io.send_data(('lidar-points', (px, py, r, scan)))
+        # while time.time() - st < 0.1:
+        #     pass
+        # st = time.time()
+
     # io commands
     # io.send_data(('grid-colors', controller.grid.get_pygame_grid())) // sends grid to server
     # io.send_data(('robot-pos', (px, py, r))) // positions robot at px, py with rotation r on server (r in radians)
 
-    # send the map to the server
-    io.send_data(('grid-colors', controller.grid.get_pygame_grid()))
 
-    px, py, r = 480, 480, math.radians(180)
-    io.send_data(('robot-pos', (px, py, r)))
+
+    # px, py, r = 480, 480, math.radians(180)
+    # io.send_data(('robot-pos', (px, py, r)))
 
     # if aquire:
     # nav_control.add_component(rec.aquire_align)

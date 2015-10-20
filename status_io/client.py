@@ -28,7 +28,7 @@ class IOHandler(multiprocessing.Process):
             while not halt.value:
                 while not q.empty():
                     data = q.get()
-                    print('processing queue', data)
+                    # print('processing queue', data)
                     client.send(data)
         except ConnectionError:
             print('connection error with server, closed')
