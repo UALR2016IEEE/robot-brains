@@ -42,7 +42,7 @@ class Base:
 
         # remove the rays that will be obscured
         for item in self.obscured:
-            rays = rays[np.logical_or(rays[:, 2] < item[0], rays[:, 2] > item[1])]
+            rays = rays[np.logical_or(rays[:, 2] < self.wrap(position.r + item[0], 0, 2.0 * math.pi), rays[:, 2] > self.wrap(position.r + item[1], 0, 2.0 * math.pi))]
 
         # preallocate results array
         hits = np.ndarray(shape=(rays.shape[0], 3))
