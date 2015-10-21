@@ -25,7 +25,7 @@ class Base:
 
     def scan(self, position) -> np.ndarray:
         """
-        :param position: point3 for y, x, r values
+        :param position: Point3 for y, x, r values
         :return: np.ndarray of hits
         """
         # calculate how many measurements to take
@@ -34,16 +34,20 @@ class Base:
         # get a slightly randomized initial position.r
         cr = self.wrap(position.r - self.angle_range / 2.0 + random.random() * self.resolution, 0.0, 2.0 * math.pi)
 
-        # preallocate results array
-        hits = np.ndarray(shape=(snaps, 3))
-
         # generate rays array
         rays = np.ndarray(shape=(snaps, 3))
         rays[:, 0] = position.y
         rays[:, 1] = position.x
-        rays[:, 2] = np.linspace(cr, cr + self.angle_range, snaps)
+        rays[:, 2] = np.linspace(cr, cr + self.angle_range, snaps) % (2.0 * np.pi)
 
-        # while there are hits, increment the ones that haven't hit something nonblocking yet
+        # remove the rays that will be obscured
+        for item in self.obscured:
+            rays = rays[np.logical_or(rays[:, 2] < item[0], rays[:, 2] > item[1])]
+
+        # preallocate results array
+        hits = np.ndarray(shape=(rays.shape[0], 3))
+
+        # while there are misses, increment the ones that haven't hit something blocking yet
         not_hit = np.in1d(self.map[rays[:, 0].astype(int), rays[:, 1].astype(int)], self.non_blocking)
         while np.any(not_hit):
             rays[not_hit, 0] -= 2.0 * np.sin(rays[not_hit, 2])  # since origin is upper-left corner instead of lower-left corner, y has to be flipped
@@ -52,12 +56,8 @@ class Base:
 
         # map results to hits array
         hits[:, 0] = np.sqrt(np.square((rays[:, 1] - position.x)) + np.square((rays[:, 0] - position.y)))
-        hits[:, 1] = (rays[:, 2] - position.r) % (2 * np.pi)
+        hits[:, 1] = (rays[:, 2] - position.r) % (2.0 * np.pi)
         hits[:, 2] = 1.0  # all the data is perfect - yay
-
-        # remove the obscured areas
-        for item in self.obscured:
-            hits = hits[np.logical_or(hits[:, 1] < item[0], hits[:, 1] > item[1])]
 
         return hits
 
