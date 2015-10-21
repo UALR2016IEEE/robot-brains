@@ -1,26 +1,27 @@
+import multiprocessing
 import math
 
 
 class Point2:
     def __init__(self, y=0, x=0):
-        self._y = y
-        self._x = x
+        self._y = multiprocessing.Value('f', y)
+        self._x = multiprocessing.Value('f', x)
 
     @property
     def x(self):
-        return self._x
+        return self._x.value
 
     @x.setter
     def x(self, value):
-        self._x = value
+        self._x.value = value
 
     @property
     def y(self):
-        return self._y
+        return self._y.value
 
     @y.setter
     def y(self, value):
-        self._y = value
+        self._y.value = value
 
     def distance(self, other):
         return math.sqrt((self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y))
@@ -54,33 +55,33 @@ class Point2:
 
 class Point3:
     def __init__(self, y=0, x=0, r=0):
-        self._y = y
-        self._x = x
-        self._r = r
+        self._y = multiprocessing.Value('f', y)
+        self._x = multiprocessing.Value('f', x)
+        self._r = multiprocessing.Value('f', r)
 
     @property
     def x(self):
-        return self._x
+        return self._x.value
 
     @x.setter
     def x(self, value):
-        self._x = value
+        self._x.value = value
 
     @property
     def y(self):
-        return self._y
+        return self._y.value
 
     @y.setter
     def y(self, value):
-        self._y = value
+        self._y.value = value
 
     @property
     def r(self):
-        return self._r
+        return self._r.value
 
     @r.setter
     def r(self, value):
-        self._r = value
+        self._r.value = value
 
     def distance(self, other):
         return math.sqrt((self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y))

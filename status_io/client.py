@@ -16,11 +16,12 @@ class IOHandler(multiprocessing.Process):
         super(multiprocessing.Process, self).start()
 
     def stop(self):
+        while not self.data.empty():
+            pass
         print('stopping')
         self.halt.value = True
 
     def send_data(self, item):
-        print('received to send', item[0])
         self.data.put(item)
 
     def io_inf(self, q, halt):

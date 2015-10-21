@@ -1,16 +1,15 @@
 import navigation_platform.navigation as navlib
 import multiprocessing
-from utils import Point
+from utils import Point2
 
 
 class Base(multiprocessing.Process):
     def __init__(self, navigation: navlib.Base):
         self.nav = navigation
-        self.pos = Point()
+        self.pos = Point2()
         self.halt = multiprocessing.Value(bool, False)
         self.components = multiprocessing.Queue()
-        self.SLAM = multiprocessing.Process.__init__(self, target=self.nav_inf,
-                                                      args=(self.nav, self.pos, self.halt, self.components))
+        self.SLAM = multiprocessing.Process.__init__(self, target=self.nav_inf, args=(self.nav, self.pos, self.halt, self.components))
 
     def start(self):
         self.halt.value = False
@@ -28,8 +27,8 @@ class Base(multiprocessing.Process):
             lidar_data = lidar.get_data()
             nav.run_components(lidar_data)
 
-            nav #blah
-            #slam loop
+            nav  # blah
+            # slam loop
 
     def get_pos(self):
         return self.pos
