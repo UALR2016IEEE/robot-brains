@@ -32,6 +32,9 @@ class Point2:
             'y': self.y
         }
 
+    def __reduce__(self):
+        return self.__class__, (self.y, self.x)
+
     def __getitem__(self, item):
         if item == 0:
             return self.y
@@ -49,8 +52,8 @@ class Point2:
             raise ValueError('Invalid coordinate id')
 
     def __iter__(self):
-        yield self.x
         yield self.y
+        yield self.x
 
 
 class Point3:
@@ -93,6 +96,9 @@ class Point3:
             'r': self.r
         }
 
+    def __reduce__(self):
+        return self.__class__, (self.y, self.x, self.r)
+
     def __getitem__(self, item):
         if item == 0:
             return self.y
@@ -114,6 +120,6 @@ class Point3:
             raise ValueError('Invalid coordinate id')
 
     def __iter__(self):
-        yield self.x
         yield self.y
+        yield self.x
         yield self.r

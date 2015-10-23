@@ -1,29 +1,32 @@
 import numpy as np
 import math
 import random
-from utils.data_structures import Point2, Point3
+from utils.data_structures import Point3
 
 
 class Base:
-    def __init__(self, controller):
+    def __init__(self, sim_controller):
 
-        # set 'sensor' angular range, angular resolution, blackout areas, and nonblocking items
+        # set sensor properties
         self.angle_range = math.radians(360)
         self.resolution = math.radians(1)
+        self.frequency = 5.5
+
+        # set sensor meta-properties
         self.obscured = [(math.radians(40), math.radians(50)), (math.radians(130), math.radians(140)), (math.radians(220), math.radians(230)), (math.radians(310), math.radians(320))]
-        self.non_blocking = [0, 12]  # refer to grid element id's : set 0 (floor) and 12 (start-box) to be non-blocking elements
+        self.non_blocking = [0, 12]  # refer to grid element ids : set 0 (floor) and 12 (start-box) to be non-blocking elements
 
         # controller provides the simulated map
-        self.controller = controller
+        self.sim_controller = sim_controller
         self.map = np.ndarray(shape=(960, 960))
 
         # load the simulated map
         self._load_map()
 
     def _load_map(self):
-        self.map = self.controller.get_grid_data()
+        self.map = self.sim_controller.get_grid_data()
 
-    def scan(self, position) -> np.ndarray:
+    def scan(self, position: Point3) -> np.ndarray:
         """
         :param position: Point3 for y, x, r values
         :return: np.ndarray of hits
@@ -33,6 +36,7 @@ class Base:
 
         # get a slightly randomized initial position.r
         cr = self.wrap(position.r - self.angle_range / 2.0 + random.random() * self.resolution, 0.0, 2.0 * math.pi)
+        # cr = self.wrap(position.r - self.angle_range / 2.0 + self.resolution, 0.0, 2.0 * math.pi)  # for testing, always returns same starting ray position
 
         # generate rays array
         rays = np.ndarray(shape=(snaps, 3))
@@ -75,4 +79,3 @@ class Base:
             return math.fmod(number, ceiling)
         else:
             return number
-

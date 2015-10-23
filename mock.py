@@ -18,7 +18,7 @@ def mock():
     position = Point3(100, 440, math.radians(270))
 
     io = status_io.client.IOHandler()
-    io.start()
+    io.start('localhost', 9998)
 
     # generate map
     controller = simulate.controller.Controller()
@@ -26,58 +26,58 @@ def mock():
 
     # send the map to the server
     io.send_data(('grid-colors', controller.grid.get_pygame_grid()))
-    io.send_data(('robot-pos', position.pickle()))
+    io.send_data(('robot-pos', position))
 
     lidar = hardware.lidar.Base(controller)
 
     for i in range(625):
-        if not io.halt.value:
+        if not io.halt:
             position.y += 1
             scan = lidar.scan(position)
-            io.send_data(('robot-pos', position.pickle()))
-            io.send_data(('lidar-points', (position.pickle(), scan)))
+            io.send_data(('robot-pos', position))
+            io.send_data(('lidar-points', (position, scan)))
 
     for i in range(45):
-        if not io.halt.value:
+        if not io.halt:
             position.r -= math.radians(2)
             scan = lidar.scan(position)
-            io.send_data(('robot-pos', position.pickle()))
-            io.send_data(('lidar-points', (position.pickle(), scan)))
+            io.send_data(('robot-pos', position))
+            io.send_data(('lidar-points', (position, scan)))
 
     for i in range(250):
-        if not io.halt.value:
+        if not io.halt:
             position.x -= 1
             scan = lidar.scan(position)
-            io.send_data(('robot-pos', position.pickle()))
-            io.send_data(('lidar-points', (position.pickle(), scan)))
+            io.send_data(('robot-pos', position))
+            io.send_data(('lidar-points', (position, scan)))
 
     for i in range(45):
-        if not io.halt.value:
+        if not io.halt:
             position.r += math.radians(2)
             scan = lidar.scan(position)
-            io.send_data(('robot-pos', position.pickle()))
-            io.send_data(('lidar-points', (position.pickle(), scan)))
+            io.send_data(('robot-pos', position))
+            io.send_data(('lidar-points', (position, scan)))
 
     for i in range(125):
-        if not io.halt.value:
+        if not io.halt:
             position.y += 1
             scan = lidar.scan(position)
-            io.send_data(('robot-pos', position.pickle()))
-            io.send_data(('lidar-points', (position.pickle(), scan)))
+            io.send_data(('robot-pos', position))
+            io.send_data(('lidar-points', (position, scan)))
 
     for i in range(45):
-        if not io.halt.value:
+        if not io.halt:
             position.r -= math.radians(2)
             scan = lidar.scan(position)
-            io.send_data(('robot-pos', position.pickle()))
-            io.send_data(('lidar-points', (position.pickle(), scan)))
+            io.send_data(('robot-pos', position))
+            io.send_data(('lidar-points', (position, scan)))
 
     for i in range(125):
-        if not io.halt.value:
+        if not io.halt:
             position.x -= 1
             scan = lidar.scan(position)
-            io.send_data(('robot-pos', position.pickle()))
-            io.send_data(('lidar-points', (position.pickle(), scan)))
+            io.send_data(('robot-pos', position))
+            io.send_data(('lidar-points', (position, scan)))
 
     io.stop()
 

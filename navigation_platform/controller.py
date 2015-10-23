@@ -1,30 +1,32 @@
 import navigation_platform.navigation as navlib
+import hardware.lidar
 import multiprocessing
-from utils import Point2
+from utils.data_structures_threadsafe import Point3
 
 
 class Base(multiprocessing.Process):
-    def __init__(self, navigation: navlib.Base):
+    def __init__(self, navigation: navlib.Base, sim_controller):
         self.nav = navigation
-        self.pos = Point2()
+        self.pos = Point3()
+        self.sim_controller = sim_controller
         self.halt = multiprocessing.Value(bool, False)
         self.components = multiprocessing.Queue()
-        self.SLAM = multiprocessing.Process.__init__(self, target=self.nav_inf, args=(self.nav, self.pos, self.halt, self.components))
+        self.SLAM = multiprocessing.Process.__init__(self, target=self.nav_inf, args=(self.nav, self.pos, self.sim_controller, self.halt, self.components))
 
     def start(self):
         self.halt.value = False
-        super(_Base, self).run()
+        super(Base, self).start()
 
     def stop(self):
         self.halt.value = True
 
     @staticmethod
-    def nav_inf(nav: navlib, pos, halt, components: multiprocessing.Queue):
-        lidar = Lidar()
+    def nav_inf(nav: navlib, pos, sim_controller, halt, components: multiprocessing.Queue):
+        lidar = hardware.lidar.Base(sim_controller)
         while not halt:
             while not components.empty():
                 nav.add_component(*components.get())
-            lidar_data = lidar.get_data()
+            lidar_data = lidar.scan(pos)
             nav.run_components(lidar_data)
 
             nav  # blah
