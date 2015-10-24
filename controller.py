@@ -19,3 +19,5 @@ class Controller:
         local = await self.nav.get_pos()
         action = self.mob.exec_line(5)
         self.nav.set_action(action)
+
+

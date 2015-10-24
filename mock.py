@@ -1,3 +1,5 @@
+import json
+
 import navigation_platform
 from mobility_platform.mobility import Base as Mobility
 from navigation_platform.controller import Base as NavControl
@@ -15,8 +17,10 @@ def mock():
     mode = 'zach'
     if mode == 'kori':
         print("mocking")
+        with open('config.json', 'r') as f:
+            config = json.load(f)
         nav = NavControl(Navigation)
-        mob = Mobility()
+        mob = Mobility(profile=config['robot characteristics'])
         controller = Controller(nav, mob)
         controller.start()
         # do mobility_platform events
