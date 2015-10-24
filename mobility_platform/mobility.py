@@ -1,11 +1,11 @@
-import types
 from time import time
 from utils import Point3
 
 
 class Base:
-    def __init__(self, cid: str=None):
+    def __init__(self, profile, cid: str=None):
         self._current_task = Action()
+        self.profile = profile
 
     @property
     def current_task(self):
@@ -26,7 +26,7 @@ class Base:
         if narc:
             angle = self._calc_angle(nang)
 
-        self.current_task = Action(angle=angle, arc=r)
+        self.current_task = Action(self.profile, arc_angle=angle, line=r)
         return self.current_task
 
 
@@ -35,16 +35,28 @@ class Base:
         #return angle
 
     def exec_line(self, l: float):
-        self.current_task = Action(line=l)
+        self.current_task = Action(self.profile, line=l)
         return self.current_task
 
     def rotate(self, angle: float):
-        self.current_task = Action(angle=angle)
+        self.current_task = Action(self.profile, angle=angle)
         return self.current_task
 
-    def exec_suicide(self, line:float, angle:float):
-        self.current_task = Action(angle=angle, line=line)
+    def exec_suicide_line(self, line: float, angle: float):
+        self.current_task = Action(self.profile, angle=angle, line=line)
         return self.current_task
+
+    def exec_suicide_arc(self, r: float, end_angle: float, arc_angle: float=None, arc_len: float=None):
+        nang = arc_angle is not None
+        narc = arc_len is not None
+        if nang and narc:
+            raise ValueError('Cannot pass both angle and arc length')
+        elif not (nang or narc):
+            raise ValueError('Need either angle or arc length')
+
+        if narc:
+            arc_angle = self._calc_angle(nang)
+        self.current_task = Action(self.profile, r, end_angle, arc_angle)
 
     def sendtask(self):
         self.current_task.start()
@@ -55,7 +67,7 @@ class Mobility:
 
 
 class Action:
-    def __init__(self, line: float=None, angle: float=None, arc_angle: float=None):
+    def __init__(self, profile: dict, line: float=None, angle: float=None, arc_angle: float=None):
         """
         passing only line is a line action
          passing only angle is rotate
@@ -75,6 +87,8 @@ class Action:
         self.line = line
         self.angle = angle
         self.arc_angle = arc_angle
+
+        self.profile = profile
 
     def start(self):
         self.start_time = time()
