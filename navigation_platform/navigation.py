@@ -1,28 +1,32 @@
 import types
-from utils import Point2
+from utils import Point3
 
 
 class Base:
     def __init__(self, cid: str=None):
         self.components = {}
+        self.point = Point3()
 
-    def get_pos(self) -> Point2:
-        point = Point2()
-        return point
+    def set_pos(self, point: Point3):
+        self.point = point
 
-    @property
-    def position(self):
-        return self.get_pos()
+    @staticmethod
+    def slam(self):
+        while True:
+            lidar, es_pos = yield
+            self.point.x = es_pos.x
+            self.point.y = es_pos.y
+            self.point.r = es_pos.r
 
-    def set_pos(self, point: Point2):
-        pass
 
     def add_component(self, name: str, func: types.FunctionType):
-        self.components[name] = func()
+        self.components[name] = func(self)
 
     def run_components(self, lidar_data):
         for key, component in self.components.items():
-            if component.send(lidar_data):
+            try:
+                component.send(lidar_data)
+            except StopIteration:
                 self.components.pop(key)
 
 

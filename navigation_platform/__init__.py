@@ -1,2 +1,2 @@
-import navigation_platform.controller
-import navigation_platform.navigation
+from .controller import Controller
+from .navigation import Navigation

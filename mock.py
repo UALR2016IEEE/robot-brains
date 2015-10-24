@@ -1,6 +1,8 @@
 import navigation_platform
-import mobility_platform.mobility
-import recovery_platform.recovery
+from mobility_platform.mobility import Base as Mobility
+from navigation_platform.controller import Base as NavControl
+from navigation_platform.navigation import Base as Navigation
+from controller import Controller
 import hardware.lidar
 import status_io.client
 import simulate.controller
@@ -10,85 +12,87 @@ from utils.data_structures import Point3
 
 
 def mock():
-    print("mocking")
-    # nav = navigation_platform.navigation.Base()
-    # nav_control = navigation_platform.controller.Base(nav)
-    # rec = recovery_platform.recovery.Base()
+    mode = 'zach'
+    if mode == 'kori':
+        print("mocking")
+        nav = NavControl(Navigation)
+        mob = Mobility()
+        controller = Controller(nav, mob)
+        controller.start()
+        # do mobility_platform events
+        # magical_fsm
 
-    position = Point3(100, 440, math.radians(270))
+    else:
 
-    io = status_io.client.IOHandler()
-    io.start('localhost', 9998)
+        position = Point3(100, 440, math.radians(270))
 
-    # generate map
-    controller = simulate.controller.Controller()
-    controller.init_grid()
+        io = status_io.client.IOHandler()
+        io.start('localhost', 9998)
 
-    # send the map to the server
-    io.send_data(('grid-colors', controller.grid.get_pygame_grid()))
-    io.send_data(('robot-pos', position))
+        # generate map
+        controller = simulate.controller.Controller()
+        controller.init_grid()
 
-    lidar = hardware.lidar.Base(controller)
+        # send the map to the server
+        io.send_data(('grid-colors', controller.grid.get_pygame_grid()))
+        io.send_data(('robot-pos', position))
 
-    for i in range(625):
-        if not io.halt:
-            position.y += 1
-            scan = lidar.scan(position)
-            io.send_data(('robot-pos', position))
-            io.send_data(('lidar-points', (position, scan)))
+        lidar = hardware.lidar.Base(controller)
 
-    for i in range(45):
-        if not io.halt:
-            position.r -= math.radians(2)
-            scan = lidar.scan(position)
-            io.send_data(('robot-pos', position))
-            io.send_data(('lidar-points', (position, scan)))
+        for i in range(625):
+            if not io.halt:
+                position.y += 1
+                scan = lidar.scan(position)
+                io.send_data(('robot-pos', position))
+                io.send_data(('lidar-points', (position, scan)))
 
-    for i in range(250):
-        if not io.halt:
-            position.x -= 1
-            scan = lidar.scan(position)
-            io.send_data(('robot-pos', position))
-            io.send_data(('lidar-points', (position, scan)))
+        for i in range(45):
+            if not io.halt:
+                position.r -= math.radians(2)
+                scan = lidar.scan(position)
+                io.send_data(('robot-pos', position))
+                io.send_data(('lidar-points', (position, scan)))
 
-    for i in range(45):
-        if not io.halt:
-            position.r += math.radians(2)
-            scan = lidar.scan(position)
-            io.send_data(('robot-pos', position))
-            io.send_data(('lidar-points', (position, scan)))
+        for i in range(250):
+            if not io.halt:
+                position.x -= 1
+                scan = lidar.scan(position)
+                io.send_data(('robot-pos', position))
+                io.send_data(('lidar-points', (position, scan)))
 
-    for i in range(125):
-        if not io.halt:
-            position.y += 1
-            scan = lidar.scan(position)
-            io.send_data(('robot-pos', position))
-            io.send_data(('lidar-points', (position, scan)))
+        for i in range(45):
+            if not io.halt:
+                position.r += math.radians(2)
+                scan = lidar.scan(position)
+                io.send_data(('robot-pos', position))
+                io.send_data(('lidar-points', (position, scan)))
 
-    for i in range(45):
-        if not io.halt:
-            position.r -= math.radians(2)
-            scan = lidar.scan(position)
-            io.send_data(('robot-pos', position))
-            io.send_data(('lidar-points', (position, scan)))
+        for i in range(125):
+            if not io.halt:
+                position.y += 1
+                scan = lidar.scan(position)
+                io.send_data(('robot-pos', position))
+                io.send_data(('lidar-points', (position, scan)))
 
-    for i in range(125):
-        if not io.halt:
-            position.x -= 1
-            scan = lidar.scan(position)
-            io.send_data(('robot-pos', position))
-            io.send_data(('lidar-points', (position, scan)))
+        for i in range(45):
+            if not io.halt:
+                position.r -= math.radians(2)
+                scan = lidar.scan(position)
+                io.send_data(('robot-pos', position))
+                io.send_data(('lidar-points', (position, scan)))
 
-    io.stop()
+        for i in range(125):
+            if not io.halt:
+                position.x -= 1
+                scan = lidar.scan(position)
+                io.send_data(('robot-pos', position))
+                io.send_data(('lidar-points', (position, scan)))
 
-    # io commands
-    # io.send_data(('grid-colors', controller.grid.get_position.ygame_grid())) // sends grid to server
-    # io.send_data(('robot-pos', (position))) // positions robot at position.x, position.y with rotation position.r on server (position.r in radians)
+        io.stop()
 
-    # position = 480, 480, math.radians(180)
-    # io.send_data(('robot-pos', (position)))
-
-    # if acquire:
-    # nav_control.add_component(rec.acquire_align)
-    # do mobility_platform events
-    # magical_fsm
+        #io commands
+        # io.send_data(('grid-colors', controller.grid.get_position.ygame_grid())) // sends grid to server
+        # io.send_data(('robot-pos', (position))) // positions robot at position.x, position.y with rotation position.r on server (position.r in radians)
+        #
+        # position = 480, 480, math.radians(180)
+        # io.send_data(('robot-pos', (position)))

@@ -1,1 +1,1 @@
-import mobility_platform.mobility
+from .mobility import Mobility

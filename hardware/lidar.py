@@ -1,3 +1,5 @@
+import asyncio
+
 import numpy as np
 import math
 import random
@@ -79,3 +81,12 @@ class Base:
             return math.fmod(number, ceiling)
         else:
             return number
+
+    def __await__(self):
+        def closure():
+            while True:
+
+                yield from asyncio.sleep(1/5.5)
+
+
+
