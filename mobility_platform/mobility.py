@@ -55,20 +55,26 @@ class Mobility:
 
 
 class Action:
-    def __init__(self, line: float=None, angle: float=None, arc: float=None):
-        argmask = [_ is None for _ in (line, angle, arc)]
-        argtable = [(True, True, True),
+    def __init__(self, line: float=None, angle: float=None, arc_angle: float=None):
+        """
+        passing only line is a line action
+         passing only angle is rotate
+         passing angle and line is rotate and move in a line
+         passing arcangle will make line the radius of the arc and angle will be the final angle
+        """
+        argmask = [_ is None for _ in (line, angle, arc_angle)]
+        argtable = [(False, True, True),
                     (True, False, True),
                     (False, False, True), ]
         if argmask in argtable:
             raise ValueError("Cannot pass in {}".format(
-                " ".join(a for a, m in zip(('line', 'angle', 'arc'), argmask) if m)))
+                " ".join(a for a, m in zip(('line', 'angle', 'arc angle'), argmask) if m)))
 
         self.start_time = None
 
         self.line = line
         self.angle = angle
-        self.arc = arc
+        self.arc_angle = arc_angle
 
     def start(self):
         self.start_time = time()
