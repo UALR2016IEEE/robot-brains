@@ -1,5 +1,4 @@
 import asyncio
-
 import numpy as np
 import math
 import random
@@ -14,8 +13,11 @@ class Base:
         self.resolution = math.radians(1)
         self.frequency = 5.5
 
-        # set sensor meta-properties
-        self.obscured = [(math.radians(40), math.radians(50)), (math.radians(130), math.radians(140)), (math.radians(220), math.radians(230)), (math.radians(310), math.radians(320))]
+        # set sensor obscure ranges : [(obscure_center, obscure_range_from_center)]
+        self.obscured = []
+        for item in [(45, 10), (135, 10), (225, 10), (315, 10)]:
+            self.obscured.append((self.wrap(math.radians(item[0]) - math.radians(item[1]), 0, 2.0 * math.pi), self.wrap(math.radians(item[0]) + math.radians(item[1]), 0, 2.0 * math.pi)))
+
         self.non_blocking = [0, 12]  # refer to grid element ids : set 0 (floor) and 12 (start-box) to be non-blocking elements
 
         # controller provides the simulated map
@@ -48,16 +50,26 @@ class Base:
 
         # remove the rays that will be obscured
         for item in self.obscured:
-            rays = rays[np.logical_or(rays[:, 2] < self.wrap(position.r + item[0], 0, 2.0 * math.pi), rays[:, 2] > self.wrap(position.r + item[1], 0, 2.0 * math.pi))]
+            # check to see if the obscured item crosses the angle-0 line
+            if self.wrap(position.r + item[0], 0, 2.0 * math.pi) > self.wrap(position.r + item[1], 0, 2.0 * math.pi):
+                # if obscured area crosses 0, keep the rays between the upper and lower lines
+                rays = rays[np.logical_and(rays[:, 2] < self.wrap(position.r + item[0], 0, 2.0 * math.pi), rays[:, 2] > self.wrap(position.r + item[1], 0, 2.0 * math.pi))]
+            else:
+                # else keep the rays below the lower line and above the upper line
+                rays = rays[np.logical_or(rays[:, 2] < self.wrap(position.r + item[0], 0, 2.0 * math.pi), rays[:, 2] > self.wrap(position.r + item[1], 0, 2.0 * math.pi))]
 
         # preallocate results array
         hits = np.ndarray(shape=(rays.shape[0], 3))
 
+        # calculate ray deltas
+        delta_x = np.cos(rays[:, 2])
+        delta_y = np.sin(rays[:, 2])
+
         # while there are misses, increment the ones that haven't hit something blocking yet
         not_hit = np.in1d(self.map[rays[:, 0].astype(int), rays[:, 1].astype(int)], self.non_blocking)
         while np.any(not_hit):
-            rays[not_hit, 0] -= 2.0 * np.sin(rays[not_hit, 2])  # since origin is upper-left corner instead of lower-left corner, y has to be flipped
-            rays[not_hit, 1] += 2.0 * np.cos(rays[not_hit, 2])  # but cheat a bit and use 2.0 * delta to make things a bit faster
+            rays[not_hit, 0] -= delta_y[not_hit]  # since origin is upper-left corner instead of lower-left corner, y has to be flipped
+            rays[not_hit, 1] += delta_x[not_hit]  # but cheat a bit and use 2.0 * delta to make things a bit faster
             not_hit = np.in1d(self.map[rays[:, 0].astype(int), rays[:, 1].astype(int)], self.non_blocking)
 
         # map results to hits array

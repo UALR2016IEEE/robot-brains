@@ -9,7 +9,6 @@ import hardware.lidar
 import status_io.client
 import simulate.controller
 import math
-import time
 from utils.data_structures import Point3
 
 
