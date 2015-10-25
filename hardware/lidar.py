@@ -97,8 +97,4 @@ class Base:
     def __await__(self):
         def closure():
             while True:
-
-                yield from asyncio.sleep(1/5.5)
-
-
-
+                yield from asyncio.sleep(1 / 5.5)

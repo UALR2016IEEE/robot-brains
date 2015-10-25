@@ -9,15 +9,13 @@ class Controller:
         self.nav = nav_plat
         self.mob = mob_plat
         self.local = Point3()
-        self.tasks = [self.fsm]
+        self.tasks = [self.fsm()]
         self.loop = asyncio.get_event_loop()
 
     def start(self):
-        self.loop.run_until_complete(map(asyncio.ensure_future, self.tasks))
+        self.loop.run_until_complete(asyncio.wait(map(asyncio.ensure_future, self.tasks)))
 
     async def fsm(self):
         local = await self.nav.get_pos()
         action = self.mob.exec_line(5)
         self.nav.set_action(action)
-
-

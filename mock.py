@@ -13,34 +13,37 @@ from utils.data_structures import Point3
 
 
 def mock():
-    mode = 'zach'
+    mode = 'kori'
+    print('mocking mode', mode)
     if mode == 'kori':
-        print("mocking")
         with open('config.json', 'r') as f:
             config = json.load(f)
-        nav = NavControl(Navigation)
+
+        sim_controller = simulate.controller.Controller()
+        sim_controller.init_grid()
+
+        nav = NavControl(Navigation, sim_controller)
         mob = Mobility(profile=config['robot characteristics'])
         controller = Controller(nav, mob)
         controller.start()
         # do mobility_platform events
         # magical_fsm
 
-    else:
-
+    elif mode == 'zach':
         position = Point3(100, 440, math.radians(270))
 
         io = status_io.client.IOHandler()
         io.start('localhost', 9998)
 
         # generate map
-        controller = simulate.controller.Controller()
-        controller.init_grid()
+        sim_controller = simulate.controller.Controller()
+        sim_controller.init_grid()
 
         # send the map to the server
-        io.send_data(('grid-colors', controller.grid.get_pygame_grid()))
+        io.send_data(('grid-colors', sim_controller.grid.get_pygame_grid()))
         io.send_data(('robot-pos', position))
 
-        lidar = hardware.lidar.Base(controller)
+        lidar = hardware.lidar.Base(sim_controller)
 
         for i in range(625):
             if not io.halt:
@@ -99,3 +102,6 @@ def mock():
         #
         # position = 480, 480, math.radians(180)
         # io.send_data(('robot-pos', (position)))
+
+    else:
+        print('mode unsupported')

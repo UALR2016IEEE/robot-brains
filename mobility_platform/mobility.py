@@ -4,7 +4,7 @@ from utils import Point3
 
 class Base:
     def __init__(self, profile, cid: str=None):
-        self._current_task = Action()
+        self._current_task = None
         self.profile = profile
 
     @property
@@ -15,6 +15,7 @@ class Base:
     def current_task(self, task):
         self._current_task = task
         self.sendtask()
+
     def exec_arc(self, r: float, angle: float=None, arcl: float=None):
         nang = angle is not None
         narc = arcl is not None
@@ -28,7 +29,6 @@ class Base:
 
         self.current_task = Action(self.profile, arc_angle=angle, line=r)
         return self.current_task
-
 
     def _calc_angle(self, arcl: float) -> float:
         pass
@@ -70,9 +70,9 @@ class Action:
     def __init__(self, profile: dict, line: float=None, angle: float=None, arc_angle: float=None):
         """
         passing only line is a line action
-         passing only angle is rotate
-         passing angle and line is rotate and move in a line
-         passing arcangle will make line the radius of the arc and angle will be the final angle
+        passing only angle is rotate
+        passing angle and line is rotate and move in a line
+        passing arcangle will make line the radius of the arc and angle will be the final angle
         """
         argmask = [_ is None for _ in (line, angle, arc_angle)]
         argtable = [(False, True, True),
@@ -94,8 +94,7 @@ class Action:
         self.start_time = time()
 
     def estimate_progress(self):
-        pass
+        return 0
 
     def estimate_position(self, initial_pos: Point3):
         prog = self.estimate_progress()
-

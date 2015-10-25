@@ -6,8 +6,9 @@ import types
 
 
 class Base(multiprocessing.Process):
-    def __init__(self, navigation: types.CodeType):
+    def __init__(self, navigation: types.CodeType, sim_controller):
         self.nav = navigation
+        self.sim_controller = sim_controller
         self.pos = Point3()
         self.halt = multiprocessing.Event()
         self.components = multiprocessing.Queue()
