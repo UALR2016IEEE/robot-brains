@@ -15,7 +15,7 @@ class Base(multiprocessing.Process):
         self.halt = multiprocessing.Event()
         self.components = multiprocessing.Queue()
         self.actions = multiprocessing.Queue()
-        self.navproc = multiprocessing.Process.__init__(self, target=self.nav_interface, args=(self.nav, Point3(), self.pos, self.sim_controller, self.halt, self.components, self.actions))
+        self.navproc = multiprocessing.Process.__init__(self, target=self.nav_interface, args=(self.nav, self.sim_controller.position, self.pos, self.sim_controller, self.halt, self.components, self.actions))
         self.current_action = None
 
     def start(self):
@@ -26,27 +26,27 @@ class Base(multiprocessing.Process):
         self.halt.set()
 
     @staticmethod
-    def nav_interface(nav: type, pos, pos_quene: multiprocessing.Queue, sim_controller, halt: multiprocessing.Event, components: multiprocessing.Queue, actions: multiprocessing.Queue):
+    def nav_interface(nav: type, initial_position, position_queue: multiprocessing.Queue, sim_controller, halt: multiprocessing.Event, components: multiprocessing.Queue, actions: multiprocessing.Queue):
         navigator = nav()
         lidar = hardware.lidar.Base(sim_controller)
         action = None
-        navigator.set_pos(pos)
+        navigator.set_position(initial_position)
         while not halt.is_set():
             while not components.empty():
                 navigator.add_component(*components.get())
             while not actions.empty():
                 action = actions.get()
             if action is None:
-                es_pos = Point3()
+                estimated_position = navigator.get_position()
             else:
-                es_pos = action.estimate_position(navigator.get_pos())
+                estimated_position = action.estimate_position(navigator.get_position())
             print('getting lidar data')
-            print(es_pos.x, es_pos.y, es_pos.r)
-            lidar_data = lidar.scan(es_pos)
+            print(estimated_position)
+            lidar_data = lidar.scan(estimated_position)
             print('running slam')
-            navigator.run_components(lidar_data, es_pos)
+            navigator.run_components(lidar_data, estimated_position)
             print('outputting data')
-            pos_quene.put(navigator.get_pos())
+            position_queue.put(navigator.get_position())
 
     @asyncio.coroutine
     def get_pos(self):

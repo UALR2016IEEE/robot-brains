@@ -32,6 +32,9 @@ class Point2:
             'y': self.y
         }
 
+    def __str__(self):
+        return 'x ' + str(self.x) + ', y ' + str(self.y)
+
     def __reduce__(self):
         return self.__class__, (self.y, self.x)
 
@@ -95,6 +98,9 @@ class Point3:
             'y': self.y,
             'r': self.r
         }
+
+    def __str__(self):
+        return 'x ' + str(self.x) + ', y ' + str(self.y) + ', r ' + str(math.degrees(self.r))
 
     def __reduce__(self):
         return self.__class__, (self.y, self.x, self.r)

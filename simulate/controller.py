@@ -1,9 +1,11 @@
 from .grid import Grid
+from utils.data_structures import Point3
 
 
 class Controller:
-    def __init__(self):
+    def __init__(self, position: Point3):
         self.grid = Grid()
+        self.position = position
 
     def init_grid(self):
         self.grid.init_grid()

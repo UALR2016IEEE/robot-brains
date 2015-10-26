@@ -15,11 +15,14 @@ from utils.data_structures import Point3
 def mock():
     mode = 'kori'
     print('mocking mode', mode)
+
+    position = Point3(100, 440, math.radians(270))
+
     if mode == 'kori':
         with open('config.json', 'r') as f:
             config = json.load(f)
 
-        sim_controller = simulate.controller.Controller()
+        sim_controller = simulate.controller.Controller(position)
         sim_controller.init_grid()
 
         nav = NavControl(Navigation, sim_controller)
@@ -31,13 +34,11 @@ def mock():
         # magical_fsm
 
     elif mode == 'zach':
-        position = Point3(100, 440, math.radians(270))
-
         io = status_io.client.IOHandler()
         io.start('localhost', 9998)
 
         # generate map
-        sim_controller = simulate.controller.Controller()
+        sim_controller = simulate.controller.Controller(position)
         sim_controller.init_grid()
 
         # send the map to the server
