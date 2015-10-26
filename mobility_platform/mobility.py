@@ -32,7 +32,7 @@ class Base:
 
     def _calc_angle(self, arcl: float) -> float:
         pass
-        #return angle
+        # return angle
 
     def exec_line(self, l: float):
         self.current_task = Action(self.profile, line=l)
@@ -98,3 +98,4 @@ class Action:
 
     def estimate_position(self, initial_pos: Point3):
         prog = self.estimate_progress()
+        return initial_pos

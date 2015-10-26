@@ -16,6 +16,10 @@ class Controller:
         self.loop.run_until_complete(asyncio.wait(map(asyncio.ensure_future, self.tasks)))
 
     async def fsm(self):
-        local = await self.nav.get_pos()
-        action = self.mob.exec_line(5)
-        self.nav.set_action(action)
+        while True:
+            print('start of fsm')
+            print('waiting on nav data')
+            local = await self.nav.get_pos()
+            print('moving')
+            action = self.mob.exec_line(5)
+            self.nav.set_action(action)

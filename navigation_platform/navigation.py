@@ -1,5 +1,5 @@
 import types
-from utils import Point3
+from utils.data_structures import Point3
 
 
 class Base:
@@ -23,11 +23,13 @@ class Base:
 
     def add_component(self, name: str, func: types.FunctionType):
         self.components[name] = func(self)
+        for component in self.components.values():
+            component.send(None)
 
-    def run_components(self, lidar_data):
+    def run_components(self, lidar_data, es_pos):
         for key, component in self.components.items():
             try:
-                component.send(lidar_data)
+                component.send((lidar_data, es_pos))
             except StopIteration:
                 self.components.pop(key)
 

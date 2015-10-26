@@ -23,6 +23,7 @@ def mock():
         sim_controller.init_grid()
 
         nav = NavControl(Navigation, sim_controller)
+        nav.start()
         mob = Mobility(profile=config['robot characteristics'])
         controller = Controller(nav, mob)
         controller.start()
@@ -96,7 +97,7 @@ def mock():
 
         io.stop()
 
-        #io commands
+        # io commands
         # io.send_data(('grid-colors', controller.grid.get_position.ygame_grid())) // sends grid to server
         # io.send_data(('robot-pos', (position))) // positions robot at position.x, position.y with rotation position.r on server (position.r in radians)
         #
