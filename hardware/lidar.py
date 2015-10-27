@@ -15,7 +15,7 @@ class Base:
 
         # set sensor obscure ranges : [(obscure_center, obscure_range_from_center)]
         self.obscured = []
-        for item in [(45, 10), (135, 10), (225, 10), (315, 10)]:
+        for item in [(45, 17.5), (135, 17.5), (225, 17.5), (315, 17.5)]:
             self.obscured.append((self.wrap(math.radians(item[0]) - math.radians(item[1]), 0, 2.0 * math.pi), self.wrap(math.radians(item[0]) + math.radians(item[1]), 0, 2.0 * math.pi)))
 
         self.non_blocking = [0, 12]  # refer to grid element ids : set 0 (floor) and 12 (start-box) to be non-blocking elements
@@ -49,14 +49,14 @@ class Base:
         rays[:, 2] = np.linspace(cr, cr + self.angle_range, snaps) % (2.0 * np.pi)
 
         # remove the rays that will be obscured
-        for item in self.obscured:
-            # check to see if the obscured item crosses the angle-0 line
-            if self.wrap(position.r + item[0], 0, 2.0 * math.pi) > self.wrap(position.r + item[1], 0, 2.0 * math.pi):
-                # if obscured area crosses 0, keep the rays between the upper and lower lines
-                rays = rays[np.logical_and(rays[:, 2] < self.wrap(position.r + item[0], 0, 2.0 * math.pi), rays[:, 2] > self.wrap(position.r + item[1], 0, 2.0 * math.pi))]
-            else:
-                # else keep the rays below the lower line and above the upper line
-                rays = rays[np.logical_or(rays[:, 2] < self.wrap(position.r + item[0], 0, 2.0 * math.pi), rays[:, 2] > self.wrap(position.r + item[1], 0, 2.0 * math.pi))]
+        # for item in self.obscured:
+        #     # check to see if the obscured item crosses the angle-0 line
+        #     if self.wrap(position.r + item[0], 0, 2.0 * math.pi) > self.wrap(position.r + item[1], 0, 2.0 * math.pi):
+        #         # if obscured area crosses 0, keep the rays between the upper and lower lines
+        #         rays = rays[np.logical_and(rays[:, 2] < self.wrap(position.r + item[0], 0, 2.0 * math.pi), rays[:, 2] > self.wrap(position.r + item[1], 0, 2.0 * math.pi))]
+        #     else:
+        #         # else keep the rays below the lower line and above the upper line
+        #         rays = rays[np.logical_or(rays[:, 2] < self.wrap(position.r + item[0], 0, 2.0 * math.pi), rays[:, 2] > self.wrap(position.r + item[1], 0, 2.0 * math.pi))]
 
         # preallocate results array
         hits = np.ndarray(shape=(rays.shape[0], 3))
@@ -73,9 +73,11 @@ class Base:
             not_hit = np.in1d(self.map[rays[:, 0].astype(int), rays[:, 1].astype(int)], self.non_blocking)
 
         # map results to hits array
-        hits[:, 0] = np.sqrt(np.square((rays[:, 1] - position.x)) + np.square((rays[:, 0] - position.y)))
+        hits[:, 0] = np.sqrt(np.square((rays[:, 1] - position.x)) + np.square((rays[:, 0] - position.y)))[::-1]
         hits[:, 1] = (rays[:, 2] - position.r) % (2.0 * np.pi)
         hits[:, 2] = 1.0  # all the data is perfect - yay
+
+        hits[:, 1] = hits[::-1, 1]
 
         return hits
 
