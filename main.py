@@ -13,8 +13,12 @@ if __name__ == "__main__":
     np.set_printoptions(threshold=99999999, linewidth=9999999, suppress=True)
 
     if len(args) > 0:
-        if 'mock' in args:
+
+        arg_mock = 'mock' in args
+        arg_render = 'render' in args
+
+        if arg_mock:
             import mock
-            mock.mock()
+            mock.mock(render=arg_render)
         else:
             main()

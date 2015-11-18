@@ -3,6 +3,7 @@ import numpy as np
 import math
 import random
 from utils.data_structures import Point3
+import breezyslam.components
 
 
 class Base:
@@ -29,6 +30,10 @@ class Base:
 
     def _load_map(self):
         self.map = self.sim_controller.get_grid_data()
+
+    def get_laser(self):
+        # laser properties - scan_size, scan_rate_hz, detection_angle_degrees, distance_no_detection_mm
+        return breezyslam.components.Laser(360, 5.5, 360, 6000)
 
     def scan(self, position: Point3) -> np.ndarray:
         """
@@ -73,13 +78,28 @@ class Base:
             not_hit = np.in1d(self.map[rays[:, 0].astype(int), rays[:, 1].astype(int)], self.non_blocking)
 
         # map results to hits array
-        hits[:, 0] = np.sqrt(np.square((rays[:, 1] - position.x)) + np.square((rays[:, 0] - position.y)))[::-1]
-        hits[:, 1] = (rays[:, 2] - position.r) % (2.0 * np.pi)
+        hits[:, 0] = np.sqrt(np.square((rays[:, 1] - position.x)) + np.square((rays[:, 0] - position.y)))
+        hits[:, 1] = (rays[:, 2] - position.r)
         hits[:, 2] = 1.0  # all the data is perfect - yay
 
-        hits[:, 1] = hits[::-1, 1]
+        # make sure the angles are properly bounded
+        hits[hits[:, 1] > 2.0 * math.pi, 1] -= 2.0 * math.pi
+        hits[hits[:, 1] < 0, 1] += 2.0 * math.pi
 
-        return hits
+        # better idea - set obscuring rays to distance=0
+        # for item in self.obscured:
+        #     lower_angle = self.wrap(position.r + item[0], 0, 2.0 * math.pi)
+        #     upper_angle = self.wrap(position.r + item[1], 0, 2.0 * math.pi)
+        #     if lower_angle < upper_angle:
+        #         # zero the rays between the lines
+        #         cut = np.logical_and(hits[:, 1] > lower_angle, hits[:, 1] < upper_angle)
+        #     else:
+        #         # else obscured area crosses 0, zero the rays below the lower line and above the upper line
+        #         cut = np.logical_or(hits[:, 1] < lower_angle, hits[:, 1] > upper_angle)
+        #
+        #     hits[cut, 0] = 0
+
+        return hits[::-1, :]
 
     @staticmethod
     def wrap(number, floor, ceiling):

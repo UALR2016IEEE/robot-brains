@@ -1,8 +1,6 @@
 import navigation_platform.navigation as navlib
 import hardware.lidar
 import multiprocessing
-from utils.data_structures import Point3
-import types
 import asyncio
 
 
@@ -27,25 +25,33 @@ class Base(multiprocessing.Process):
 
     @staticmethod
     def nav_interface(nav: type, initial_position, position_queue: multiprocessing.Queue, sim_controller, halt: multiprocessing.Event, components: multiprocessing.Queue, actions: multiprocessing.Queue):
-        navigator = nav()
+        print('initial pos', initial_position)
+        navigator = nav(position=initial_position)
         lidar = hardware.lidar.Base(sim_controller)
         action = None
         navigator.set_position(initial_position)
+        no_action = False
         while not halt.is_set():
             while not components.empty():
                 navigator.add_component(*components.get())
             while not actions.empty():
                 action = actions.get()
             if action is None:
-                estimated_position = navigator.get_position()
+                # dxy, dr, dt
+                estimates = 0, 0, 0
+                if not no_action:
+                    no_action = True
+                    print('no action', navigator.get_position())
+                    navigator.save_map()
+                    halt.set()
             else:
-                estimated_position = action.estimate_position(navigator.get_position())
-            print('getting lidar data')
-            print(estimated_position)
-            lidar_data = lidar.scan(estimated_position)
-            print('running slam')
-            navigator.run_components(lidar_data, estimated_position)
-            print('outputting data')
+                if not action.started:
+                    action.start()
+                estimates = action.estimate(navigator.get_position())
+                if action.complete:
+                    action = None
+            lidar_data = lidar.scan(navigator.get_position())
+            navigator.run_components(lidar_data, estimates)
             position_queue.put(navigator.get_position())
 
     @asyncio.coroutine
@@ -70,4 +76,3 @@ class Base(multiprocessing.Process):
 
 class Controller:
     pass
-

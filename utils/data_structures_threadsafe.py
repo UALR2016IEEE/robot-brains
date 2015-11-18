@@ -24,7 +24,10 @@ class Point2:
         self._y.value = value
 
     def distance(self, other):
-        return math.sqrt((self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y))
+        return math.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
+
+    def magnitude(self):
+        return math.sqrt(self.x ** 2 + self.y ** 2)
 
     def pickle(self):
         return {
@@ -90,7 +93,10 @@ class Point3:
         self._r.value = value
 
     def distance(self, other):
-        return math.sqrt((self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y))
+        return math.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
+
+    def magnitude(self):
+        return math.sqrt(self.x ** 2 + self.y ** 2)
 
     def pickle(self):
         return {

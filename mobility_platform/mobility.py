@@ -1,11 +1,15 @@
-from time import time
+import time
 from utils import Point3
+import math
+import copy
 
 
 class Base:
     def __init__(self, profile, cid: str=None):
         self._current_task = None
         self.profile = profile
+        self.velocity = Point3()
+        self.acceleration = Point3()
 
     @property
     def current_task(self):
@@ -16,7 +20,7 @@ class Base:
         self._current_task = task
         self.sendtask()
 
-    def exec_arc(self, r: float, angle: float=None, arcl: float=None):
+    def exec_arc(self, r: float, angle: float=None, arcl: float=None, stop=True):
         nang = angle is not None
         narc = arcl is not None
         if nang and narc:
@@ -27,26 +31,26 @@ class Base:
         if narc:
             angle = self._calc_angle(nang)
 
-        self.current_task = Action(self.profile, arc_angle=angle, line=r)
+        self.current_task = Action(self.profile, self.velocity, self.acceleration, arc_angle=angle, line=r, stop=stop)
         return self.current_task
 
     def _calc_angle(self, arcl: float) -> float:
         pass
         # return angle
 
-    def exec_line(self, l: float):
-        self.current_task = Action(self.profile, line=l)
+    def exec_line(self, l: float, stop=True):
+        self.current_task = Action(self.profile, self.velocity, self.acceleration, line=l, stop=stop)
         return self.current_task
 
-    def rotate(self, angle: float):
-        self.current_task = Action(self.profile, angle=angle)
+    def rotate(self, angle: float, stop=True):
+        self.current_task = Action(self.profile, self.velocity, self.acceleration, angle=angle, stop=stop)
         return self.current_task
 
-    def exec_suicide_line(self, line: float, angle: float):
-        self.current_task = Action(self.profile, angle=angle, line=line)
+    def exec_suicide_line(self, line: float, angle: float, stop=True):
+        self.current_task = Action(self.profile, self.velocity, self.acceleration, angle=angle, line=line, stop=stop)
         return self.current_task
 
-    def exec_suicide_arc(self, r: float, end_angle: float, arc_angle: float=None, arc_len: float=None):
+    def exec_suicide_arc(self, r: float, end_angle: float, arc_angle: float=None, arc_len: float=None, stop=True):
         nang = arc_angle is not None
         narc = arc_len is not None
         if nang and narc:
@@ -56,7 +60,7 @@ class Base:
 
         if narc:
             arc_angle = self._calc_angle(nang)
-        self.current_task = Action(self.profile, r, end_angle, arc_angle)
+        self.current_task = Action(self.profile, self.velocity, self.acceleration, r, end_angle, arc_angle, stop=stop)
 
     def sendtask(self):
         self.current_task.start()
@@ -67,7 +71,7 @@ class Mobility:
 
 
 class Action:
-    def __init__(self, profile: dict, line: float=None, angle: float=None, arc_angle: float=None):
+    def __init__(self, profile: dict, velocity, acceleration, line: float=None, angle: float=None, arc_angle: float=None, stop=True):
         """
         passing only line is a line action
         passing only angle is rotate
@@ -83,19 +87,53 @@ class Action:
                 " ".join(a for a, m in zip(('line', 'angle', 'arc angle'), argmask) if m)))
 
         self.start_time = None
+        self.current_time = None
 
         self.line = line
         self.angle = angle
         self.arc_angle = arc_angle
+        self.stop = stop  # whether to stop at the end of an action or not
+
+        self.velocity = velocity
+        self.acceleration = acceleration
 
         self.profile = profile
 
+        self.started = False
+        self.complete = False
+        self.distance = 0
+
     def start(self):
-        self.start_time = time()
+        if not self.started:
+            self.started = True
+            self.start_time = time.time()
+            self.current_time = self.start_time
 
     def estimate_progress(self):
         return 0
 
-    def estimate_position(self, initial_pos: Point3):
-        prog = self.estimate_progress()
-        return initial_pos
+    def estimate(self, initial_pos: Point3):
+        # prog = self.estimate_progress()
+
+        if not self.started:
+            return 0, 0, 0
+
+        if self.line:
+
+            self.velocity.x = self.profile['top lateral speed'] * math.cos(initial_pos.r)
+            self.velocity.y = self.profile['top lateral speed'] * math.sin(initial_pos.r)
+
+            self.distance += self.velocity.magnitude() * (time.time() - self.current_time)
+
+            if self.distance > self.line:
+                print('distance reached')
+                if self.stop:
+                    print('zeroing velocity')
+                    self.velocity.x = 0
+                    self.velocity.y = 0
+                self.complete = True
+
+        dt = time.time() - self.current_time
+        self.current_time = time.time()
+
+        return self.velocity.magnitude() * 2.54 * dt, self.velocity.r, dt

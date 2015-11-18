@@ -1,7 +1,7 @@
 {
     "robot characteristics": {
-        "acceleration":         "2",
-        "deceleration":         "2",
+        "acceleration":         2,
+        "deceleration":         2,
         "top lateral speed":    4,
         "top rotational speed": 20,
         "note": {

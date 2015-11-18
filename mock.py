@@ -1,6 +1,4 @@
 import json
-
-import navigation_platform
 from mobility_platform.mobility import Base as Mobility
 from navigation_platform.controller import Base as NavControl
 from navigation_platform.navigation import Base as Navigation
@@ -13,11 +11,11 @@ from utils.data_structures import Point3
 
 
 def mm2pix(mm):
-    return int(mm / (2.4384 * 2000. / 960))
+    return int(mm / (2.8 * 1000. / 960))
 
 
-def mock():
-    mode = 'kori'
+def mock(render=False):
+    mode = 'zach'
     print('mocking mode', mode)
 
     position = Point3(100, 440, math.radians(270))
@@ -43,98 +41,113 @@ def mock():
         from breezyslam.components import Laser
         from PIL import Image
 
-        io = status_io.client.IOHandler()
-        io.start('localhost', 9998)
+        if render:
+            io = status_io.client.IOHandler()
+            io.start('localhost', 9998)
 
         # generate map
         sim_controller = simulate.controller.Controller(position)
         sim_controller.init_grid()
 
         # send the map to the server
-        io.send_data(('grid-colors', sim_controller.grid.get_pygame_grid()))
-        io.send_data(('robot-pos', position))
+        if render:
+            io.send_data(('grid-colors', sim_controller.grid.get_pygame_grid()))
+            io.send_data(('robot-pos', position))
 
         lidar = hardware.lidar.Base(sim_controller)
-
-        laser = Laser(360, 5.5, 360, 6000, 70)
-
-        mapbytes = bytearray(960 * 960)
-
-        slam = RMHC_SLAM(laser, 960, 2.4384 * 2)
+        laser = Laser(360, 5.5, 360, 6000)
+        slam = RMHC_SLAM(laser, 960, 2.8, map_quality=10, sigma_xy_mm=100, sigma_theta_degrees=20, max_search_iter=1000, init_x=position.x / 960, init_y=position.y / 960, init_r=90, hole_width_mm=100)
 
         trajectory = []
 
+        print('step 1/7')
+
         for i in range(625):
-            if not io.halt:
-                position.y += 1
-                scan = lidar.scan(position)
-                slam.update((scan[:, 0] * 2.54).tolist(), (2.54, 0, 0.1))
-                x, y, theta = slam.getpos()
-                trajectory.append((x, y))
+            position.y += 1
+            scan = lidar.scan(position)
+            slam.update((scan[:, 0] * 2.54).tolist(), (2.54, 0, 0.1))
+            x, y, theta = slam.getpos()
+            trajectory.append((x, y))
+            if render:
                 io.send_data(('robot-pos', position))
                 io.send_data(('lidar-points', (position, scan)))
 
+        print('step 2/7')
+
         for i in range(45):
-            if not io.halt:
-                position.r -= math.radians(2)
-                scan = lidar.scan(position)
-                slam.update((scan[:, 0] * 2.54).tolist(), (0, -2, 0.1))
-                x, y, theta = slam.getpos()
-                trajectory.append((x, y))
+            position.r -= math.radians(2)
+            scan = lidar.scan(position)
+            slam.update((scan[:, 0] * 2.54).tolist(), (0, -2, 0.1))
+            x, y, theta = slam.getpos()
+            trajectory.append((x, y))
+            if render:
                 io.send_data(('robot-pos', position))
                 io.send_data(('lidar-points', (position, scan)))
+
+        print('step 3/7')
 
         for i in range(250):
-            if not io.halt:
-                position.x -= 1
-                scan = lidar.scan(position)
-                slam.update((scan[:, 0] * 2.54).tolist(), (2.54, 0, 0.1))
-                x, y, theta = slam.getpos()
-                trajectory.append((x, y))
+            position.x -= 1
+            scan = lidar.scan(position)
+            slam.update((scan[:, 0] * 2.54).tolist(), (2.54, 0, 0.1))
+            x, y, theta = slam.getpos()
+            trajectory.append((x, y))
+            if render:
                 io.send_data(('robot-pos', position))
                 io.send_data(('lidar-points', (position, scan)))
+
+        print('step 4/7')
 
         for i in range(45):
-            if not io.halt:
-                position.r += math.radians(2)
-                scan = lidar.scan(position)
-                slam.update((scan[:, 0] * 2.54).tolist(), (0, 2, 0.1))
-                x, y, theta = slam.getpos()
-                trajectory.append((x, y))
+            position.r += math.radians(2)
+            scan = lidar.scan(position)
+            slam.update((scan[:, 0] * 2.54).tolist(), (0, 2, 0.1))
+            x, y, theta = slam.getpos()
+            trajectory.append((x, y))
+            if render:
                 io.send_data(('robot-pos', position))
                 io.send_data(('lidar-points', (position, scan)))
 
+        print('step 5/7')
+
         for i in range(125):
-            if not io.halt:
-                position.y += 1
-                scan = lidar.scan(position)
-                slam.update((scan[:, 0] * 2.54).tolist(), (2.54, 0, 0.1))
-                x, y, theta = slam.getpos()
-                trajectory.append((x, y))
+            position.y += 1
+            scan = lidar.scan(position)
+            slam.update((scan[:, 0] * 2.54).tolist(), (2.54, 0, 0.1))
+            x, y, theta = slam.getpos()
+            trajectory.append((x, y))
+            if render:
                 io.send_data(('robot-pos', position))
                 io.send_data(('lidar-points', (position, scan)))
+
+        print('step 6/7')
 
         for i in range(45):
-            if not io.halt:
-                position.r -= math.radians(2)
-                scan = lidar.scan(position)
-                slam.update((scan[:, 0] * 2.54).tolist(), (0, -2, 0.1))
-                x, y, theta = slam.getpos()
-                trajectory.append((x, y))
+            position.r -= math.radians(2)
+            scan = lidar.scan(position)
+            slam.update((scan[:, 0] * 2.54).tolist(), (0, -2, 0.1))
+            x, y, theta = slam.getpos()
+            trajectory.append((x, y))
+            if render:
                 io.send_data(('robot-pos', position))
                 io.send_data(('lidar-points', (position, scan)))
+
+        print('step 7/7')
 
         for i in range(125):
-            if not io.halt:
-                position.x -= 1
-                scan = lidar.scan(position)
-                slam.update((scan[:, 0] * 2.54).tolist(), (2.54, 0, 0.1))
-                x, y, theta = slam.getpos()
-                trajectory.append((x, y))
+            position.x -= 1
+            scan = lidar.scan(position)
+            slam.update((scan[:, 0] * 2.54).tolist(), (2.54, 0, 0.1))
+            x, y, theta = slam.getpos()
+            trajectory.append((x, y))
+            if render:
                 io.send_data(('robot-pos', position))
                 io.send_data(('lidar-points', (position, scan)))
 
-        io.stop()
+        if render:
+            io.stop()
+
+        print('saving map to image')
 
         # Create a byte array to receive the computed maps
         mapbytes = bytearray(960 * 960)
@@ -153,7 +166,6 @@ def mock():
 
         # Save map and trajectory as PNG file
         image = Image.frombuffer('L', (960, 960), mapbytes, 'raw', 'L', 0, 1)
-        image = image.rotate(270)
 
         image.save('test_image.png')
 
