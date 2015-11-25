@@ -167,7 +167,7 @@ def mock(render=False):
         # Save map and trajectory as PNG file
         image = Image.frombuffer('L', (960, 960), mapbytes, 'raw', 'L', 0, 1)
 
-        image.save('test_image.png')
+        image.save('test_image_mock.png')
 
         # io commands
         # io.send_data(('grid-colors', controller.grid.get_position.ygame_grid())) // sends grid to server
