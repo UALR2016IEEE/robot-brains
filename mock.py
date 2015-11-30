@@ -10,12 +10,13 @@ import math
 from utils.data_structures import Point3
 
 
+# grid is 960 x 960 (96 inches, 2438 mm)
 def mm2pix(mm):
-    return int(mm / (2.8 * 1000. / 960))
+    return int(mm / (2.5 * 1000. / 960))
 
 
 def mock(render=False):
-    mode = 'zach'
+    mode = 'kori'
     print('mocking mode', mode)
 
     position = Point3(100, 440, math.radians(270))
@@ -38,7 +39,6 @@ def mock(render=False):
     elif mode == 'zach':
 
         from breezyslam.algorithms import RMHC_SLAM
-        from breezyslam.components import Laser
         from PIL import Image
 
         if render:
@@ -55,8 +55,8 @@ def mock(render=False):
             io.send_data(('robot-pos', position))
 
         lidar = hardware.lidar.Base(sim_controller)
-        laser = Laser(360, 5.5, 360, 6000)
-        slam = RMHC_SLAM(laser, 960, 2.8, map_quality=10, sigma_xy_mm=100, sigma_theta_degrees=20, max_search_iter=1000, init_x=position.x / 960, init_y=position.y / 960, init_r=90, hole_width_mm=100)
+        laser = lidar.get_laser()
+        slam = RMHC_SLAM(laser, 960, 2.5, map_quality=10, sigma_xy_mm=100, sigma_theta_degrees=20, max_search_iter=1000, init_x=position.x / 960, init_y=position.y / 960, init_r=90, hole_width_mm=100)
 
         trajectory = []
 
@@ -65,7 +65,7 @@ def mock(render=False):
         for i in range(625):
             position.y += 1
             scan = lidar.scan(position)
-            slam.update((scan[:, 0] * 2.54).tolist(), (2.54, 0, 0.1))
+            slam.update((scan[:, 0]).tolist(), (2.54, 0, 0.1))
             x, y, theta = slam.getpos()
             trajectory.append((x, y))
             if render:
@@ -77,7 +77,7 @@ def mock(render=False):
         for i in range(45):
             position.r -= math.radians(2)
             scan = lidar.scan(position)
-            slam.update((scan[:, 0] * 2.54).tolist(), (0, -2, 0.1))
+            slam.update((scan[:, 0]).tolist(), (0, -2, 0.1))
             x, y, theta = slam.getpos()
             trajectory.append((x, y))
             if render:
@@ -89,7 +89,7 @@ def mock(render=False):
         for i in range(250):
             position.x -= 1
             scan = lidar.scan(position)
-            slam.update((scan[:, 0] * 2.54).tolist(), (2.54, 0, 0.1))
+            slam.update((scan[:, 0]).tolist(), (2.54, 0, 0.1))
             x, y, theta = slam.getpos()
             trajectory.append((x, y))
             if render:
@@ -101,7 +101,7 @@ def mock(render=False):
         for i in range(45):
             position.r += math.radians(2)
             scan = lidar.scan(position)
-            slam.update((scan[:, 0] * 2.54).tolist(), (0, 2, 0.1))
+            slam.update((scan[:, 0]).tolist(), (0, 2, 0.1))
             x, y, theta = slam.getpos()
             trajectory.append((x, y))
             if render:
@@ -113,7 +113,7 @@ def mock(render=False):
         for i in range(125):
             position.y += 1
             scan = lidar.scan(position)
-            slam.update((scan[:, 0] * 2.54).tolist(), (2.54, 0, 0.1))
+            slam.update((scan[:, 0]).tolist(), (2.54, 0, 0.1))
             x, y, theta = slam.getpos()
             trajectory.append((x, y))
             if render:
@@ -125,7 +125,7 @@ def mock(render=False):
         for i in range(45):
             position.r -= math.radians(2)
             scan = lidar.scan(position)
-            slam.update((scan[:, 0] * 2.54).tolist(), (0, -2, 0.1))
+            slam.update((scan[:, 0]).tolist(), (0, -2, 0.1))
             x, y, theta = slam.getpos()
             trajectory.append((x, y))
             if render:
@@ -137,7 +137,7 @@ def mock(render=False):
         for i in range(125):
             position.x -= 1
             scan = lidar.scan(position)
-            slam.update((scan[:, 0] * 2.54).tolist(), (2.54, 0, 0.1))
+            slam.update((scan[:, 0]).tolist(), (2.54, 0, 0.1))
             x, y, theta = slam.getpos()
             trajectory.append((x, y))
             if render:

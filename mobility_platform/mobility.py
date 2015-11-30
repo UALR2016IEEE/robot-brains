@@ -115,15 +115,18 @@ class Action:
     def estimate(self, initial_pos: Point3):
         # prog = self.estimate_progress()
 
+        print('intiial', initial_pos)
+
         if not self.started:
             return 0, 0, 0
+
+        dt = time.time() - self.current_time
 
         if self.line:
 
             self.velocity.x = self.profile['top lateral speed'] * math.cos(initial_pos.r)
             self.velocity.y = self.profile['top lateral speed'] * math.sin(initial_pos.r)
-
-            self.distance += self.velocity.magnitude() * (time.time() - self.current_time)
+            self.distance += self.velocity.magnitude() * dt
 
             if self.distance > self.line:
                 print('distance reached')
@@ -133,7 +136,6 @@ class Action:
                     self.velocity.y = 0
                 self.complete = True
 
-        dt = time.time() - self.current_time
         self.current_time = time.time()
 
         return self.velocity.magnitude() * 2.54 * dt, self.velocity.r, dt

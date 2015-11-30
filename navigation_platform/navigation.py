@@ -10,7 +10,7 @@ class Base:
         self.components = {}
         self.position = position
         self.laser = Laser(360, 5.5, 360, 6000)
-        self.slam_object = RMHC_SLAM(self.laser, 960, 2.8, map_quality=10, sigma_xy_mm=100, sigma_theta_degrees=20, max_search_iter=1000, init_x=self.position.x / 960, init_y=self.position.y / 960, init_r=math.degrees(self.position.r), hole_width_mm=100)
+        self.slam_object = RMHC_SLAM(self.laser, 960, 2.438, map_quality=10, sigma_xy_mm=100, sigma_theta_degrees=20, max_search_iter=1000, init_x=self.position.x / 960, init_y=self.position.y / 960, init_r=math.degrees(self.position.r), hole_width_mm=100)
         self.trajectory = []
 
     def set_position(self, point: Point3):
@@ -45,14 +45,14 @@ class Base:
     def slam(self):
         while True:
             lidar, estimated_velocity = yield
-            self.slam_object.update((lidar[:, 0] * 2.54).tolist(), estimated_velocity)
+            self.slam_object.update((lidar[:, 0]).tolist(), estimated_velocity)
             self.position.x, self.position.y, self.position.r = self.slam_object.getpos()
             self.position.r = math.radians(self.position.r)
             self.trajectory.append((self.position.x, self.position.y))
             # convert back from mm to tenths of an inch (grid units)
             self.position.x /= 2.54
             self.position.y /= 2.54
-            print('slam pos', self.position)
+            print('slam pos', self.position, 'estimates', estimated_velocity)
 
     def add_component(self, name: str, func: types.FunctionType):
         self.components[name] = func(self)
@@ -68,7 +68,7 @@ class Base:
 
     @staticmethod
     def mm2pix(mm):
-        return int(mm / (2.8 * 1000. / 960))
+        return int(mm / (2.438 * 1000. / 960))
 
 
 class Navigation(Base):

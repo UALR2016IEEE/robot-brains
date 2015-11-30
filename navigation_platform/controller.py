@@ -34,6 +34,7 @@ class Base(multiprocessing.Process):
         while not halt.is_set():
             while not components.empty():
                 navigator.add_component(*components.get())
+            lidar_data = lidar.scan(navigator.get_position())
             while not actions.empty():
                 action = actions.get()
             if action is None:
@@ -50,7 +51,6 @@ class Base(multiprocessing.Process):
                 estimates = action.estimate(navigator.get_position())
                 if action.complete:
                     action = None
-            lidar_data = lidar.scan(navigator.get_position())
             navigator.run_components(lidar_data, estimates)
             position_queue.put(navigator.get_position())
 

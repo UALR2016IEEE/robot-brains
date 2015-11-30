@@ -39,12 +39,6 @@ class Base:
 
         # controller provides the simulated map
         self.sim_controller = sim_controller
-        self.map = np.ndarray(shape=(960, 960))
-
-        # load the simulated map
-        self._load_map()
-
-    def _load_map(self):
         self.map = self.sim_controller.get_grid_data()
 
     def get_laser(self):
@@ -67,7 +61,7 @@ class Base:
         rays = np.ndarray(shape=(snaps, 3))
         rays[:, 0] = position.y
         rays[:, 1] = position.x
-        rays[:, 2] = np.linspace(cr, cr + self.angle_range, snaps) % (2.0 * np.pi)
+        rays[:, 2] = np.linspace(cr + self.angle_range, cr, snaps) % (2.0 * np.pi)
 
         # preallocate results array
         hits = np.ndarray(shape=(rays.shape[0], 3))
@@ -83,8 +77,8 @@ class Base:
             rays[not_hit, 1] += delta_x[not_hit]  # but cheat a bit and use 2.0 * delta to make things a bit faster
             not_hit = np.in1d(self.map[rays[:, 0].astype(int), rays[:, 1].astype(int)], self.non_blocking)
 
-        # map results to hits array
-        hits[:, 0] = np.sqrt(np.square((rays[:, 1] - position.x)) + np.square((rays[:, 0] - position.y)))
+        # map results to hits array [distances must be in mm, so multiply by 2.54]
+        hits[:, 0] = np.sqrt(np.square((rays[:, 1] - position.x)) + np.square((rays[:, 0] - position.y))) * 2.54
         hits[:, 1] = (rays[:, 2] - position.r)
         hits[:, 2] = 1.0  # all the data is perfect - yay
 
@@ -107,7 +101,7 @@ class Base:
                 cut = np.logical_or(hits[:, 1] < upper_angle, hits[:, 1] > lower_angle)
             hits[cut, 0] = 0
 
-        return hits[::-1, :]
+        return hits
 
     @staticmethod
     def wrap(number, floor, ceiling):
