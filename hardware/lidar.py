@@ -1,14 +1,28 @@
 import asyncio
+import queue
+import struct
+
 import numpy as np
 import math
 import random
+
+import serial
+import time
+
 from utils.data_structures import Point3
 import breezyslam.components
+import hardware.constants as const
 
 
 class Base:
-    def __init__(self, sim_controller):
+    def __init__(self, controller, hw_addr=None):
+        self._lidar = None
+        self.build_lidar(controller, hw_addr)
 
+    def build_lidar(self, controller, hw_addr):
+        self.build_simultor(controller)
+
+    def build_simultor(self, sim_controller):
         # set sensor properties
         self.angle_range = math.radians(360)
         self.resolution = math.radians(1)
@@ -120,3 +134,57 @@ class Base:
         def closure():
             while True:
                 yield from asyncio.sleep(1 / 5.5)
+
+
+class Lidar(Base):
+    def write(self, cmd):
+        self._lidar.write(self.attach_header(cmd))
+
+    def read(self, size):
+        return self._lidar.read(size)
+
+    def read_header(self):
+        header = self.read(7)
+        assert len(header) == 7
+        header1, header2, payload_len_w_m, r_type = struct.unpack("!BBIB", header)
+        assert header1 == 0xA5
+        assert header2 == 0x5A
+        assert const.DataTypes.member_of(r_type)
+        payload_len = payload_len_w_m >> 2
+        r_mode = payload_len_w_m & 0b11
+        return payload_len, r_mode, r_type
+
+    @staticmethod
+    def attach_header(cmd):
+        return struct.pack('!BB', 0xA5, cmd)
+
+    def reset(self):
+        self.write(const.Commands.Reset)
+        time.sleep(0.001)
+
+    def self_test(self):
+        self.write(const.Commands.Health)
+        health_len, r_mode, r_type = self.read_header()
+        assert health_len == 3
+        assert r_mode == const.Modes.Single
+        assert r_type == 0x06
+        health, ecode = struct.unpack("!BH", self.read(health_len))
+        return health == 0
+
+    def get_info(self):
+        self.write(const.Commands.Info)
+        info_len, r_mode, r_type = self.read_header()
+        assert info_len == 20
+        assert r_type == 4
+        model, firware_minor, firmware_major, hardware, serial = struct.unpack("!BBBB16p")
+        return model, firware_minor, firmware_major, hardware, serial
+
+
+    def build_lidar(self, controller, hw_addr):
+        self.connect(hw_addr)
+
+    def connect(self, hw_addr: str):
+        self._lidar = serial.Serial(hw_addr,
+                                           baudrate=115200,
+                                           timeout=20)
+
