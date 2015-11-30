@@ -139,17 +139,16 @@ class Lidar(Base):
     def read_header(self):
         header = self.read(7)
         assert len(header) == 7
-        header1, header2, payload_len_w_m, r_type = struct.unpack("!BBIB", header)
+        header1, header2, payload_len_w_m, r_type = struct.unpack("<BBIB", header)
         assert header1 == 0xA5
         assert header2 == 0x5A
-        assert const.DataTypes.member_of(r_type)
-        payload_len = payload_len_w_m >> 2
-        r_mode = payload_len_w_m & 0b11
+        payload_len = payload_len_w_m & 0x3FFFFFFF
+        r_mode = (payload_len_w_m &     0xC0000000) >> 30
         return payload_len, r_mode, r_type
 
     @staticmethod
     def attach_header(cmd):
-        return struct.pack('!BB', 0xA5, cmd)
+        return struct.pack('<BB', 0xA5, cmd)
 
     def reset(self):
         self.write(const.Commands.Reset)
@@ -158,18 +157,20 @@ class Lidar(Base):
     def self_test(self):
         self.write(const.Commands.Health)
         health_len, r_mode, r_type = self.read_header()
+        payload = self.read(health_len)
         assert health_len == 3
         assert r_mode == const.Modes.Single
         assert r_type == 0x06
-        health, ecode = struct.unpack("!BH", self.read(health_len))
+        health, ecode = struct.unpack("<BH", payload)
         return health == 0
 
     def get_info(self):
         self.write(const.Commands.Info)
         info_len, r_mode, r_type = self.read_header()
+        payload = self.read(info_len)
         assert info_len == 20
         assert r_type == 4
-        model, firware_minor, firmware_major, hardware, serial = struct.unpack("!BBBB16p")
+        model, firware_minor, firmware_major, hardware, serial = struct.unpack("<BBBB16p", payload)
         return model, firware_minor, firmware_major, hardware, serial
 
 
@@ -181,3 +182,8 @@ class Lidar(Base):
                                            baudrate=115200,
                                            timeout=20)
 
+    def disconnect(self):
+        self._lidar.close()
+
+    def __del__(self):
+        self.disconnect()

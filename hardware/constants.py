@@ -22,12 +22,12 @@ class Commands:
     def get_command(value):
         return Commands.__dict__[value]
 
-    Start_Scan = b"\x20"
-    Force_Scan = b"\x21"
-    Health = b"\x51"
-    Stop_Scan = b"\x25"
-    Reset = b"\x40"
-    Info = b"0x50"
+    Start_Scan = 0x20
+    Force_Scan = 0x21
+    Health = 0x52
+    Stop_Scan = 0x25
+    Reset = 0x40
+    Info = 0x50
 
 
 Start_Flag = 0xA5
