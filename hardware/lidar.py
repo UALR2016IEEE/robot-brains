@@ -30,7 +30,9 @@ class Base:
 
         # set sensor obscure ranges : [(obscure_center, obscure_range_from_center)]
         self.obscured = []
-        for item in [(45, 17.5), (135, 17.5), (225, 17.5), (315, 17.5)]:
+        # for item in [(45, 7), (135, 7), (225, 7), (315, 7)]:
+        #     self.obscured.append((self.wrap(math.radians(item[0]) - math.radians(item[1]), 0, 2.0 * math.pi), self.wrap(math.radians(item[0]) + math.radians(item[1]), 0, 2.0 * math.pi)))
+        for item in [(60, 7), (180, 7), (300, 7)]:
             self.obscured.append((self.wrap(math.radians(item[0]) - math.radians(item[1]), 0, 2.0 * math.pi), self.wrap(math.radians(item[0]) + math.radians(item[1]), 0, 2.0 * math.pi)))
 
         self.non_blocking = [0, 12]  # refer to grid element ids : set 0 (floor) and 12 (start-box) to be non-blocking elements
@@ -67,16 +69,6 @@ class Base:
         rays[:, 1] = position.x
         rays[:, 2] = np.linspace(cr, cr + self.angle_range, snaps) % (2.0 * np.pi)
 
-        # remove the rays that will be obscured
-        # for item in self.obscured:
-        #     # check to see if the obscured item crosses the angle-0 line
-        #     if self.wrap(position.r + item[0], 0, 2.0 * math.pi) > self.wrap(position.r + item[1], 0, 2.0 * math.pi):
-        #         # if obscured area crosses 0, keep the rays between the upper and lower lines
-        #         rays = rays[np.logical_and(rays[:, 2] < self.wrap(position.r + item[0], 0, 2.0 * math.pi), rays[:, 2] > self.wrap(position.r + item[1], 0, 2.0 * math.pi))]
-        #     else:
-        #         # else keep the rays below the lower line and above the upper line
-        #         rays = rays[np.logical_or(rays[:, 2] < self.wrap(position.r + item[0], 0, 2.0 * math.pi), rays[:, 2] > self.wrap(position.r + item[1], 0, 2.0 * math.pi))]
-
         # preallocate results array
         hits = np.ndarray(shape=(rays.shape[0], 3))
 
@@ -97,21 +89,23 @@ class Base:
         hits[:, 2] = 1.0  # all the data is perfect - yay
 
         # make sure the angles are properly bounded
-        hits[hits[:, 1] > 2.0 * math.pi, 1] -= 2.0 * math.pi
-        hits[hits[:, 1] < 0, 1] += 2.0 * math.pi
+        while np.any(hits[hits[:, 1] > 2.0 * math.pi, 1]):
+            hits[hits[:, 1] > 2.0 * math.pi, 1] -= 2.0 * math.pi
+
+        while np.any(hits[hits[:, 1] < 0, 1]):
+            hits[hits[:, 1] < 0, 1] += 2.0 * math.pi
 
         # better idea - set obscuring rays to distance=0
-        # for item in self.obscured:
-        #     lower_angle = self.wrap(position.r + item[0], 0, 2.0 * math.pi)
-        #     upper_angle = self.wrap(position.r + item[1], 0, 2.0 * math.pi)
-        #     if lower_angle < upper_angle:
-        #         # zero the rays between the lines
-        #         cut = np.logical_and(hits[:, 1] > lower_angle, hits[:, 1] < upper_angle)
-        #     else:
-        #         # else obscured area crosses 0, zero the rays below the lower line and above the upper line
-        #         cut = np.logical_or(hits[:, 1] < lower_angle, hits[:, 1] > upper_angle)
-        #
-        #     hits[cut, 0] = 0
+        for item in self.obscured:
+            lower_angle = item[0]
+            upper_angle = item[1]
+            if lower_angle < upper_angle:
+                # zero the rays between the lines
+                cut = np.logical_and(hits[:, 1] > lower_angle, hits[:, 1] < upper_angle)
+            else:
+                # else obscured area crosses 0, zero the rays below the lower line and above the upper line
+                cut = np.logical_or(hits[:, 1] < upper_angle, hits[:, 1] > lower_angle)
+            hits[cut, 0] = 0
 
         return hits[::-1, :]
 
@@ -123,12 +117,11 @@ class Base:
         :param ceiling: upper bound
         :return: number between lower and upper bound
         """
-        if number < floor:
-            return number + ceiling
-        elif number > ceiling:
-            return math.fmod(number, ceiling)
-        else:
-            return number
+        while number < floor:
+            number += ceiling
+        while number > ceiling:
+            number -= ceiling
+        return number
 
     def __await__(self):
         def closure():
