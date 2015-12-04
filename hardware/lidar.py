@@ -7,7 +7,7 @@ import math
 import random
 
 import serial
-import time
+from time import sleep
 
 from utils.data_structures import Point3
 import breezyslam.components
@@ -146,9 +146,11 @@ class Lidar(Base):
 
     def reset(self):
         self.write(const.Commands.Reset)
-        time.sleep(0.001)
+        sleep(0.01)
+        self._lidar.flushInput()
 
     def self_test(self):
+        self._lidar.flushInput()
         self.write(const.Commands.Health)
         health_len, r_mode, r_type = self.read_header()
         payload = self.read(health_len)
@@ -159,22 +161,100 @@ class Lidar(Base):
         return health == 0
 
     def get_info(self):
+        self._lidar.flushInput()
         self.write(const.Commands.Info)
         info_len, r_mode, r_type = self.read_header()
         payload = self.read(info_len)
         assert info_len == 20
         assert r_type == 4
-        model, firware_minor, firmware_major, hardware, serial = struct.unpack("<BBBB16p", payload)
-        return model, firware_minor, firmware_major, hardware, serial
+        model, firware_minor, firmware_major, hardware, *sn = struct.unpack("<BBBB16s", payload)
+        return model, firware_minor, firmware_major, hardware, sn
 
+    def stop(self):
+        self.write(const.Commands.Stop_Scan)
+
+    def scanner(self):
+        yield
+        self._lidar.flushInput()
+        self.write(const.Commands.Stop_Scan)
+        sleep(0.1)
+        self.write(const.Commands.Start_Scan)
+        info_len, r_mode, r_type = self.read_header()
+        assert info_len == 5
+        assert r_type == 0x81
+        assert r_mode == 1
+        for i in range(100):
+            if self._lidar.inWaiting() < info_len:
+                sleep(0.01)
+            else:
+                break
+        else:
+            raise TimeoutError("No data recieved from lidar")
+        payload = self.read(info_len)
+        quality, angle, distance, start = self._unpack_scan(payload)
+        assert start
+        angles = [angle]
+        qualities = [quality]
+        distances = [distance]
+        try:
+            while True:
+                if self._lidar.inWaiting() >= info_len:
+                    payload = self.read(info_len)
+                    quality, angle, distance, start = self._unpack_scan(payload)
+                    if start:
+                        self.write(const.Commands.Stop_Scan)
+                        return np.array((angles, qualities, distances))
+                    angles.append(angle)
+                    distances.append(distance)
+                    qualities.append(quality)
+                else:
+                    yield
+        except GeneratorExit:
+            self.write(const.Commands.Stop_Scan)
+
+    def get_scan(self):
+        scanner = self.scanner()
+        try:
+            while True:
+                next(scanner)
+        except StopIteration as err:
+            return err.value
+        assert False
+
+    def _unpack_scan(self, payload):
+        quality, angle, distance = struct.unpack("<BHH", payload)
+        start_bit = quality & 0b1
+        not_start_bit = quality & 0b10
+        assert start_bit ^ not_start_bit
+        quality >>= 2
+        check = angle & 0b1
+        assert check
+        angle >>= 1
+        angle /= 64
+        distance /= 4
+        return quality, angle, distance, start_bit
 
     def build_lidar(self, controller, hw_addr):
         self.connect(hw_addr)
+        self._lidar.flushInput()
 
     def connect(self, hw_addr: str):
         self._lidar = serial.Serial(hw_addr,
-                                           baudrate=115200,
-                                           timeout=20)
+                                    baudrate=115200,
+                                    timeout=20,
+                                    dsrdtr=False
+                                    )
+        self._lidar.setDTR(0)
+        for i in range(5):
+            try:
+                if not self.self_test():
+                    raise IOError("Could not communicate with Lidar")
+            except Exception as err:
+                pass
+            else:
+                break
+        else:
+            raise err
 
     def disconnect(self):
         self._lidar.close()
