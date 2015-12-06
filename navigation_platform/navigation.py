@@ -45,7 +45,7 @@ class Base:
     def slam(self):
         while True:
             lidar, estimated_velocity = yield
-            self.slam_object.update((lidar[:, 0]).tolist(), estimated_velocity)
+            self.slam_object.update((lidar[0, :]).tolist(), estimated_velocity)
             self.position.x, self.position.y, self.position.r = self.slam_object.getpos()
             self.position.r = math.radians(self.position.r)
             self.trajectory.append((self.position.x, self.position.y))

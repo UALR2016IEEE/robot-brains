@@ -101,7 +101,7 @@ class Base:
                 cut = np.logical_or(hits[:, 1] < upper_angle, hits[:, 1] > lower_angle)
             hits[cut, 0] = 0
 
-        return hits
+        return hits.T
 
     @staticmethod
     def wrap(number, floor, ceiling):
