@@ -125,10 +125,14 @@ class Base:
 
 class Lidar(Base):
     def write(self, cmd):
-        self._lidar.write(self.attach_header(cmd))
+        packet = self.attach_header(cmd)
+        # print("send: ", list(map(hex, packet)))
+        self._lidar.write(packet)
 
     def read(self, size):
-        return self._lidar.read(size)
+        packet = self._lidar.read(size)
+        # print("received: ", list(map(hex, packet)))
+        return packet
 
     def read_header(self):
         header = self.read(7)
@@ -172,12 +176,12 @@ class Lidar(Base):
 
     def stop(self):
         self.write(const.Commands.Stop_Scan)
+        sleep(0.1)
 
     def scanner(self):
         yield
+        self.stop()
         self._lidar.flushInput()
-        self.write(const.Commands.Stop_Scan)
-        sleep(0.1)
         self.write(const.Commands.Start_Scan)
         info_len, r_mode, r_type = self.read_header()
         assert info_len == 5
@@ -202,7 +206,7 @@ class Lidar(Base):
                     payload = self.read(info_len)
                     quality, angle, distance, start = self._unpack_scan(payload)
                     if start:
-                        self.write(const.Commands.Stop_Scan)
+                        self.stop()
                         return np.array((angles, qualities, distances))
                     angles.append(angle)
                     distances.append(distance)
@@ -210,7 +214,7 @@ class Lidar(Base):
                 else:
                     yield
         except GeneratorExit:
-            self.write(const.Commands.Stop_Scan)
+            self.stop()
 
     def get_scan(self):
         scanner = self.scanner()
