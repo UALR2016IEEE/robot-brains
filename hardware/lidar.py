@@ -206,8 +206,10 @@ class Lidar(Base):
                     payload = self.read(info_len)
                     quality, angle, distance, start = self._unpack_scan(payload)
                     if start:
-                        self.stop()
-                        return np.array((angles, qualities, distances))
+                        yield np.array((distances, np.deg2rad(angles), qualities))
+                        angles = []
+                        qualities = []
+                        distances = []
                     angles.append(angle)
                     distances.append(distance)
                     qualities.append(quality)
