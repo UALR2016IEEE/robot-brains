@@ -1,7 +1,7 @@
-import navigation_platform.navigation as navlib
-import hardware.lidar
-import multiprocessing
 import asyncio
+import multiprocessing
+
+import hardware.lidar
 
 
 class Base(multiprocessing.Process):
@@ -13,7 +13,7 @@ class Base(multiprocessing.Process):
         self.halt = multiprocessing.Event()
         self.components = multiprocessing.Queue()
         self.actions = multiprocessing.Queue()
-        self.navproc = multiprocessing.Process.__init__(self, target=self.nav_interface, args=(self.nav, self.sim_controller.position, self.pos, self.sim_controller, self.halt, self.components, self.actions))
+        self.nav_process = multiprocessing.Process.__init__(self, target=self.nav_interface, args=(self.nav, self.sim_controller.position, self.pos, self.sim_controller, self.halt, self.components, self.actions))
         self.current_action = None
 
     def start(self):
@@ -74,5 +74,5 @@ class Base(multiprocessing.Process):
         self.actions.put(action)
 
 
-class Controller:
+class Controller(object):
     pass

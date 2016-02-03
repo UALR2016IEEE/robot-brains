@@ -1,7 +1,7 @@
 import multiprocessing.connection
 
 
-class IOHandler:
+class IOHandler(object):
     def __init__(self):
         self.host, self.port = 'localhost', 9998
         self.client = None

@@ -1,11 +1,10 @@
-__author__ = 'StaticVOiDance'
-
-class DataTypes:
+class DataTypes(object):
     @staticmethod
     def member_of(data):
         return data in DataTypes.__dict__.values()
 
-class Modes:
+
+class Modes(object):
     @staticmethod
     def get_mode(value):
         return Modes.__dict__[value]
@@ -17,7 +16,8 @@ class Modes:
     Single = 0x00
     Multiple = 0x01
 
-class Commands:
+
+class Commands(object):
     @staticmethod
     def get_command(value):
         return Commands.__dict__[value]

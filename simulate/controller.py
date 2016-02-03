@@ -2,7 +2,7 @@ from .grid import Grid
 from utils.data_structures import Point3
 
 
-class Controller:
+class Controller(object):
     def __init__(self, position: Point3):
         self.grid = Grid()
         self.position = position
