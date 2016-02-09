@@ -1,11 +1,11 @@
 import asyncio
-from mobility_platform.mobility import Base as mobbase
-from navigation_platform.controller import Base as navbase
+from mobility_platform.mobility import Base as mob_base
+from navigation_platform.controller import Base as nav_base
 from utils import Point3
 
 
 class Controller:
-    def __init__(self, nav_plat: navbase, mob_plat: mobbase):
+    def __init__(self, nav_plat: nav_base, mob_plat: mob_base):
         self.nav = nav_plat
         self.mob = mob_plat
         self.local = Point3()

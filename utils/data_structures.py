@@ -1,7 +1,7 @@
 import math
 
 
-class Point2:
+class Point2(object):
     def __init__(self, y=0, x=0):
         self._y = y
         self._x = x
@@ -61,7 +61,7 @@ class Point2:
         yield self.x
 
 
-class Point3:
+class Point3(object):
     def __init__(self, y=0, x=0, r=0):
         self._y = y
         self._x = x

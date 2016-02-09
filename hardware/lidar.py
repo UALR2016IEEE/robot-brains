@@ -1,28 +1,27 @@
 import asyncio
-import queue
-import struct
-
-import numpy as np
 import math
 import random
-
 import serial
+import struct
 from time import sleep
+from typing import Union
 
-from utils.data_structures import Point3
 import breezyslam.components
+import numpy as np
+
 import hardware.constants as const
+from utils.data_structures import Point3
 
 
-class Base:
+class Base(object):
     def __init__(self, controller, hw_addr=None):
         self._lidar = None
         self.build_lidar(controller, hw_addr)
 
     def build_lidar(self, controller, hw_addr):
-        self.build_simultor(controller)
+        self.build_simulator(controller)
 
-    def build_simultor(self, sim_controller):
+    def build_simulator(self, sim_controller):
         # set sensor properties
         self.angle_range = math.radians(360)
         self.resolution = math.radians(1)
@@ -41,14 +40,18 @@ class Base:
         self.sim_controller = sim_controller
         self.map = self.sim_controller.get_grid_data()
 
-    def get_laser(self):
+    @staticmethod
+    def get_laser() -> breezyslam.components.Laser:
+        """Returns the breezyslam.components.Laser that Lidar class uses
+        :return: breezyslam.components.Laser: laser properties - scan_size, scan_rate_hz, detection_angle_degrees, distance_no_detection_mm
+        """
         # laser properties - scan_size, scan_rate_hz, detection_angle_degrees, distance_no_detection_mm
         return breezyslam.components.Laser(360, 5.5, 360, 6000)
 
     def scan(self, position: Point3) -> np.ndarray:
-        """
-        :param position: Point3 for y, x, r values
-        :return: np.ndarray of hits
+        """Performs a scan simulation from a given point
+        :param position: Point3 defining scan origin and direction
+        :return: np.ndarray of scan hits
         """
         # calculate how many measurements to take
         snaps = int(self.angle_range / self.resolution)
@@ -79,17 +82,17 @@ class Base:
 
         # map results to hits array [distances must be in mm, so multiply by 2.54]
         hits[:, 0] = np.sqrt(np.square((rays[:, 1] - position.x)) + np.square((rays[:, 0] - position.y))) * 2.54
-        hits[:, 1] = (rays[:, 2] - position.r)
+        hits[:, 1] = rays[:, 2] - position.r
         hits[:, 2] = 1.0  # all the data is perfect - yay
 
         # make sure the angles are properly bounded
-        while np.any(hits[hits[:, 1] > 2.0 * math.pi, 1]):
+        while np.any(hits[hits[:, 1] >= 2.0 * math.pi, 1]):
             hits[hits[:, 1] > 2.0 * math.pi, 1] -= 2.0 * math.pi
 
         while np.any(hits[hits[:, 1] < 0, 1]):
             hits[hits[:, 1] < 0, 1] += 2.0 * math.pi
 
-        # better idea - set obscuring rays to distance=0
+        # remove obscuring rays
         for item in self.obscured:
             lower_angle = item[0]
             upper_angle = item[1]
@@ -99,23 +102,24 @@ class Base:
             else:
                 # else obscured area crosses 0, zero the rays below the lower line and above the upper line
                 cut = np.logical_or(hits[:, 1] < upper_angle, hits[:, 1] > lower_angle)
-            hits[cut, 0] = 0
+            hits = hits[np.invert(cut)]
 
         return hits.T
 
+    int_float = Union[int, float]
+
     @staticmethod
-    def wrap(number, floor, ceiling):
+    def wrap(number: int_float, floor: int_float, ceiling: int_float) -> int_float:
+        """Wraps an int or float between a floor and ceiling
+        :param number: input number to wrap
+        :param floor: lower wrapping bound
+        :param ceiling: upper wrapping bound
+        :return: float or int between lower and upper bound
         """
-        :param number: any number
-        :param floor: lower bound
-        :param ceiling: upper bound
-        :return: number between lower and upper bound
-        """
-        while number < floor:
-            number += ceiling
-        while number > ceiling:
-            number -= ceiling
-        return number
+        range_size = ceiling - floor + 1
+        if number < floor:
+            number += range_size * ((floor - number) / range_size + 1)
+        return floor + (number - floor) % range_size
 
     def __await__(self):
         def closure():
@@ -171,8 +175,8 @@ class Lidar(Base):
         payload = self.read(info_len)
         assert info_len == 20
         assert r_type == 4
-        model, firware_minor, firmware_major, hardware, *sn = struct.unpack("<BBBB16s", payload)
-        return model, firware_minor, firmware_major, hardware, sn
+        model, firmware_minor, firmware_major, hardware, *sn = struct.unpack("<BBBB16s", payload)
+        return model, firmware_minor, firmware_major, hardware, sn
 
     def stop(self):
         self.write(const.Commands.Stop_Scan)
@@ -193,7 +197,7 @@ class Lidar(Base):
             else:
                 break
         else:
-            raise TimeoutError("No data recieved from lidar")
+            raise TimeoutError("No data received from lidar")
         payload = self.read(info_len)
         quality, angle, distance, start = self._unpack_scan(payload)
         assert start

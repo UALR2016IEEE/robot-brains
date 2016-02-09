@@ -1,8 +1,9 @@
 import random
+
 import numpy as np
 
 
-class Grid:
+class Grid(object):
     def __init__(self):
         self.data = []
         self.colors = []

@@ -1,16 +1,18 @@
-import types
-from utils.data_structures import Point3
-from breezyslam.algorithms import RMHC_SLAM
-from breezyslam.components import Laser
 import math
+import types
+
+from breezyslam.algorithms import RMHCSlam
+from breezyslam.components import Laser
+
+from utils.data_structures import Point3
 
 
-class Base:
+class Base(object):
     def __init__(self, position=Point3(), cid: str=None):
         self.components = {}
         self.position = position
         self.laser = Laser(360, 5.5, 360, 6000)
-        self.slam_object = RMHC_SLAM(self.laser, 960, 2.438, map_quality=10, sigma_xy_mm=100, sigma_theta_degrees=20, max_search_iter=1000, init_x=self.position.x / 960, init_y=self.position.y / 960, init_r=math.degrees(self.position.r), hole_width_mm=100)
+        self.slam_object = RMHCSlam(self.laser, 960, 2.438, map_quality=10, sigma_xy_mm=100, sigma_theta_degrees=20, max_search_iter=1000, init_x=self.position.x / 960, init_y=self.position.y / 960, init_r=math.degrees(self.position.r), hole_width_mm=100)
         self.trajectory = []
 
     def set_position(self, point: Point3):
@@ -25,9 +27,9 @@ class Base:
         print('saving nav map')
 
         # Create a byte array to receive the computed maps
-        mapbytes = bytearray(960 * 960)
+        map_bytes = bytearray(960 * 960)
         # Get final map
-        self.slam_object.getmap(mapbytes)
+        self.slam_object.getmap(map_bytes)
 
         # Put trajectory into map as black pixels
         for coords in self.trajectory:
@@ -36,16 +38,16 @@ class Base:
             x_pix = self.mm2pix(x_mm)
             y_pix = self.mm2pix(y_mm)
 
-            mapbytes[y_pix * 960 + x_pix] = 0
+            map_bytes[y_pix * 960 + x_pix] = 0
 
         # Save map and trajectory as PNG file
-        image = Image.frombuffer('L', (960, 960), mapbytes, 'raw', 'L', 0, 1)
+        image = Image.frombuffer('L', (960, 960), map_bytes, 'raw', 'L', 0, 1)
         image.save('test_image_nav.png')
 
     def slam(self):
         while True:
             lidar, estimated_velocity = yield
-            self.slam_object.update((lidar[0, :]).tolist(), estimated_velocity)
+            self.slam_object.update(lidar, estimated_velocity)
             self.position.x, self.position.y, self.position.r = self.slam_object.getpos()
             self.position.r = math.radians(self.position.r)
             self.trajectory.append((self.position.x, self.position.y))

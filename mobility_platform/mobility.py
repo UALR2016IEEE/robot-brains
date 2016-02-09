@@ -1,11 +1,11 @@
-import time
-from utils import Point3
 import math
-import copy
+import time
+
+from utils import Point3
 
 
-class Base:
-    def __init__(self, profile, cid: str=None):
+class Base(object):
+    def __init__(self, profile, cid: str = None):
         self._current_task = None
         self.profile = profile
         self.velocity = Point3()
@@ -18,11 +18,11 @@ class Base:
     @current_task.setter
     def current_task(self, task):
         self._current_task = task
-        self.sendtask()
+        self.send_task()
 
-    def exec_arc(self, r: float, angle: float=None, arcl: float=None, stop=True):
+    def exec_arc(self, r: float, angle: float = None, arc_len: float = None, stop=True):
         nang = angle is not None
-        narc = arcl is not None
+        narc = arc_len is not None
         if nang and narc:
             raise ValueError('Cannot pass both angle and arc length')
         elif not (nang or narc):
@@ -50,7 +50,7 @@ class Base:
         self.current_task = Action(self.profile, self.velocity, self.acceleration, angle=angle, line=line, stop=stop)
         return self.current_task
 
-    def exec_suicide_arc(self, r: float, end_angle: float, arc_angle: float=None, arc_len: float=None, stop=True):
+    def exec_suicide_arc(self, r: float, end_angle: float, arc_angle: float = None, arc_len: float = None, stop=True):
         nang = arc_angle is not None
         narc = arc_len is not None
         if nang and narc:
@@ -62,29 +62,30 @@ class Base:
             arc_angle = self._calc_angle(nang)
         self.current_task = Action(self.profile, self.velocity, self.acceleration, r, end_angle, arc_angle, stop=stop)
 
-    def sendtask(self):
+    def send_task(self):
         self.current_task.start()
 
 
-class Mobility:
+class Mobility(object):
     pass
 
 
-class Action:
-    def __init__(self, profile: dict, velocity, acceleration, line: float=None, angle: float=None, arc_angle: float=None, stop=True):
+class Action(object):
+    def __init__(self, profile: dict, velocity, acceleration, line: float = None, angle: float = None,
+                 arc_angle: float = None, stop=True):
         """
         passing only line is a line action
         passing only angle is rotate
         passing angle and line is rotate and move in a line
-        passing arcangle will make line the radius of the arc and angle will be the final angle
+        passing arc_angle will make line the radius of the arc and angle will be the final angle
         """
-        argmask = [_ is None for _ in (line, angle, arc_angle)]
-        argtable = [(False, True, True),
-                    (True, False, True),
-                    (False, False, True), ]
-        if argmask in argtable:
+        arg_mask = [_ is None for _ in (line, angle, arc_angle)]
+        arg_table = [(False, True, True),
+                     (True, False, True),
+                     (False, False, True), ]
+        if arg_mask in arg_table:
             raise ValueError("Cannot pass in {}".format(
-                " ".join(a for a, m in zip(('line', 'angle', 'arc angle'), argmask) if m)))
+                    " ".join(a for a, m in zip(('line', 'angle', 'arc angle'), arg_mask) if m)))
 
         self.start_time = None
         self.current_time = None
@@ -115,7 +116,7 @@ class Action:
     def estimate(self, initial_pos: Point3):
         # prog = self.estimate_progress()
 
-        print('intiial', initial_pos)
+        print('initial', initial_pos)
 
         if not self.started:
             return 0, 0, 0

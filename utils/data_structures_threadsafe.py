@@ -1,8 +1,8 @@
-import multiprocessing
 import math
+import multiprocessing
 
 
-class Point2:
+class Point2(object):
     def __init__(self, y=0, x=0):
         self._y = multiprocessing.Value('f', y)
         self._x = multiprocessing.Value('f', x)
@@ -62,7 +62,7 @@ class Point2:
         yield self.x
 
 
-class Point3:
+class Point3(object):
     def __init__(self, y=0, x=0, r=0):
         self._y = multiprocessing.Value('f', y)
         self._x = multiprocessing.Value('f', x)
