@@ -18,7 +18,7 @@ class Base(object):
     @current_task.setter
     def current_task(self, task):
         self._current_task = task
-        self.send_task()
+        # self.send_task()
 
     def exec_arc(self, r: float, angle: float = None, arc_len: float = None, stop=True):
         nang = angle is not None
@@ -84,8 +84,9 @@ class Action(object):
                      (True, False, True),
                      (False, False, True), ]
         if arg_mask in arg_table:
-            raise ValueError("Cannot pass in {}".format(
-                    " ".join(a for a, m in zip(('line', 'angle', 'arc angle'), arg_mask) if m)))
+            raise ValueError(
+                    "Cannot pass in {}".format(
+                        " ".join(a for a, m in zip(('line', 'angle', 'arc angle'), arg_mask) if m)))
 
         self.start_time = None
         self.current_time = None
@@ -102,31 +103,54 @@ class Action(object):
 
         self.started = False
         self.complete = False
+
         self.distance = 0
+        self.total_angle = 0
+        self.d_xy = 0
+        self.d_theta = 0
 
     def start(self):
         if not self.started:
             self.started = True
             self.start_time = time.time()
             self.current_time = self.start_time
+            print('time: ', self.current_time)
 
     def estimate_progress(self):
         return 0
 
     def estimate(self, initial_pos: Point3):
-        # prog = self.estimate_progress()
-
-        print('initial', initial_pos)
-
         if not self.started:
             return 0, 0, 0
 
         dt = time.time() - self.current_time
+        self.d_xy = 0
+        self.d_theta = 0
+
+        if self.angle:
+            self.velocity.x = 0
+            self.velocity.y = 0
+            if self.angle > 0:
+                # turning CW
+                self.velocity.r = self.profile['top rotational speed']
+            else:
+                # turning CCW
+                self.velocity.r = -self.profile['top rotational speed']
+
+            self.d_theta = self.velocity.r * dt
+            self.total_angle += self.d_theta
+
+            if abs(self.total_angle) > abs(self.angle):
+                print('angle reached')
+                if self.stop:
+                    print('zeroing angular velocity')
+                    self.velocity.r = 0
+                self.complete = True
 
         if self.line:
-
             self.velocity.x = self.profile['top lateral speed'] * math.cos(initial_pos.r)
             self.velocity.y = self.profile['top lateral speed'] * math.sin(initial_pos.r)
+            self.velocity.r = 0
             self.distance += self.velocity.magnitude() * dt
 
             if self.distance > self.line:
@@ -137,6 +161,8 @@ class Action(object):
                     self.velocity.y = 0
                 self.complete = True
 
+            self.d_xy = self.velocity.magnitude() * 2.54 * dt
+
         self.current_time = time.time()
 
-        return self.velocity.magnitude() * 2.54 * dt, self.velocity.r, dt
+        return self.d_xy, self.d_theta, dt

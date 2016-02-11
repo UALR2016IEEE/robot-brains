@@ -1,5 +1,5 @@
-from .grid import Grid
 from utils.data_structures import Point3
+from .grid import Grid
 
 
 class Controller(object):

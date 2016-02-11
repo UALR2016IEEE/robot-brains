@@ -2,7 +2,7 @@ import time
 
 
 class Base(object):
-    def __init__(self, cid: {str, type(None)}=None):
+    def __init__(self, cid: {str, type(None)} = None):
         pass
 
     def acquire_align(self) -> bool:

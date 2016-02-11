@@ -5,7 +5,7 @@ import hardware.lidar
 
 
 class Base(multiprocessing.Process):
-    def __init__(self, navigation: type, sim_controller):
+    def __init__(self, navigation: type, sim_controller, render=False):
         self.nav = navigation
         self.sim_controller = sim_controller
         self.pos = multiprocessing.Queue()
@@ -13,7 +13,9 @@ class Base(multiprocessing.Process):
         self.halt = multiprocessing.Event()
         self.components = multiprocessing.Queue()
         self.actions = multiprocessing.Queue()
-        self.nav_process = multiprocessing.Process.__init__(self, target=self.nav_interface, args=(self.nav, self.sim_controller.position, self.pos, self.sim_controller, self.halt, self.components, self.actions))
+        self.nav_process = multiprocessing.Process.__init__(self, target=self.nav_interface, args=(
+            self.nav, self.sim_controller.position, self.pos, self.sim_controller, self.halt, self.components,
+            self.actions, render))
         self.current_action = None
 
     def start(self):
@@ -24,18 +26,36 @@ class Base(multiprocessing.Process):
         self.halt.set()
 
     @staticmethod
-    def nav_interface(nav: type, initial_position, position_queue: multiprocessing.Queue, sim_controller, halt: multiprocessing.Event, components: multiprocessing.Queue, actions: multiprocessing.Queue):
+    def nav_interface(nav: type, initial_position, position_queue: multiprocessing.Queue, sim_controller,
+                      halt: multiprocessing.Event, components: multiprocessing.Queue, actions: multiprocessing.Queue,
+                      render: bool):
         print('initial pos', initial_position)
         navigator = nav(position=initial_position)
         lidar = hardware.lidar.Base(sim_controller)
         action = None
         navigator.set_position(initial_position)
         no_action = False
+
+        if render:
+            import status_io.client
+            io = status_io.client.IOHandler()
+            io.start('localhost', 9998)
+
+            io.send_data(('full-simulation', None))
+            io.send_data(('grid-colors', sim_controller.grid.get_pygame_grid()))
+            io.send_data(('robot-pos', initial_position))
+
         while not halt.is_set():
             while not components.empty():
                 navigator.add_component(*components.get())
             lidar_data = lidar.scan(navigator.get_position())
-            while not actions.empty():
+
+            if render:
+                io.send_data(('robot-pos', navigator.get_position()))
+                io.send_data(('lidar-points', (navigator.get_position(), lidar_data)))
+
+            if not actions.empty() and action is None:
+                print('getting action')
                 action = actions.get()
             if action is None:
                 # dxy, dr, dt
@@ -47,6 +67,7 @@ class Base(multiprocessing.Process):
                     halt.set()
             else:
                 if not action.started:
+                    print('staring action!')
                     action.start()
                 estimates = action.estimate(navigator.get_position())
                 if action.complete:
@@ -70,6 +91,7 @@ class Base(multiprocessing.Process):
         return self.get_pos()
 
     def set_action(self, action):
+        print('setting action!')
         self.current_action = action
         self.actions.put(action)
 
