@@ -31,3 +31,9 @@ class Commands(object):
 
 
 Start_Flag = 0xA5
+
+
+V_SCALE_MIN = 0
+V_SCALE_MAX = 10
+RP_SCAN_TIME = 490.3  # ms
+RP_SCAN_POINT_LEN = 1e6

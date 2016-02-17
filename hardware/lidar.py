@@ -12,7 +12,6 @@ import numpy as np
 import hardware.constants as const
 from utils.data_structures import Point3
 
-
 class Base(object):
     def __init__(self, controller, hw_addr=None):
         self._lidar = None
@@ -138,6 +137,16 @@ class Lidar(Base):
         # print("received: ", list(map(hex, packet)))
         return packet
 
+    def flush(self):
+        self._lidar.flushInput()
+
+    def set_target_speed(self, ang_velocity):
+        pass
+
+    async def get_current_speed(self):
+        scan = await self.get_scan()
+        return const.RP_SCAN_POINT_LEN/(len(scan) * const.RP_SCAN_TIME)
+
     def read_header(self):
         header = self.read(7)
         assert len(header) == 7
@@ -155,10 +164,10 @@ class Lidar(Base):
     def reset(self):
         self.write(const.Commands.Reset)
         sleep(0.01)
-        self._lidar.flushInput()
+        self.flush()
 
     def self_test(self):
-        self._lidar.flushInput()
+        self.flush()
         self.write(const.Commands.Health)
         health_len, r_mode, r_type = self.read_header()
         payload = self.read(health_len)
@@ -169,7 +178,7 @@ class Lidar(Base):
         return health == 0
 
     def get_info(self):
-        self._lidar.flushInput()
+        self.flush()
         self.write(const.Commands.Info)
         info_len, r_mode, r_type = self.read_header()
         payload = self.read(info_len)
@@ -185,7 +194,7 @@ class Lidar(Base):
     def scanner(self):
         yield
         self.stop()
-        self._lidar.flushInput()
+        self.flush()
         self.write(const.Commands.Start_Scan)
         info_len, r_mode, r_type = self.read_header()
         assert info_len == 5
@@ -222,14 +231,15 @@ class Lidar(Base):
         except GeneratorExit:
             self.stop()
 
-    def get_scan(self):
+    async def get_scan(self):
         scanner = self.scanner()
-        try:
-            while True:
-                next(scanner)
-        except StopIteration as err:
-            return err.value
-        assert False
+        await asyncio.sleep(0.6)
+        while True:
+            data = next(scanner)
+            if data:
+                scanner.close()
+                return data
+            await asyncio.sleep(0.1)
 
     def _unpack_scan(self, payload):
         quality, angle, distance = struct.unpack("<BHH", payload)
@@ -246,7 +256,7 @@ class Lidar(Base):
 
     def build_lidar(self, controller, hw_addr):
         self.connect(hw_addr)
-        self._lidar.flushInput()
+        self.flush()
 
     def connect(self, hw_addr: str):
         self._lidar = serial.Serial(hw_addr,

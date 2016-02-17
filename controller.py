@@ -19,4 +19,4 @@ class Controller:
         action = self.mob.exec_line(50)
         self.nav.set_action(action)
         while not self.nav.actions.empty():
-            asyncio.sleep(0.05)
+            await asyncio.sleep(0.05)
