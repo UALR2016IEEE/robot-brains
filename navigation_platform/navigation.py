@@ -1,6 +1,7 @@
 import math
 import types
 
+import numpy as np
 from breezyslam.algorithms import RMHCSlam
 from breezyslam.components import Laser
 
@@ -8,11 +9,14 @@ from utils.data_structures import Point3
 
 
 class Base(object):
-    def __init__(self, position=Point3(), cid: str=None):
+    def __init__(self, position=Point3(), cid: str = None):
         self.components = {}
         self.position = position
         self.laser = Laser(360, 5.5, 360, 6000)
-        self.slam_object = RMHCSlam(self.laser, 960, 2.438, map_quality=10, sigma_xy_mm=100, sigma_theta_degrees=20, max_search_iter=1000, init_x=self.position.x / 960, init_y=self.position.y / 960, init_r=math.degrees(self.position.r), hole_width_mm=100)
+        self.slam_object = RMHCSlam(self.laser, 960, 2.438, map_quality=40, sigma_xy_mm=200, sigma_theta_degrees=40,
+                                    max_search_iter=500, init_x=self.position.x / 960, init_y=self.position.y / 960,
+                                    init_r=math.degrees(self.position.r), hole_width_mm=100)
+        # self.slam_object = RMHCSlam(self.laser, 960, 2.438, map_quality=10, sigma_xy_mm=100, sigma_theta_degrees=20, max_search_iter=1000, init_x=self.position.x / 960, init_y=self.position.y / 960, init_r=math.degrees(self.position.r), hole_width_mm=100)
         self.trajectory = []
 
     def set_position(self, point: Point3):
@@ -74,9 +78,9 @@ class Base(object):
 
 
 class Navigation(Base):
-    def __init__(self, cid: str=None):
+    def __init__(self, cid: str = None):
         if cid:
             self.connect(cid)
 
-    def connect(self, cid: str=None):
+    def connect(self, cid: str = None):
         pass

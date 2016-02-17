@@ -1,12 +1,13 @@
 import json
+import math
+
+import hardware.lidar
+import simulate.controller
+import status_io.client
+from controller import Controller
 from mobility_platform.mobility import Base as Mobility
 from navigation_platform.controller import Base as NavControl
 from navigation_platform.navigation import Base as Navigation
-from controller import Controller
-import hardware.lidar
-import status_io.client
-import simulate.controller
-import math
 from utils.data_structures import Point3
 
 
@@ -16,7 +17,7 @@ def mm2pix(mm):
 
 
 def mock(render=False):
-    mode = 'zach'
+    mode = 'kori'
     print('mocking mode', mode)
 
     position = Point3(100, 440, math.radians(270))
@@ -54,7 +55,7 @@ def mock(render=False):
         sim_controller = simulate.controller.Controller(position)
         sim_controller.init_grid()
 
-        nav = NavControl(Navigation, sim_controller)
+        nav = NavControl(Navigation, sim_controller, render)
         nav.start()
         mob = Mobility(profile=config['robot characteristics'])
         controller = Controller(nav, mob)
@@ -83,7 +84,9 @@ def mock(render=False):
 
         lidar = hardware.lidar.Base(sim_controller)
         laser = lidar.get_laser()
-        slam = RMHCSlam(laser, 960, 2.438, map_quality=10, sigma_xy_mm=100, sigma_theta_degrees=20, max_search_iter=1000, init_x=position.x / 960, init_y=position.y / 960, init_r=math.degrees(position.r), hole_width_mm=100)
+        slam = RMHCSlam(laser, 960, 2.438, map_quality=40, sigma_xy_mm=200, sigma_theta_degrees=40, max_search_iter=500,
+                        init_x=position.x / 960, init_y=position.y / 960, init_r=math.degrees(position.r),
+                        hole_width_mm=100)
         trajectory = []
 
         print('step 1/7')

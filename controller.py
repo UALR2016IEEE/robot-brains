@@ -1,4 +1,5 @@
 import asyncio
+
 from mobility_platform.mobility import Base as mob_base
 from navigation_platform.controller import Base as nav_base
 from utils import Point3
@@ -16,7 +17,11 @@ class Controller:
         self.loop.run_until_complete(asyncio.wait(map(asyncio.ensure_future, self.tasks)))
 
     async def fsm(self):
-        action = self.mob.exec_line(50)
+        print('')
+        action = self.mob.exec_line(100)
         self.nav.set_action(action)
+        action = self.mob.rotate(180)
+        self.nav.set_action(action)
+
         while not self.nav.actions.empty():
             await asyncio.sleep(0.05)

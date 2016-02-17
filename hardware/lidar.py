@@ -1,13 +1,13 @@
 import asyncio
 import math
 import random
-import serial
 import struct
 from time import sleep
 from typing import Union
 
 import breezyslam.components
 import numpy as np
+import serial
 
 import hardware.constants as const
 from utils.data_structures import Point3
@@ -28,12 +28,12 @@ class Base(object):
 
         # set sensor obscure ranges : [(obscure_center, obscure_range_from_center)]
         self.obscured = []
-        # for item in [(45, 7), (135, 7), (225, 7), (315, 7)]:
-        #     self.obscured.append((self.wrap(math.radians(item[0]) - math.radians(item[1]), 0, 2.0 * math.pi), self.wrap(math.radians(item[0]) + math.radians(item[1]), 0, 2.0 * math.pi)))
         for item in [(60, 7), (180, 7), (300, 7)]:
-            self.obscured.append((self.wrap(math.radians(item[0]) - math.radians(item[1]), 0, 2.0 * math.pi), self.wrap(math.radians(item[0]) + math.radians(item[1]), 0, 2.0 * math.pi)))
+            self.obscured.append((self.wrap(math.radians(item[0]) - math.radians(item[1]), 0, 2.0 * math.pi),
+                                  self.wrap(math.radians(item[0]) + math.radians(item[1]), 0, 2.0 * math.pi)))
 
-        self.non_blocking = [0, 12]  # refer to grid element ids : set 0 (floor) and 12 (start-box) to be non-blocking elements
+        # refer to grid element ids : set 0 (floor) and 12 (start-box) to be non-blocking elements
+        self.non_blocking = [0, 12]
 
         # controller provides the simulated map
         self.sim_controller = sim_controller
@@ -52,18 +52,18 @@ class Base(object):
         :param position: Point3 defining scan origin and direction
         :return: np.ndarray of scan hits
         """
+
         # calculate how many measurements to take
         snaps = int(self.angle_range / self.resolution)
 
         # get a slightly randomized initial position.r
         cr = self.wrap(position.r - self.angle_range / 2.0 + random.random() * self.resolution, 0.0, 2.0 * math.pi)
-        # cr = self.wrap(position.r - self.angle_range / 2.0 + self.resolution, 0.0, 2.0 * math.pi)  # for testing, always returns same starting ray position
 
         # generate rays array
         rays = np.ndarray(shape=(snaps, 3))
         rays[:, 0] = position.y
         rays[:, 1] = position.x
-        rays[:, 2] = np.linspace(cr + self.angle_range, cr, snaps) % (2.0 * np.pi)
+        rays[:, 2] = np.linspace(cr, cr + self.angle_range, snaps) % (2.0 * np.pi)
 
         # preallocate results array
         hits = np.ndarray(shape=(rays.shape[0], 3))
@@ -75,8 +75,9 @@ class Base(object):
         # while there are misses, increment the ones that haven't hit something blocking yet
         not_hit = np.in1d(self.map[rays[:, 0].astype(int), rays[:, 1].astype(int)], self.non_blocking)
         while np.any(not_hit):
-            rays[not_hit, 0] -= delta_y[not_hit]  # since origin is upper-left corner instead of lower-left corner, y has to be flipped
-            rays[not_hit, 1] += delta_x[not_hit]  # but cheat a bit and use 2.0 * delta to make things a bit faster
+            # since origin is upper-left corner instead of lower-left corner, y has to be flipped
+            rays[not_hit, 0] -= delta_y[not_hit]
+            rays[not_hit, 1] += delta_x[not_hit]
             not_hit = np.in1d(self.map[rays[:, 0].astype(int), rays[:, 1].astype(int)], self.non_blocking)
 
         # map results to hits array [distances must be in mm, so multiply by 2.54]
@@ -154,7 +155,7 @@ class Lidar(Base):
         assert header1 == 0xA5
         assert header2 == 0x5A
         payload_len = payload_len_w_m & 0x3FFFFFFF
-        r_mode = (payload_len_w_m &     0xC0000000) >> 30
+        r_mode = (payload_len_w_m & 0xC0000000) >> 30
         return payload_len, r_mode, r_type
 
     @staticmethod
