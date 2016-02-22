@@ -9,10 +9,10 @@ lock = Lock()
 
 def line(len, angle):
     with lock:
-        ard.write("L{:4d}{:-1.3f}".format(len, angle))
+        ard.write(b"L{:4d}{:-1.3f}".format(len, angle))
 
 def rotate(angle):
     line(0, angle)
 
 def arm(enable):
-    ard.write("E{:1d}".format(enable))
+    ard.write(b"E{:1d}".format(enable))
