@@ -13,3 +13,6 @@ def line(len, angle):
 
 def rotate(angle):
     line(0, angle)
+
+def arm(enable):
+    ard.write("E{:1d}".format(enable))
