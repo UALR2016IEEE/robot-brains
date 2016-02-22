@@ -1,5 +1,6 @@
 import asyncio
 import multiprocessing
+from utils.data_structures_threadsafe import Point3 as Safe_Point3
 
 import hardware.lidar
 
@@ -9,14 +10,17 @@ class Base(multiprocessing.Process):
         self.nav = navigation
         self.sim_controller = sim_controller
         self.pos = multiprocessing.Queue()
+        self.cpos = Safe_Point3()
 
         self.halt = multiprocessing.Event()
         self.components = multiprocessing.Queue()
         self.actions = multiprocessing.Queue()
+        self.nav_process = multiprocessing.Process.__init__(self, target=self.nav_interface, args=(self.nav, self.sim_controller.position, self.pos, self.cpos, self.sim_controller, self.halt, self.components, self.actions))
         self.nav_process = multiprocessing.Process.__init__(self, target=self.nav_interface, args=(
             self.nav, self.sim_controller.position, self.pos, self.sim_controller, self.halt, self.components,
             self.actions, render))
         self.current_action = None
+        self.pos_lock = multiprocessing.Lock()
 
     def start(self):
         super(Base, self).start()
@@ -73,7 +77,9 @@ class Base(multiprocessing.Process):
                 if action.complete:
                     action = None
             navigator.run_components(lidar_data, estimates)
-            position_queue.put(navigator.get_position())
+            position = navigator.get_position()
+            current_position[None] = position[None]
+            position_queue.put(position)
 
     @asyncio.coroutine
     def get_pos(self):
@@ -88,7 +94,9 @@ class Base(multiprocessing.Process):
 
     @property
     def position(self):
-        return self.get_pos()
+        pos = Safe_Point3()
+        pos[None] = self.cpos[None]
+        return pos
 
     def set_action(self, action):
         print('setting action!')

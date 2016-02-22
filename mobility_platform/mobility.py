@@ -1,7 +1,7 @@
 import math
 import time
 
-from utils import Point3
+from utils import Point3, Point2
 
 
 class Base(object):
@@ -38,8 +38,8 @@ class Base(object):
         pass
         # return angle
 
-    def exec_line(self, l: float, stop=True):
-        self.current_task = Action(self.profile, self.velocity, self.acceleration, line=l, stop=stop)
+    def exec_line(self, vector:Point3, stop=True):
+        self.current_task = Action(self.profile, self.velocity, self.acceleration, line=vector, stop=stop)
         return self.current_task
 
     def rotate(self, angle: float, stop=True):
@@ -66,12 +66,18 @@ class Base(object):
         self.current_task.start()
 
 
-class Mobility(object):
-    pass
+class Mobility(Base):
+    def __init__(self):
+        import status
+        super(Mobility, self).__init__()
+
+    def exec_line(self, vector:Point3, stop=True):
+        status.run_line(vector, stop)
+        return super(Mobility, self).exec_line(vector, stop)
 
 
 class Action(object):
-    def __init__(self, profile: dict, velocity, acceleration, line: float = None, angle: float = None,
+    def __init__(self, profile: dict, velocity, acceleration, line: Point2 = None, angle: float = None,
                  arc_angle: float = None, stop=True):
         """
         passing only line is a line action

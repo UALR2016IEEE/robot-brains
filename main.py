@@ -1,10 +1,23 @@
 import sys
 
 import numpy as np
+import json
+
+from navigation_platform.controller import Controller as NavControl
+from navigation_platform.navigation import Navigation as Navigation
+from mobility_platform.mobility import Mobility
 
 
 def main():
-    pass
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+
+        #nav = NavControl()
+        #nav.start()
+        nav = None
+        mob = Mobility()
+        controller = Controller(nav, mob)
+        controller.start()
 
 
 if __name__ == "__main__":

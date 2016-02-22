@@ -110,7 +110,12 @@ class Point3(object):
     def __reduce__(self):
         return self.__class__, (self.y, self.x, self.r)
 
-    def __getitem__(self, item):
+    def __getitem__(self, *args):
+        if args[0] == None:
+            return self.x, self.y, self.r
+        else:
+            item, = args
+
         if item == 0:
             return self.y
         elif item == 1:
@@ -120,7 +125,11 @@ class Point3(object):
         else:
             raise ValueError('Invalid coordinate id')
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, *args):
+        if len(args) == 3:
+            self.x, self.y, self.r = args
+        else:
+            key, value = args
         if key == 0:
             self.y = value
         elif key == 1:
