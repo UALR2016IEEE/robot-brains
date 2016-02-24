@@ -22,13 +22,16 @@ class Controller:
     async def pilot(self, dest):
         delta_vector = self.nav.position - dest
         self.pos_intention = self.mob.exec_line(delta_vector)
+        await self.audit_motion()
 
     async def fsm(self):
         action = self.mob.exec_line(50)
         self.nav.set_action(action)
-            await pilot(Point3(2, 2))
+        await self.pilot(Point3(2, 2))
 
     async def audit_motion(self):
         actual_pos = self.nav.position
-
+        delta = Point3(abs(acutal - intent) for intent, acutal in zip(self.pos_intention[None], actual_pos[None]))
+        self.mob.exec_line(delta)
+        self.mob.rotate(delta.r)
 

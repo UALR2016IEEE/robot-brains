@@ -60,9 +60,6 @@ def mock(render=False):
         mob = Mobility(profile=config['robot characteristics'])
         controller = Controller(nav, mob)
         controller.start()
-        # do mobility_platform events
-        # magical_fsm
-
     elif mode == 'zach':
 
         from breezyslam.algorithms import RMHCSlam
