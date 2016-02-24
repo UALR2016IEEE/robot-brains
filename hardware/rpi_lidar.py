@@ -14,6 +14,7 @@ wiringpi.pwmWrite(PWM_PIN, 0)
 class RPi_Lidar(Lidar):
     def connect(self, hw_addr: str):
         self.set_motor_duty(0)
+        super(RPi_Lidar, self).connect(hw_addr)
 
     def set_motor_duty(self, duty_cycle):
         assert 0 <= duty_cycle <= 100

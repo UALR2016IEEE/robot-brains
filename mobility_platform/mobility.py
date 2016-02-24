@@ -62,18 +62,31 @@ class Base(object):
             arc_angle = self._calc_angle(nang)
         self.current_task = Action(self.profile, self.velocity, self.acceleration, r, end_angle, arc_angle, stop=stop)
 
+    def arm(self, enable=True):
+        pass
+
+    def disarm(self):
+        self.arm(False)
+
     def send_task(self):
         self.current_task.start()
 
 
 class Mobility(Base):
-    def __init__(self):
-        import status
-        super(Mobility, self).__init__()
+    def __init__(self, *args, **kwargs):
+        from status_platform import status
+        self.status = status
+        super(Mobility, self).__init__(*args, **kwargs)
 
-    def exec_line(self, vector:Point3, stop=True):
-        status.run_line(vector, stop)
+    def exec_line(self, vector: Point3, stop=True):
+        self.status.line(vector, stop)
         return super(Mobility, self).exec_line(vector, stop)
+
+    def rotate(self, angle: float, stop=True):
+        self.status.rotate(angle)
+
+    def arm(self, enable=True):
+        self.status.arm(enable)
 
 
 class Action(object):
