@@ -1,5 +1,5 @@
 import wiringpi2 as wiringpi
-import const
+import hardware.APDS9960.const as const
 
 
 class APDS9960:
@@ -158,7 +158,7 @@ class APDS9960:
     # */
     def readAmbientLight(self):
         # 	/* Read value from clear channel, low byte register */
-    	lowval = wiringpi.wireReadDataByte(const.APDS9960_CDATAL)
+        lowval = wiringpi.wireReadDataByte(const.APDS9960_CDATAL)
         # 	/* Read value from clear channel, high byte register *
         highval = wiringpi.wireReadDataByte(const.APDS9960_CDATAH)
         lowval += highval << 8
