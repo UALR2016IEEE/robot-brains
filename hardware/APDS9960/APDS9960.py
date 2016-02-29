@@ -13,7 +13,7 @@ class APDS9960:
             raise IOError
 
         #Set ENABLE register to 0 (disable all features)
-        self.setMode(const.ALL, const.OFF)
+        self.set_mode(const.ALL, const.OFF)
         #Set default values for ambient light and proximity registers */
         self.wireWriteDataByte(const.APDS9960_ATIME, const.DEFAULT_ATIME)
         self.wireWriteDataByte(const.APDS9960_WTIME, const.DEFAULT_WTIME)
@@ -21,7 +21,6 @@ class APDS9960:
         self.wireWriteDataByte(const.APDS9960_POFFSET_UR, const.DEFAULT_POFFSET_UR)
         self.wireWriteDataByte(const.APDS9960_POFFSET_DL, const.DEFAULT_POFFSET_DL)
         self.wireWriteDataByte(const.APDS9960_CONFIG1, const.DEFAULT_CONFIG1)
-        self.setLEDDrive(const.DEFAULT_LDRIVE)
 
     def wireWriteByte(self, val):
         wiringpi.wiringPiI2CWrite(self._fd, val)

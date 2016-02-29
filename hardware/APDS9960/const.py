@@ -2,168 +2,132 @@ APDS9960_I2C_ADDR = 0x39
 APDS9960_ID = 0x92
 APDS9960_IDs = [0xAB, 0x9C]
 
-APDS9960_I2C_ADDR = 0x3
-
-GESTURE_THRESHOLD_OUT = 1
-
-GESTURE_SENSITIVITY_1 = 5
-
-GESTURE_SENSITIVITY_2 = 2
-
-ERROR = 0xF
-
-FIFO_PAUSE_TIME = 30
-
-APDS9960_ENABLE = 0x8
-
-APDS9960_ATIME = 0x8
-
-APDS9960_WTIME = 0x8
-
-APDS9960_AILTL = 0x8
-
-APDS9960_AILTH = 0x8
-
-APDS9960_AIHTL = 0x8
-
-APDS9960_AIHTH = 0x8
-
-APDS9960_PILT = 0x8
-
-APDS9960_PIHT = 0x8
-
-APDS9960_PERS = 0x8
-
-APDS9960_CONFIG1 = 0x8
-
-APDS9960_PPULSE = 0x8
-
-APDS9960_CONTROL = 0x8
-
-APDS9960_CONFIG2 = 0x9
-
-APDS9960_ID = 0x9
-
-APDS9960_STATUS = 0x9
-
-APDS9960_CDATAL = 0x9
-
-APDS9960_CDATAH = 0x9
-
-APDS9960_RDATAL = 0x9
-
-APDS9960_RDATAH = 0x9
-
-APDS9960_GDATAL = 0x9
-
-APDS9960_GDATAH = 0x9
-
-APDS9960_BDATAL = 0x9
-
-APDS9960_BDATAH = 0x9
-
-APDS9960_PDATA = 0x9
-
-APDS9960_POFFSET_UR = 0x9
-
-APDS9960_POFFSET_DL = 0x9
-
-APDS9960_CONFIG3 = 0x9
-
-APDS9960_GPENTH = 0xA
-
-APDS9960_GEXTH = 0xA
-
-APDS9960_GCONF1 = 0xA
-
-APDS9960_GCONF2 = 0xA
-
-APDS9960_GOFFSET_U = 0xA
-
-APDS9960_GOFFSET_D = 0xA
-
-APDS9960_GOFFSET_L = 0xA
-
-APDS9960_GOFFSET_R = 0xA
-
-APDS9960_GPULSE = 0xA
-
-APDS9960_GCONF3 = 0xA
-
-APDS9960_GCONF4 = 0xA
-
-APDS9960_GFLVL = 0xA
-
-APDS9960_GSTATUS = 0xA
-
-APDS9960_IFORCE = 0xE
-
-APDS9960_PICLEAR = 0xE
-
-APDS9960_CICLEAR = 0xE
-
-APDS9960_AICLEAR = 0xE
-
-APDS9960_GFIFO_U = 0xF
-
-APDS9960_GFIFO_D = 0xF
-
-APDS9960_GFIFO_L = 0xF
-
-APDS9960_GFIFO_R = 0xF
-
-APDS9960_PON = 0b0000000
-
-APDS9960_AEN = 0b0000001
-
-APDS9960_PEN = 0b0000010
-
-APDS9960_WEN = 0b0000100
-
-APSD9960_AIEN = 0b0001000
-
-APDS9960_PIEN = 0b0010000
-
-APDS9960_GEN = 0b0100000
-
-APDS9960_GVALID = 0b0000000
-
-DEFAULT_ATIME = 219
-
-DEFAULT_WTIME = 246
-
-DEFAULT_PROX_PPULSE = 0x87
-
-DEFAULT_GESTURE_PPULSE = 0x89
-
-DEFAULT_POFFSET_UR = 0
-
-DEFAULT_POFFSET_DL = 0
-
-DEFAULT_CONFIG1 = 0x60
-
-DEFAULT_PILT = 0
-
-DEFAULT_PIHT = 50
-
-DEFAULT_AILT = 0xFFFF
-
-DEFAULT_PERS = 0x11
-
-DEFAULT_CONFIG2 = 0x01
-
-DEFAULT_CONFIG3 = 0
-
-DEFAULT_GPENTH = 40
-
-DEFAULT_GEXTH = 30
-
-DEFAULT_GCONF1 = 0x40
-
-DEFAULT_GOFFSET = 0
-
-DEFAULT_GPULSE = 0xC9
-
-DEFAULT_GCONF3 = 0
-
-DEFAULT_GIEN = 0
+DEBUG                   = 0
+GESTURE_THRESHOLD_OUT   = 10
+GESTURE_SENSITIVITY_1   = 50
+GESTURE_SENSITIVITY_2   = 20
+ERROR                   = 0xFF
+APDS9960_ID_1           = 0xAB
+APDS9960_ID_2           = 0x9C
+FIFO_PAUSE_TIME         = 30      # Wait period (ms) between FIFO reads
+APDS9960_ENABLE         = 0x80
+APDS9960_ATIME          = 0x81
+APDS9960_WTIME          = 0x83
+APDS9960_AILTL          = 0x84
+APDS9960_AILTH          = 0x85
+APDS9960_AIHTL          = 0x86
+APDS9960_AIHTH          = 0x87
+APDS9960_PILT           = 0x89
+APDS9960_PIHT           = 0x8B
+APDS9960_PERS           = 0x8C
+APDS9960_CONFIG1        = 0x8D
+APDS9960_PPULSE         = 0x8E
+APDS9960_CONTROL        = 0x8F
+APDS9960_CONFIG2        = 0x90
+APDS9960_STATUS         = 0x93
+APDS9960_CDATAL         = 0x94
+APDS9960_CDATAH         = 0x95
+APDS9960_RDATAL         = 0x96
+APDS9960_RDATAH         = 0x97
+APDS9960_GDATAL         = 0x98
+APDS9960_GDATAH         = 0x99
+APDS9960_BDATAL         = 0x9A
+APDS9960_BDATAH         = 0x9B
+APDS9960_PDATA          = 0x9C
+APDS9960_POFFSET_UR     = 0x9D
+APDS9960_POFFSET_DL     = 0x9E
+APDS9960_CONFIG3        = 0x9F
+APDS9960_GPENTH         = 0xA0
+APDS9960_GEXTH          = 0xA1
+APDS9960_GCONF1         = 0xA2
+APDS9960_GCONF2         = 0xA3
+APDS9960_GOFFSET_U      = 0xA4
+APDS9960_GOFFSET_D      = 0xA5
+APDS9960_GOFFSET_L      = 0xA7
+APDS9960_GOFFSET_R      = 0xA9
+APDS9960_GPULSE         = 0xA6
+APDS9960_GCONF3         = 0xAA
+APDS9960_GCONF4         = 0xAB
+APDS9960_GFLVL          = 0xAE
+APDS9960_GSTATUS        = 0xAF
+APDS9960_IFORCE         = 0xE4
+APDS9960_PICLEAR        = 0xE5
+APDS9960_CICLEAR        = 0xE6
+APDS9960_AICLEAR        = 0xE7
+APDS9960_GFIFO_U        = 0xFC
+APDS9960_GFIFO_D        = 0xFD
+APDS9960_GFIFO_L        = 0xFE
+APDS9960_GFIFO_R        = 0xFF
+APDS9960_PON            = 0b00000001
+APDS9960_AEN            = 0b00000010
+APDS9960_PEN            = 0b00000100
+APDS9960_WEN            = 0b00001000
+APSD9960_AIEN           = 0b00010000
+APDS9960_PIEN           = 0b00100000
+APDS9960_GEN            = 0b01000000
+APDS9960_GVALID         = 0b00000001
+OFF                     = 0
+ON                      = 1
+POWER                   = 0
+AMBIENT_LIGHT           = 1
+PROXIMITY               = 2
+WAIT                    = 3
+AMBIENT_LIGHT_INT       = 4
+PROXIMITY_INT           = 5
+GESTURE                 = 6
+ALL                     = 7
+LED_DRIVE_100MA         = 0
+LED_DRIVE_50MA          = 1
+LED_DRIVE_25MA          = 2
+LED_DRIVE_12_5MA        = 3
+PGAIN_1X                = 0
+PGAIN_2X                = 1
+PGAIN_4X                = 2
+PGAIN_8X                = 3
+AGAIN_1X                = 0
+AGAIN_4X                = 1
+AGAIN_16X               = 2
+AGAIN_64X               = 3
+GGAIN_1X                = 0
+GGAIN_2X                = 1
+GGAIN_4X                = 2
+GGAIN_8X                = 3
+LED_BOOST_100           = 0
+LED_BOOST_150           = 1
+LED_BOOST_200           = 2
+LED_BOOST_300           = 3
+GWTIME_0MS              = 0
+GWTIME_2_8MS            = 1
+GWTIME_5_6MS            = 2
+GWTIME_8_4MS            = 3
+GWTIME_14_0MS           = 4
+GWTIME_22_4MS           = 5
+GWTIME_30_8MS           = 6
+GWTIME_39_2MS           = 7
+DEFAULT_ATIME           = 219     # 103ms
+DEFAULT_WTIME           = 246     # 27ms
+DEFAULT_PROX_PPULSE     = 0x87    # 16us, 8 pulses
+DEFAULT_GESTURE_PPULSE  = 0x89    # 16us, 10 pulses
+DEFAULT_POFFSET_UR      = 0       # 0 offset
+DEFAULT_POFFSET_DL      = 0       # 0 offset
+DEFAULT_CONFIG1         = 0x60    # No 12x wait (WTIME) factor
+DEFAULT_LDRIVE          = LED_DRIVE_100MA
+DEFAULT_PGAIN           = PGAIN_4X
+DEFAULT_AGAIN           = AGAIN_4X
+DEFAULT_PILT            = 0       # Low proximity threshold
+DEFAULT_PIHT            = 50      # High proximity threshold
+DEFAULT_AILT            = 0xFFFF  # Force interrupt for calibration
+DEFAULT_AIHT            = 0
+DEFAULT_PERS            = 0x11    # 2 consecutive prox or ALS for int.
+DEFAULT_CONFIG2         = 0x01    # No saturation interrupts or LED boost
+DEFAULT_CONFIG3         = 0       # Enable all photodiodes, no SAI
+DEFAULT_GPENTH          = 40      # Threshold for entering gesture mode
+DEFAULT_GEXTH           = 30      # Threshold for exiting gesture mode
+DEFAULT_GCONF1          = 0x40    # 4 gesture events for int., 1 for exit
+DEFAULT_GGAIN           = GGAIN_4X
+DEFAULT_GLDRIVE         = LED_DRIVE_100MA
+DEFAULT_GWTIME          = GWTIME_2_8MS
+DEFAULT_GOFFSET         = 0       # No offset scaling for gesture mode
+DEFAULT_GPULSE          = 0xC9    # 32us, 10 pulses
+DEFAULT_GCONF3          = 0       # All photodiodes active during gesture
+DEFAULT_GIEN            = 0       # Disable gesture interrupts
