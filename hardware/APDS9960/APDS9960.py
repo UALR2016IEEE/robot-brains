@@ -1,5 +1,5 @@
 import wiringpi2 as wiringpi
-import hardware.APDS9960.const as const
+import const
 
 
 class APDS9960:
@@ -80,7 +80,7 @@ class APDS9960:
     # * @return Contents of the ENABLE register. 0xFF if error.
 
     def get_mode(self):
-        return wiringpi.wireReadDataByte(const.APDS9960_ENABLE)
+        return self.wireReadDataByte(const.APDS9960_ENABLE)
 
     def set_mode(self, mode, enable):
         enable &= 0x01
@@ -96,7 +96,7 @@ class APDS9960:
             else:
                 reg_val = 0x00
 
-        wiringpi.wireWriteDataByte(const.APDS9960_ENABLE, reg_val)
+        self.wireWriteDataByte(const.APDS9960_ENABLE, reg_val)
     #
     # /**
     # * @brief Starts the light (R/G/B/Ambient) sensor on the APDS-9960
@@ -157,9 +157,9 @@ class APDS9960:
     # */
     def readAmbientLight(self):
         # 	/* Read value from clear channel, low byte register */
-        lowval = wiringpi.wireReadDataByte(const.APDS9960_CDATAL)
+        lowval = self.wireReadDataByte(const.APDS9960_CDATAL)
         # 	/* Read value from clear channel, high byte register *
-        highval = wiringpi.wireReadDataByte(const.APDS9960_CDATAH)
+        highval = self.wireReadDataByte(const.APDS9960_CDATAH)
         lowval += highval << 8
         return lowval
 
@@ -211,7 +211,7 @@ class APDS9960:
     # * @return True if operation successful. False otherwise.
     # */
     def readProximity(self):
-        return wiringpi.wireReadDataByte(const.APDS9960_PDATA)
+        return self.wireReadDataByte(const.APDS9960_PDATA)
 
     # bool APDS9960_RPi::setProxIntHighThresh(uint8_t threshold)
     # {

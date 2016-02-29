@@ -1,4 +1,4 @@
-from .APDS9960 import APDS9960
+from APDS9960 import APDS9960
 
 sen = APDS9960()
 
