@@ -3,5 +3,7 @@ from .APDS9960 import APDS9960
 sen = APDS9960()
 
 sen.initialize()
+sen.enableProximitySensor(None)
 while True:
-    sen.enable_
+    print(sen.readRedLight(), sen.readBLueLight(), sen.readGreenLight())
+
