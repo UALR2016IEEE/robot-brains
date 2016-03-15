@@ -192,11 +192,11 @@ class APDS9960:
     # * @param[out] val value of the light sensor.
     # * @return True if operation successful. False otherwise.
     # */
-    def readBLueLight(self):
-        lowval = self.wireReadDataByte(const.APDS9960_RDATAL)
+    def readBlueLight(self):
+        lowval = self.wireReadDataByte(const.APDS9960_BDATAL)
 
         # 	/* Read value from clear channel, high byte register */
-        highval = self.wireReadDataByte(const.APDS9960_RDATAH)
+        highval = self.wireReadDataByte(const.APDS9960_BDATAH)
         lowval += highval << 8
         return lowval
 

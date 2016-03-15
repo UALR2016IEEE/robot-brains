@@ -11,12 +11,19 @@ class Base(object):
         confidence = 0.0
         lidar_data = yield
         while aligning:
-            find_victim()
-            instruct_mobility()
+            self.find_victim()
+            self.instruct_mobility()
             confidence = 1.0
             aligning = confidence < 0.9
             lidar_data = yield False
         yield True
 
     def attempt_recover(self) -> bool:
-        return
+        return True
+
+    def find_victim(self):
+        pass
+
+    def instruct_mobility(self):
+        pass
+
