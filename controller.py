@@ -28,16 +28,24 @@ class Controller:
         await self.audit_motion()
 
     async def fsm(self):
-        # action = self.mob.exec_line(50)
-        # self.nav.set_action(action)
-        # await self.pilot(action)
+        action = self.mob.exec_line(Point3(200, 0))
+        action.start()
 
-        action_list = [self.mob.exec_line(self.conversion.pix2mm(625)), self.mob.rotate(-90), self.mob.exec_line(self.conversion.pix2mm(250)), self.mob.rotate(90), self.mob.exec_line(self.conversion.pix2mm(125)), self.mob.rotate(-90), self.mob.exec_line(self.conversion.pix2mm(100))]
-        for action in action_list:
-            self.nav.set_action(action)
+        # self.nav.set_action(action)
+        # await self.audit_motion()
+
+        # action_list = [self.mob.exec_line(self.conversion.pix2mm(625)), self.mob.rotate(-90), self.mob.exec_line(self.conversion.pix2mm(250)), self.mob.rotate(90), self.mob.exec_line(self.conversion.pix2mm(125)), self.mob.rotate(-90), self.mob.exec_line(self.conversion.pix2mm(100))]
+        # for action in action_list:
+        #     self.nav.set_action(action)
 
     async def audit_motion(self):
         actual_pos = self.nav.position
         delta = Point3(abs(actual - intent) for intent, actual in zip(self.pos_intention[None], actual_pos[None]))
-        self.mob.exec_line(delta)
-        self.mob.rotate(delta.r)
+        if delta.x > POINT_THREASHOLD or delta.y > POINT_THREASHOLD:
+            action = self.mob.exec_line(delta)
+            self.nav.set_action(action)
+            await asyncio.Condition().wait_for(action.complete, timeout=0.5)
+        if delta.r > ANGLE_THREASHOLD:
+            action = self.mob.rotate(delta.r)
+            self.nav.set_action(action)
+            await asyncio.Condition().wait_for(action.complete, timeout=0.5)

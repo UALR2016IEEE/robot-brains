@@ -1,8 +1,10 @@
 import math
 import time
+import statistics
 
 from utils import Point3, Point2
-
+from status_platform import status
+from hardware.robo_claw import RoboClaw
 
 class Base(object):
     def __init__(self, profile, cid: str = None):
@@ -71,19 +73,80 @@ class Base(object):
     def send_task(self):
         self.current_task.start()
 
+ENCODER_TICKS = 979.62
+WHEEL_BASE = 10
+WHEEL_ARC = 2 * math.pi * WHEEL_BASE
+WHEEL_DIAMETER = 32
+WHEEL_CIRCUMFERENCE = 2*math.pi*WHEEL_DIAMETER
+ROTATION_PER_TICK = WHEEL_CIRCUMFERENCE / ENCODER_TICKS
+
+def ticks_to_mm(ticks):
+    return ROTATION_PER_TICK * ticks
+
+def mm_to_ticks(mm):
+    return mm / ROTATION_PER_TICK
 
 class Mobility(Base):
     def __init__(self, *args, **kwargs):
-        from status_platform import status
-        self.status = status
+        self.m1 = RoboClaw(status, 0x80)
+        self.m2 = RoboClaw(status, 0x81)
         super(Mobility, self).__init__(*args, **kwargs)
 
     def exec_line(self, vector: Point3, stop=True):
-        self.status.line(vector, stop)
-        return super(Mobility, self).exec_line(vector, stop)
+        x_in_ticks = mm_to_ticks(vector.x)
+        y_in_ticks = mm_to_ticks(vector.y)
+
+        def start(action):
+            with self.m1.port.lock():
+                self.m1.reset_motor_positions()
+                self.m1.reset_motor_positions()
+                self.m1.set_motor_positions(12000, x_in_ticks, -x_in_ticks)
+                self.m2.set_motor_positions(12000, y_in_ticks, -y_in_ticks)
+
+        def estimate_progress(action):
+            with self.m1.port.lock():
+                m1a_pos, m1b_pos = self.m1.get_motor_positions()
+                m2a_pos, m2b_pos = self.m2.get_motor_positions()
+            actual = Point3(
+                ticks_to_mm(statistics.mean((m1a_pos, -m1b_pos))),
+                ticks_to_mm(statistics.mean((m2a_pos, -m2b_pos)))
+            )
+            delta = Point3(abs(actual - intent) for intent, actual in zip(action.target[None], actual[None]))
+            if all(d < 10 for d in delta):
+                action.complete = True
+                with self.m1.port.lock():
+                    self.m1.set_motor_pwm(0, 0)
+                    self.m2.set_motor_pwm(0, 0)
+            return actual
+
+
+        return HardwareAction(start=start, estimate_progress=estimate_progress, target=vector)
 
     def rotate(self, angle: float, stop=True):
-        self.status.rotate(angle)
+        wheel_arc = WHEEL_ARC * (angle / (math.pi * 2))
+        wheel_arc_in_ticks = mm_to_ticks(wheel_arc)
+
+        def start(action):
+            with self.m1.port.lock():
+                self.m1.reset_motor_positions()
+                self.m2.reset_motor_positions()
+                self.m1.set_motor_positions(12000, wheel_arc_in_ticks, wheel_arc_in_ticks)
+                self.m2.set_motor_positions(12000, -wheel_arc_in_ticks, -wheel_arc_in_ticks)
+
+        def estimate_progress(action):
+            with self.m1.port.lock():
+                m1a_pos, m1b_pos = self.m1.get_motor_positions()
+                m2a_pos, m2b_pos = self.m2.get_motor_positions()
+            actual = ticks_to_mm(statistics.mean((m1a_pos, m1b_pos, -m2a_pos, -m2b_pos)))
+            if abs(actual - action.target) > math.pi / 7:
+                action.complete = True
+                with self.m1.port.lock():
+                    self.m1.set_motor_pwm(0, 0)
+                    self.m2.set_motor_pwm(0, 0)
+            return actual
+
+
+        return HardwareAction(start=start, estimate_progress=estimate_progress, target=angle)
 
     def arm(self, enable=True):
         self.status.arm(enable)
@@ -190,3 +253,15 @@ class Action(object):
         self.current_time = time.time()
 
         return self.d_xy, self.d_theta, dt
+
+
+class HardwareAction(object):
+    def __init__(self, start, estimate_progress, target):
+        self.estimate_progress = estimate_progress
+        self.start = start
+        self.target = target
+        self.complete = False
+
+
+
+

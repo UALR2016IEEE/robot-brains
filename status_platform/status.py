@@ -1,21 +1,17 @@
 import serial
+import time
 from multiprocessing import Lock
 import asyncio
 
-ard = serial.Serial("/dev/ttyUSB0")
-ard.baudrate = 155200
 
-lock = Lock()
+class StatusClass(serial.Serial):
+    def __init__(self, *args, **kwargs):
+        self.lock = Lock()
+        super(status, self).__init__(self, *args, **kwargs)
 
-
-def line(len, angle):
-    with lock:
-        ard.write(bytes("L{:4d}{:-1.3f}".format(len, angle)))
-
-
-def rotate(angle):
-    line(0, angle)
+status = StatusClass("/dev/ttyUSB0")
+status.buadrate = 115200
+status.timeout = 0.1
+time.sleep(2)
 
 
-def arm(enable):
-    ard.write(bytes("E{:1d}".format(enable)))

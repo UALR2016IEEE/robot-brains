@@ -34,7 +34,7 @@ class Base(multiprocessing.Process):
                       render: bool):
         print('initial pos', initial_position.mm2pix())
         navigator = nav(position=initial_position)
-        lidar = hardware.lidar.Base(sim_controller)
+        lidar = hardware.lidar.Lidar(sim_controller, "/dev/ttyAMA0")
         action = None
         navigator.set_position(initial_position)
         no_action = False
@@ -48,10 +48,11 @@ class Base(multiprocessing.Process):
             io.send_data(('grid-colors', sim_controller.grid.get_pygame_grid()))
             io.send_data(('robot-pos', initial_position))
 
-        while not halt.is_set():
+        for lidar_data in lidar.get_scan():
+            if halt.is_set():
+                break
             while not components.empty():
                 navigator.add_component(*components.get())
-            lidar_data = lidar.scan(navigator.get_position())
 
             if render:
                 io.send_data(('robot-pos', navigator.get_position()))
@@ -72,7 +73,7 @@ class Base(multiprocessing.Process):
                 if not action.started:
                     print('staring action!')
                     action.start()
-                estimates = action.estimate(navigator.get_position())
+                estimates = action.estimate_progress()
                 if action.complete:
                     action = None
             # print('running components')

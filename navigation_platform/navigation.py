@@ -107,11 +107,3 @@ class Base(object):
             except StopIteration:
                 self.components.pop(key)
 
-
-class Navigation(Base):
-    def __init__(self, cid: str = None):
-        if cid:
-            self.connect(cid)
-
-    def connect(self, cid: str = None):
-        pass
