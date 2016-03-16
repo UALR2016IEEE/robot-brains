@@ -1,14 +1,18 @@
 {
-  "robot characteristics": {
-    "acceleration": 2,
-    "deceleration": 2,
-    "top lateral speed": 4,
-    "top rotational speed": 20,
-    "note": {
-      "acceleration": "Should be evaluated for non linear acceleration, in m/s^2",
-      "deceleration": "Should be evaluated for non linear acceleration, in m/s^2",
-      "top lateral speed": "Constant in m/s",
-      "top rotational speed": "Constant in deg/s"
+    "map characteristics": {
+        "map size meters": 2.438,
+        "map size pixels": 960
+    },
+    "robot characteristics": {
+        "top rotational speed": 20,
+        "acceleration": 0.4,
+        "top lateral speed": 0.1,
+        "note": {
+            "top rotational speed": "Constant in deg/s",
+            "acceleration": "Should be evaluated for non linear acceleration, in m/s^2",
+            "top lateral speed": "Constant in m/s",
+            "deceleration": "Should be evaluated for non linear acceleration, in m/s^2"
+        },
+        "deceleration": 0.4
     }
-  }
 }

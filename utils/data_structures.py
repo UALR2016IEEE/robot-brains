@@ -1,10 +1,12 @@
 import math
+from utils.conversion import Conversion
 
 
 class Point2(object):
     def __init__(self, y=0, x=0):
         self._y = y
         self._x = x
+        self.conversion = Conversion()
 
     @property
     def x(self):
@@ -21,6 +23,12 @@ class Point2(object):
     @y.setter
     def y(self, value):
         self._y = value
+
+    def mm2pix(self):
+        return Point2(self.conversion.mm2pix(self.y), self.conversion.mm2pix(self.x))
+
+    def pix2mm(self):
+        return Point2(self.conversion.pix2mm(self.y), self.conversion.pix2mm(self.x))
 
     def distance(self, other):
         return math.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
@@ -66,6 +74,7 @@ class Point3(object):
         self._y = y
         self._x = x
         self._r = r
+        self.conversion = Conversion()
 
     @property
     def x(self):
@@ -90,6 +99,12 @@ class Point3(object):
     @r.setter
     def r(self, value):
         self._r = value
+
+    def mm2pix(self):
+        return Point3(self.conversion.mm2pix(self.y), self.conversion.mm2pix(self.x), self.r)
+
+    def pix2mm(self):
+        return Point3(self.conversion.pix2mm(self.y), self.conversion.pix2mm(self.x), self.r)
 
     def distance(self, other):
         return math.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)

@@ -38,7 +38,7 @@ class Base(object):
         pass
         # return angle
 
-    def exec_line(self, vector:Point3, stop=True):
+    def exec_line(self, vector: Point3, stop=True):
         self.current_task = Action(self.profile, self.velocity, self.acceleration, line=vector, stop=stop)
         return self.current_task
 
@@ -133,7 +133,6 @@ class Action(object):
             self.started = True
             self.start_time = time.time()
             self.current_time = self.start_time
-            print('time: ', self.current_time)
 
     def estimate_progress(self):
         return 0
@@ -156,7 +155,11 @@ class Action(object):
                 # turning CCW
                 self.velocity.r = -self.profile['top rotational speed']
 
-            self.d_theta = self.velocity.r * dt
+            factor = 1.0
+            if abs(self.angle) - abs(self.total_angle) < abs(self.velocity.r) / 2.0:
+                factor = 0.3
+
+            self.d_theta = self.velocity.r * dt * factor
             self.total_angle += self.d_theta
 
             if abs(self.total_angle) > abs(self.angle):
@@ -167,9 +170,11 @@ class Action(object):
                 self.complete = True
 
         if self.line:
-            self.velocity.x = self.profile['top lateral speed'] * math.cos(initial_pos.r)
-            self.velocity.y = self.profile['top lateral speed'] * math.sin(initial_pos.r)
+            # velocities need to be in mm/s
+            self.velocity.x = (self.profile['top lateral speed'] * 1000) * math.cos(initial_pos.r)
+            self.velocity.y = (self.profile['top lateral speed'] * 1000) * math.sin(initial_pos.r)
             self.velocity.r = 0
+
             self.distance += self.velocity.magnitude() * dt
 
             if self.distance > self.line:
@@ -180,7 +185,7 @@ class Action(object):
                     self.velocity.y = 0
                 self.complete = True
 
-            self.d_xy = self.velocity.magnitude() * 2.54 * dt
+            self.d_xy = self.velocity.magnitude() * dt
 
         self.current_time = time.time()
 

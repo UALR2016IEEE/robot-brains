@@ -28,7 +28,7 @@ class Base(object):
 
         # set sensor obscure ranges : [(obscure_center, obscure_range_from_center)]
         self.obscured = []
-        for item in [(60, 7), (180, 7), (300, 7)]:
+        for item in [(45, 7), (135, 7), (225, 7), (315, 7)]:
             self.obscured.append((self.wrap(math.radians(item[0]) - math.radians(item[1]), 0, 2.0 * math.pi),
                                   self.wrap(math.radians(item[0]) + math.radians(item[1]), 0, 2.0 * math.pi)))
 
@@ -53,16 +53,22 @@ class Base(object):
         :return: np.ndarray of scan hits
         """
 
+        # for convenience, convert position (mm) into grid units (pix)
+        p = position.mm2pix()
+        px = p.x
+        py = p.y
+        pr = p.r
+
         # calculate how many measurements to take
         snaps = int(self.angle_range / self.resolution)
 
-        # get a slightly randomized initial position.r
-        cr = self.wrap(position.r - self.angle_range / 2.0 + random.random() * self.resolution, 0.0, 2.0 * math.pi)
+        # get a slightly randomized initial pr
+        cr = self.wrap(pr - self.angle_range / 2.0 + random.random() * self.resolution, 0.0, 2.0 * math.pi)
 
         # generate rays array
         rays = np.ndarray(shape=(snaps, 3))
-        rays[:, 0] = position.y
-        rays[:, 1] = position.x
+        rays[:, 0] = py
+        rays[:, 1] = px
         rays[:, 2] = np.linspace(cr, cr + self.angle_range, snaps) % (2.0 * np.pi)
 
         # preallocate results array
@@ -81,8 +87,8 @@ class Base(object):
             not_hit = np.in1d(self.map[rays[:, 0].astype(int), rays[:, 1].astype(int)], self.non_blocking)
 
         # map results to hits array [distances must be in mm, so multiply by 2.54]
-        hits[:, 0] = np.sqrt(np.square((rays[:, 1] - position.x)) + np.square((rays[:, 0] - position.y))) * 2.54
-        hits[:, 1] = rays[:, 2] - position.r
+        hits[:, 0] = np.sqrt(np.square((rays[:, 1] - px)) + np.square((rays[:, 0] - py))) * 2.54
+        hits[:, 1] = rays[:, 2] - pr
         hits[:, 2] = 1.0  # all the data is perfect - yay
 
         # make sure the angles are properly bounded

@@ -15,7 +15,6 @@ class Base(multiprocessing.Process):
         self.halt = multiprocessing.Event()
         self.components = multiprocessing.Queue()
         self.actions = multiprocessing.Queue()
-        self.nav_process = multiprocessing.Process.__init__(self, target=self.nav_interface, args=(self.nav, self.sim_controller.position, self.pos, self.cpos, self.sim_controller, self.halt, self.components, self.actions))
         self.nav_process = multiprocessing.Process.__init__(self, target=self.nav_interface, args=(
             self.nav, self.sim_controller.position, self.pos, self.sim_controller, self.halt, self.components,
             self.actions, render))
@@ -33,7 +32,7 @@ class Base(multiprocessing.Process):
     def nav_interface(nav: type, initial_position, position_queue: multiprocessing.Queue, sim_controller,
                       halt: multiprocessing.Event, components: multiprocessing.Queue, actions: multiprocessing.Queue,
                       render: bool):
-        print('initial pos', initial_position)
+        print('initial pos', initial_position.mm2pix())
         navigator = nav(position=initial_position)
         lidar = hardware.lidar.Base(sim_controller)
         action = None
@@ -59,7 +58,7 @@ class Base(multiprocessing.Process):
                 io.send_data(('lidar-points', (navigator.get_position(), lidar_data)))
 
             if not actions.empty() and action is None:
-                print('getting action')
+                print('getting action!')
                 action = actions.get()
             if action is None:
                 # dxy, dr, dt
@@ -67,7 +66,7 @@ class Base(multiprocessing.Process):
                 if not no_action:
                     no_action = True
                     print('no action', navigator.get_position())
-                    navigator.save_map()
+                    navigator.export_gif()
                     halt.set()
             else:
                 if not action.started:
@@ -76,10 +75,13 @@ class Base(multiprocessing.Process):
                 estimates = action.estimate(navigator.get_position())
                 if action.complete:
                     action = None
+            # print('running components')
             navigator.run_components(lidar_data, estimates)
             position = navigator.get_position()
-            current_position[None] = position[None]
+            # current_position[None] = position[None]
             position_queue.put(position)
+            # print('saving map')
+            navigator.save_map()
 
     @asyncio.coroutine
     def get_pos(self):
