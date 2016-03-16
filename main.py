@@ -6,18 +6,18 @@ import json
 from navigation_platform.controller import Controller as NavControl
 from navigation_platform.navigation import Navigation as Navigation
 from mobility_platform.mobility import Mobility
+from controller import Controller
 
 
-def main():
+def main(render):
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-        #nav = NavControl()
-        #nav.start()
-        nav = None
-        mob = Mobility()
-        controller = Controller(nav, mob)
-        controller.start()
+    nav = NavControl(Navigation, None, render)
+    nav.start()
+    mob = Mobility(profile=config['robot characteristics'])
+    controller = Controller(nav, mob)
+    controller.start()
 
 
 if __name__ == "__main__":
@@ -36,4 +36,4 @@ if __name__ == "__main__":
 
             mock.mock(render=arg_render)
         else:
-            main()
+            main(arg_render)
