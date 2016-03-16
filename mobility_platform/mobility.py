@@ -1,5 +1,6 @@
 import math
 import time
+import types
 import statistics
 
 from utils import Point3, Point2
@@ -257,8 +258,8 @@ class Action(object):
 
 class HardwareAction(object):
     def __init__(self, start, estimate_progress, target):
-        self.estimate_progress = estimate_progress
-        self.start = start
+        self.estimate_progress = types.MethodType(estimate_progress, self)
+        self.start = types.MethodType(start, self)
         self.target = target
         self.complete = False
 
