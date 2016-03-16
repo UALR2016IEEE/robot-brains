@@ -53,7 +53,7 @@ def mock(render=False):
         sim_controller = simulate.controller.Controller(position)
         sim_controller.init_grid()
 
-        nav = NavControl(Navigation, sim_controller, render)
+        nav = NavControl(Navigation, None, render)
         nav.start()
         mob = Mobility(profile=config['robot characteristics'])
         controller = Controller(nav, mob)

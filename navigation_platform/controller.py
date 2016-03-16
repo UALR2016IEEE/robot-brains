@@ -15,11 +15,24 @@ class Base(multiprocessing.Process):
         self.halt = multiprocessing.Event()
         self.components = multiprocessing.Queue()
         self.actions = multiprocessing.Queue()
-        self.nav_process = multiprocessing.Process.__init__(self, target=self.nav_interface, args=(
-            self.nav, self.sim_controller.position, self.pos, self.sim_controller, self.halt, self.components,
-            self.actions, render))
+        self.nav_process = self.create_nav_process(render)
         self.current_action = None
         self.pos_lock = multiprocessing.Lock()
+
+    def create_nav_process(self, render=False):
+        return multiprocessing.Process.__init__(
+            self, target=self.nav_interface, args=
+            (
+                self.nav,
+                self.sim_controller.position,
+                self.pos,
+                self.sim_controller,
+                self.halt,
+                self.components,
+                self.actions,
+                render
+            )
+        )
 
     def start(self):
         super(Base, self).start()
@@ -107,5 +120,18 @@ class Base(multiprocessing.Process):
         self.actions.put(action)
 
 
-class Controller(object):
-    pass
+class Controller(Base):
+    def create_nav_process(self, render=False):
+        return multiprocessing.Process.__init__(
+            self, target=self.nav_interface, args=
+            (
+                self.nav,
+                Safe_Point3(),
+                self.pos,
+                None,
+                self.halt,
+                self.components,
+                self.actions,
+                render
+            )
+        )
