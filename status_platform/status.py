@@ -7,7 +7,7 @@ import asyncio
 class StatusClass(serial.Serial):
     def __init__(self, *args, **kwargs):
         self.lock = Lock()
-        super(status, self).__init__(self, *args, **kwargs)
+        super(StatusClass, self).__init__(*args, **kwargs)
 
 status = StatusClass("/dev/ttyUSB0")
 status.buadrate = 115200

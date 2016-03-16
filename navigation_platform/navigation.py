@@ -2,7 +2,6 @@ import json
 import math
 import types
 
-import moviepy.editor as mp
 import numpy as np
 from PIL import Image
 from breezyslam.algorithms import RMHCSlam
@@ -107,3 +106,5 @@ class Base(object):
             except StopIteration:
                 self.components.pop(key)
 
+class Navigation(Base):
+    pass
