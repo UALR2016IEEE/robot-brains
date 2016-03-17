@@ -10,7 +10,7 @@ class StatusClass(serial.Serial):
         super(StatusClass, self).__init__(*args, **kwargs)
 
 status = StatusClass("/dev/ttyUSB0")
-status.buadrate = 115200
+status.baudrate = 115200
 status.timeout = 0.1
 time.sleep(2)
 

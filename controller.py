@@ -16,6 +16,7 @@ class Controller:
         self.local = Point3()
         self.tasks = [self.fsm()]
         self.loop = asyncio.get_event_loop()
+        self.loop.set_debug(True)
         self.pos_intention = Point3()
         self.conversion = Conversion()
 
@@ -29,7 +30,10 @@ class Controller:
 
     async def fsm(self):
         action = self.mob.exec_line(Point3(200, 0))
-        action.start()
+        try:
+            action.start()
+        except:
+            self.mob.stop()
 
         # self.nav.set_action(action)
         # await self.audit_motion()

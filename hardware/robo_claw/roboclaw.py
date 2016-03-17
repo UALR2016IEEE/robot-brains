@@ -116,9 +116,7 @@ class RoboClaw:
         self.send_command(raw_data)
 
     def reset_motor_positions(self):
-        return_code = self.ask(constants.RESETENC, 1)
-        if return_code != 0xFF:
-            raise CommandNotReceived()
+        self.send_command(bytes([constants.RESETENC]))
 
     def get_motor_positions(self):
         # Recive Format:

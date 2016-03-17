@@ -85,7 +85,7 @@ def ticks_to_mm(ticks):
     return ROTATION_PER_TICK * ticks
 
 def mm_to_ticks(mm):
-    return mm / ROTATION_PER_TICK
+    return int(mm / ROTATION_PER_TICK)
 
 class Mobility(Base):
     def __init__(self, *args, **kwargs):
@@ -98,14 +98,14 @@ class Mobility(Base):
         y_in_ticks = mm_to_ticks(vector.y)
 
         def start(action):
-            with self.m1.port.lock():
+            with self.m1.port.lock:
                 self.m1.reset_motor_positions()
                 self.m1.reset_motor_positions()
-                self.m1.set_motor_positions(12000, x_in_ticks, -x_in_ticks)
-                self.m2.set_motor_positions(12000, y_in_ticks, -y_in_ticks)
+                self.m1.set_motor_positions(12000, (6000, x_in_ticks), (-6000, -x_in_ticks))
+                self.m2.set_motor_positions(12000, (6000, y_in_ticks), (-6000, -y_in_ticks))
 
         def estimate_progress(action):
-            with self.m1.port.lock():
+            with self.m1.port.lock:
                 m1a_pos, m1b_pos = self.m1.get_motor_positions()
                 m2a_pos, m2b_pos = self.m2.get_motor_positions()
             actual = Point3(
@@ -115,7 +115,7 @@ class Mobility(Base):
             delta = Point3(abs(actual - intent) for intent, actual in zip(action.target[None], actual[None]))
             if all(d < 10 for d in delta):
                 action.complete = True
-                with self.m1.port.lock():
+                with self.m1.port.lock:
                     self.m1.set_motor_pwm(0, 0)
                     self.m2.set_motor_pwm(0, 0)
             return actual
@@ -128,20 +128,20 @@ class Mobility(Base):
         wheel_arc_in_ticks = mm_to_ticks(wheel_arc)
 
         def start(action):
-            with self.m1.port.lock():
+            with self.m1.port.lock:
                 self.m1.reset_motor_positions()
                 self.m2.reset_motor_positions()
-                self.m1.set_motor_positions(12000, wheel_arc_in_ticks, wheel_arc_in_ticks)
-                self.m2.set_motor_positions(12000, -wheel_arc_in_ticks, -wheel_arc_in_ticks)
+                self.m1.set_motor_positions(12000, (6000, wheel_arc_in_ticks), (6000, wheel_arc_in_ticks))
+                self.m2.set_motor_positions(12000, (6000, -wheel_arc_in_ticks), (6000, -wheel_arc_in_ticks))
 
         def estimate_progress(action):
-            with self.m1.port.lock():
+            with self.m1.port.lock:
                 m1a_pos, m1b_pos = self.m1.get_motor_positions()
                 m2a_pos, m2b_pos = self.m2.get_motor_positions()
             actual = ticks_to_mm(statistics.mean((m1a_pos, m1b_pos, -m2a_pos, -m2b_pos)))
             if abs(actual - action.target) > math.pi / 7:
                 action.complete = True
-                with self.m1.port.lock():
+                with self.m1.port.lock:
                     self.m1.set_motor_pwm(0, 0)
                     self.m2.set_motor_pwm(0, 0)
             return actual
@@ -149,8 +149,10 @@ class Mobility(Base):
 
         return HardwareAction(start=start, estimate_progress=estimate_progress, target=angle)
 
-    def arm(self, enable=True):
-        self.status.arm(enable)
+    def stop(self, enable=True):
+        with self.m1.port.lock:
+            self.m1.set_motor_pwm(0, 0)
+            self.m2.set_motor_pwm(0, 0)
 
 
 class Action(object):
