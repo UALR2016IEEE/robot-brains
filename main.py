@@ -14,7 +14,7 @@ def main(render):
         config = json.load(f)
 
     nav = NavControl(Navigation, None, render)
-    nav.start()
+    #nav.start()
     mob = Mobility(profile=config['robot characteristics'])
     controller = Controller(nav, mob)
     controller.start()

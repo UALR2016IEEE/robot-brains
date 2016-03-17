@@ -83,20 +83,22 @@ class RoboClaw:
         motor2_current = motor2_current_in_ma /100
         return motor1_current, motor2_current
 
-    def set_motor_positions(self, acceleration, m1, m2, buffered=False):
+    def set_motor_positions(self, m1, m2, buffered=False):
         # Order for command:
-        # [Address,
-        # 46,
-        # Accel(4 Bytes),
-        # SpeedM1(4 Bytes),
-        # DistanceM1(4 Bytes),
-        # SpeedM2(4 bytes),
-        # DistanceM2(4 Bytes),
+        #[Address,
+        #67,
+        #AccelM1(4 bytes),
+        #SpeedM1(4 Bytes),
+        # DeccelM1(4 bytes),
+        #PositionM1(4 Bytes),
+        # AccelM2(4 bytes),
+        # SpeedM2(4 Bytes),
+        # DeccelM2(4 bytes),
+        #PositionM2(4 Bytes),
         # Buffer,
         # CRC(2 bytes)]
-        raw_data = struct.pack(">BIIiIi?",
-                               constants.MIXEDSPEEDACCELDIST,
-                               acceleration,
+        raw_data = struct.pack(">BIIIiIIIi?",
+                               constants.MIXEDSPEEDACCELDECCELPOS,
                                *m1,
                                *m2,
                                buffered
