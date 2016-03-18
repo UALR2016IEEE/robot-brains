@@ -150,7 +150,7 @@ class RoboClaw:
         # if underflow or overflow:
         #     raise OverflowError
 
-        return m1_position, m2_position
+        return m1_position_unsigned, m2_position_unsigned
 
 
 if __name__ == "__main__":

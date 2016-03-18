@@ -76,9 +76,9 @@ class Base(object):
 
 ENCODER_TICKS = 979.62
 WHEEL_BASE = 10
-WHEEL_ARC = 2 * math.pi * WHEEL_BASE
+WHEEL_ARC = math.pi * WHEEL_BASE
 WHEEL_DIAMETER = 32
-WHEEL_CIRCUMFERENCE = 2*math.pi*WHEEL_DIAMETER
+WHEEL_CIRCUMFERENCE = math.pi*WHEEL_DIAMETER
 ROTATION_PER_TICK = WHEEL_CIRCUMFERENCE / ENCODER_TICKS
 
 def ticks_to_mm(ticks):
@@ -100,7 +100,7 @@ class Mobility(Base):
         def start(action):
             with self.m1.port.lock:
                 self.m1.reset_motor_positions()
-                self.m1.reset_motor_positions()
+                self.m2.reset_motor_positions()
                 self.m1.set_motor_positions(12000, (6000, x_in_ticks), (-6000, x_in_ticks))
                 self.m2.set_motor_positions(12000, (6000, y_in_ticks), (-6000, y_in_ticks))
 
@@ -113,7 +113,7 @@ class Mobility(Base):
                 ticks_to_mm(statistics.mean((m2a_pos, -m2b_pos)))
             )
             delta = Point3(*(abs(actual - intent) for intent, actual in zip(action.target[None], actual[None])))
-            if all(d < 10 for d in delta):
+            if all(d < 300 for d in delta):
                 action.complete = True
                 with self.m1.port.lock:
                     self.m1.set_motor_pwm(0, 0)
