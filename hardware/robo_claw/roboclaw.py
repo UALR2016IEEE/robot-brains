@@ -122,7 +122,19 @@ class RoboClaw:
         self.send_command(raw_data)
 
     def reset_motor_positions(self):
-        self.send_command(bytes([constants.RESETENC]))
+        raw_data = struct.pack(
+            ">BI",
+            constants.SETM1ENCCOUNT,
+            constants.ENCODER_MIDPOINT
+        )
+        self.send_command(raw_data)
+
+        raw_data = struct.pack(
+            ">BI",
+            constants.SETM2ENCCOUNT,
+            constants.ENCODER_MIDPOINT
+        )
+        self.send_command(raw_data)
 
     def get_motor_positions(self):
         # Recive Format:
@@ -137,7 +149,7 @@ class RoboClaw:
         underflow = status & 0b00000001
         overflow =  status & 0b00000100
         direction = status & 0b00000010
-        m1_position = direction * -1 * m1_position_unsigned
+        m1_position = m1_position_unsigned - constants.ENCODER_MIDPOINT
         if underflow or overflow:
             raise OverflowError
 
@@ -146,7 +158,7 @@ class RoboClaw:
         underflow = status & 0b00000001
         overflow =  status & 0b00000100
         direction = status & 0b00000010
-        m2_position = direction * -1 * m2_position_unsigned
+        m2_position = m2_position_unsigned - constants.ENCODER_MIDPOINT
         if underflow or overflow:
             raise OverflowError
 
