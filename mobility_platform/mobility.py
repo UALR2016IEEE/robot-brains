@@ -101,8 +101,8 @@ class Mobility(Base):
             with self.m1.port.lock:
                 self.m1.reset_motor_positions()
                 self.m1.reset_motor_positions()
-                self.m1.set_motor_positions(12000, (6000, x_in_ticks), (-6000, -x_in_ticks))
-                self.m2.set_motor_positions(12000, (6000, y_in_ticks), (-6000, -y_in_ticks))
+                self.m1.set_motor_positions(12000, (6000, x_in_ticks), (-6000, x_in_ticks))
+                self.m2.set_motor_positions(12000, (6000, y_in_ticks), (-6000, y_in_ticks))
 
         def estimate_progress(action):
             with self.m1.port.lock:
@@ -132,12 +132,10 @@ class Mobility(Base):
                 self.m1.reset_motor_positions()
                 self.m2.reset_motor_positions()
                 self.m1.set_motor_positions(
-                    (12000, 6000, 12000, wheel_arc_in_ticks),
-                    (12000, 6000, 12000, wheel_arc_in_ticks)
+                    12000, (6000, wheel_arc_in_ticks), (6000, wheel_arc_in_ticks)
                 )
                 self.m2.set_motor_positions(
-                    (12000, 6000, 12000, -wheel_arc_in_ticks),
-                    (12000, 6000, 12000, -wheel_arc_in_ticks)
+                    12000, (6000, wheel_arc_in_ticks), (6000, wheel_arc_in_ticks)
                 )
 
         def estimate_progress(action):
