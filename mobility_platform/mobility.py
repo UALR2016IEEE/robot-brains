@@ -112,7 +112,7 @@ class Mobility(Base):
                 ticks_to_mm(statistics.mean((m1a_pos, -m1b_pos))),
                 ticks_to_mm(statistics.mean((m2a_pos, -m2b_pos)))
             )
-            delta = Point3(*abs(actual - intent) for intent, actual in zip(action.target[None], actual[None]))
+            delta = Point3(*(abs(actual - intent) for intent, actual in zip(action.target[None], actual[None])))
             if all(d < 10 for d in delta):
                 action.complete = True
                 with self.m1.port.lock:
