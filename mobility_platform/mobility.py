@@ -114,10 +114,13 @@ class Mobility(Base):
             )
             delta = Point3(*(abs(actual - intent) for intent, actual in zip(action.target[None], actual[None])))
             if all(d < 300 for d in delta):
-                action.complete = True
-                with self.m1.port.lock:
-                    self.m1.set_motor_pwm(0, 0)
-                    self.m2.set_motor_pwm(0, 0)
+                self.timeout = time.time()
+            if self.timeout != 0:
+                if time.time() - self.timeout > 2 or all(d < 10 for d in delta):
+                    action.complete = True
+                    with self.m1.port.lock:
+                        self.m1.set_motor_pwm(0, 0)
+                        self.m2.set_motor_pwm(0, 0)
             return actual
 
 
@@ -268,6 +271,7 @@ class HardwareAction(object):
         self.start = types.MethodType(start, self)
         self.target = target
         self.complete = False
+        self.timeout = 0
 
 
 
