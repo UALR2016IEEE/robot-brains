@@ -7,11 +7,12 @@ import hardware
 
 
 class Base(multiprocessing.Process):
-    def __init__(self, navigation: type, sim_controller, render=False):
+    def __init__(self, navigation: type, sim_controller, stat_lock, render=False):
         self.nav = navigation
         self.sim_controller = sim_controller
         self.pos = multiprocessing.Queue()
         self.cpos = Safe_Point3()
+        self.stat_lock = stat_lock
 
         self.halt = multiprocessing.Event()
         self.components = multiprocessing.Queue()
@@ -124,7 +125,7 @@ class Base(multiprocessing.Process):
 class Controller(Base):
     def create_nav_process(self, render=False):
         return multiprocessing.Process.__init__(
-            self, target=self.nav_interface, args=
+            self, target=self.hardware_nav_interface, args=
             (
                 self.nav,
                 Safe_Point3(),
@@ -133,14 +134,15 @@ class Controller(Base):
                 self.halt,
                 self.components,
                 self.actions,
-                render
+                render,
+                self.stat_lock
             )
         )
 
     @staticmethod
-    def nav_interface(nav: type, initial_position, position_queue: multiprocessing.Queue, sim_controller,
+    def hardware_nav_interface(nav: type, initial_position, position_queue: multiprocessing.Queue, sim_controller,
                       halt: multiprocessing.Event, components: multiprocessing.Queue, actions: multiprocessing.Queue,
-                      render: bool):
+                      render: bool, stat_lock):
         print('initial pos', initial_position.mm2pix())
         navigator = nav(position=initial_position)
         lidar = hardware.RPi_Lidar(sim_controller, "/dev/ttyAMA0")
@@ -172,7 +174,8 @@ class Controller(Base):
                     print('getting action!')
                     input("waiting")
 
-                    action = actions.get()()
+                    action = actions.get()
+                    action.set_status(stat_lock)
                 if action is not None:
                     if not action.started:
                         print('staring action!')

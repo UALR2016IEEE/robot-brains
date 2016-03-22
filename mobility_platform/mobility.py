@@ -2,9 +2,9 @@ import math
 import time
 import types
 import statistics
+import multiprocessing
 
 from utils import Point3, Point2
-from status_platform import status
 from hardware.robo_claw import RoboClaw
 
 class Base(object):
@@ -98,12 +98,40 @@ def shift_vector_angle(x, y, shift):
 
 class Mobility(Base):
     def __init__(self, *args, **kwargs):
-        self.m1 = RoboClaw(status, 0x80)
-        self.m2 = RoboClaw(status, 0x81)
         super(Mobility, self).__init__(*args, **kwargs)
 
     def exec_line(self, vector: Point3, stop=True):
         return LineAction(target=vector)
+
+    def rotate(self, angle: float, stop=True):
+        wheel_arc = WHEEL_ARC * (angle / (math.pi * 2))
+        wheel_arc_in_ticks = mm_to_ticks(wheel_arc)
+
+        def start(action):
+            with self.m1.port.lock:
+                self.m1.reset_motor_positions()
+                self.m2.reset_motor_positions()
+                self.m1.set_motor_positions(
+                    12000, (6000, wheel_arc_in_ticks), (6000, wheel_arc_in_ticks)
+                )
+                self.m2.set_motor_positions(
+                    12000, (6000, wheel_arc_in_ticks), (6000, wheel_arc_in_ticks)
+                )
+
+        def estimate_progress(action):
+            with self.m1.port.lock:
+                m1a_pos, m1b_pos = self.m1.get_motor_positions()
+                m2a_pos, m2b_pos = self.m2.get_motor_positions()
+            actual = ticks_to_mm(statistics.mean((m1a_pos, m1b_pos, -m2a_pos, -m2b_pos)))
+            if abs(actual - action.target) > math.pi / 7:
+                action.complete = True
+                with self.m1.port.lock:
+                    self.m1.set_motor_pwm(0, 0)
+                    self.m2.set_motor_pwm(0, 0)
+            return actual
+
+
+        return LineAction(start=start, estimate_progress=estimate_progress)
 
     def stop(self, enable=True):
         with self.m1.port.lock:
@@ -219,6 +247,8 @@ class LineAction(object):
         self.target = target
         self.complete = False
         self.timeout = 0
+
+    def set_status(self, status):
         self.m1 = RoboClaw(status, 0x80)
         self.m2 = RoboClaw(status, 0x81)
 

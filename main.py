@@ -1,5 +1,5 @@
 import sys
-
+import multiprocessing
 import numpy as np
 import json
 
@@ -13,7 +13,8 @@ def main(render):
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-    nav = NavControl(Navigation, None, render)
+    stat_lock = multiprocessing.Lock()
+    nav = NavControl(Navigation, None, stat_lock, render)
     #nav.start()
     mob = Mobility(profile=config['robot characteristics'])
     controller = Controller(nav, mob)

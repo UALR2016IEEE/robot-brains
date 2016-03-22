@@ -1,12 +1,10 @@
 import serial
 import time
-from multiprocessing import Lock
-import asyncio
 
 
 class StatusClass(serial.Serial):
     def __init__(self, *args, **kwargs):
-        self.lock = Lock()
+        self.lock = None
         super(StatusClass, self).__init__(*args, **kwargs)
 
 status = StatusClass("/dev/ttyUSB0")
