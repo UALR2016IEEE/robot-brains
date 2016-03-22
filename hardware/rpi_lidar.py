@@ -1,5 +1,7 @@
 __author__ = 'StaticVOiDance'
 
+
+import atexit
 from .lidar import Lidar
 from .constants import  *
 
@@ -19,7 +21,8 @@ class RPi_Lidar(Lidar):
         self.set_motor_duty(0)
         super(RPi_Lidar, self).connect(hw_addr)
 
-    def set_motor_duty(self, duty_cycle):
+    @staticmethod
+    def set_motor_duty(duty_cycle):
         assert 0 <= duty_cycle <= 100
         duty_cycle = int(duty_cycle * 10.24)
         wiringpi.pwmWrite(PWM_PIN, duty_cycle)
@@ -37,3 +40,7 @@ class RPi_Lidar(Lidar):
             rate = await self.get_current_speed()
             if not round(abs(rate - rot_per_sec), -1):
                 return
+
+@atexit.register
+def cleanup_gpio():
+    RPi_Lidar.set_motor_duty(0)
