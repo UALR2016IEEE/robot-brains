@@ -74,6 +74,7 @@ class Base(multiprocessing.Process):
 
             if not actions.empty() and action is None:
                 print('getting action!')
+                print
                 action = actions.get()
             if action is None:
                 # dxy, dr, dt
@@ -144,7 +145,6 @@ class Controller(Base):
         print('initial pos', initial_position.mm2pix())
         navigator = nav(position=initial_position)
         lidar = hardware.RPi_Lidar(sim_controller, "/dev/ttyAMA0")
-        lidar.set_motor_duty(90)
         action = None
         navigator.set_position(initial_position)
         no_action = False
@@ -157,37 +157,41 @@ class Controller(Base):
             io.send_data(('full-simulation', None))
             io.send_data(('grid-colors', sim_controller.grid.get_pygame_grid()))
             io.send_data(('robot-pos', initial_position))
-        for lidar_data in lidar.get_scan():
-            if halt.is_set():
-                break
-            while not components.empty():
-                navigator.add_component(*components.get())
+        lidar.set_motor_duty(90)
+        try:
+            for lidar_data in lidar.get_scan():
+                if halt.is_set():
+                    break
+                while not components.empty():
+                    navigator.add_component(*components.get())
 
-            if render:
-                io.send_data(('robot-pos', navigator.get_position()))
-                io.send_data(('lidar-points', (navigator.get_position(), lidar_data)))
+                if render:
+                    io.send_data(('robot-pos', navigator.get_position()))
+                    io.send_data(('lidar-points', (navigator.get_position(), lidar_data)))
 
-            if not actions.empty() and action is None:
-                print('getting action!')
-                action = actions.get()
+                if not actions.empty() and action is None:
+                    print('getting action!')
+                    action = actions.get()
 
-            if action is not None:
-                if not action.started:
-                    print('staring action!')
-                    action.start()
-                dx_dy = action.estimate_progress()
-                dt = time.time() - scan_time
-                estimates = (dx_dy, 0, dt)
-                scan_time = time.time()
-                if action.complete:
-                    action = None
+                if action is not None:
+                    if not action.started:
+                        print('staring action!')
+                        action.start()
+                    dx_dy = action.estimate_progress()
+                    dt = time.time() - scan_time
+                    estimates = (dx_dy, 0, dt)
+                    scan_time = time.time()
+                    if action.complete:
+                        action = None
 
-            else:
-                estimates = Safe_Point3()
-            # print('running components')
-            navigator.run_components(lidar_data, estimates)
-            position = navigator.get_position()
-            # current_position[None] = position[None]
-            position_queue.put(position)
-            # print('saving map')
-        lidar.set_motor_duty(0)
+                else:
+                    estimates = Safe_Point3()
+                # print('running components')
+                navigator.run_components(lidar_data, estimates)
+                position = navigator.get_position()
+                # current_position[None] = position[None]
+                position_queue.put(position)
+                # print('saving map')
+        except Exception as e:
+            lidar.set_motor_duty(0)
+            raise e
