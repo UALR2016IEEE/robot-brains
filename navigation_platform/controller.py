@@ -174,10 +174,9 @@ class Controller(Base):
                     print('getting action!')
                     action = actions.get()
                     action.set_status(stat_lock)
+                    print('staring action!')
+                    action.start()
                 if action is not None:
-                    if not action.started:
-                        print('staring action!')
-                        action.start()
                     dx_dy = action.estimate_progress()
                     dt = time.time() - scan_time
                     estimates = (dx_dy, 0, dt)
