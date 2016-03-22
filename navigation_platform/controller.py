@@ -172,8 +172,6 @@ class Controller(Base):
 
                 if not actions.empty() and action is None:
                     print('getting action!')
-                    input("waiting")
-
                     action = actions.get()
                     action.set_status(stat_lock)
                 if action is not None:
