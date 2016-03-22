@@ -276,12 +276,13 @@ class LineAction(object):
         with self.m1.port.lock:
             m1a_pos, m1b_pos = self.m1.get_motor_positions()
             m2a_pos, m2b_pos = self.m2.get_motor_positions()
-        actual = Point3(
+        actual_point = Point3(
             ticks_to_mm(statistics.mean((m2a_pos, -m2b_pos))),
             ticks_to_mm(statistics.mean((m1a_pos, -m1b_pos)))
         )
-        actual_point = Point3(*shift_vector_angle(actual.y, actual.x, -math.pi/4))
-        delta = Point3(*(abs(actual - intent) for intent, actual in zip(self.target[None], actual_point[None])))
+        actual_point_shifted = Point3(*shift_vector_angle(actual_point.y, actual_point.x, -math.pi/4))
+        print(list(zip(self.target[None], actual_point_shifted[None])))
+        delta = Point3(*(abs(actual - intent) for intent, actual in zip(self.target[None], actual_point_shifted[None])))
         if self.timeout == 0 and all(d < 300 for d in delta):
             self.timeout = time.time()
         if self.timeout != 0:
@@ -290,7 +291,7 @@ class LineAction(object):
                 with self.m1.port.lock:
                     self.m1.set_motor_pwm(0, 0)
                     self.m2.set_motor_pwm(0, 0)
-        return actual
+        return delta
 
 
 
