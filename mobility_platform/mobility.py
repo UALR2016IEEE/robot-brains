@@ -255,7 +255,7 @@ class LineAction(object):
     def start(self):
         x_in_ticks = mm_to_ticks(self.target.x)
         y_in_ticks = mm_to_ticks(self.target.y)
-        x_in_ticks, y_in_ticks = shift_vector_angle(x_in_ticks, y_in_ticks, math.pi / 4)
+        x_in_ticks, y_in_ticks = map(int, shift_vector_angle(x_in_ticks, y_in_ticks, math.pi / 4))
         with self.m1.port.lock:
             self.m1.reset_motor_positions()
             self.m2.reset_motor_positions()

@@ -29,7 +29,7 @@ class Controller:
         await self.audit_motion()
 
     async def fsm(self):
-        action = self.mob.exec_line(Point3(200, 0))
+        action = self.mob.exec_line(Point3(1000, 0))
 
         self.nav.set_action(action)
         self.nav.start()
