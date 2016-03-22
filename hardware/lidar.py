@@ -199,7 +199,6 @@ class Lidar(Base):
         sleep(0.1)
 
     def scanner(self):
-        yield
         self.stop()
         self.flush()
         self.write(const.Commands.Start_Scan)
