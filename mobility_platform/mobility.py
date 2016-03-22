@@ -256,11 +256,21 @@ class LineAction(object):
         x_in_ticks = mm_to_ticks(self.target.x)
         y_in_ticks = mm_to_ticks(self.target.y)
         x_in_ticks, y_in_ticks = map(int, shift_vector_angle(x_in_ticks, y_in_ticks, math.pi / 4))
+        x_speed_sign = 1 if x_in_ticks > 0 else -1
+        y_speed_sign = 1 if y_in_ticks > 0 else -1
         with self.m1.port.lock:
             self.m1.reset_motor_positions()
             self.m2.reset_motor_positions()
-            self.m1.set_motor_positions(12000, (6000, x_in_ticks), (-6000, x_in_ticks))
-            self.m2.set_motor_positions(12000, (6000, y_in_ticks), (-6000, y_in_ticks))
+            self.m1.set_motor_positions(
+                12000,
+                (x_speed_sign * 6000, abs(x_in_ticks)),
+                (x_speed_sign * -6000, abs(x_in_ticks))
+            )
+            self.m2.set_motor_positions(
+                12000,
+                (y_speed_sign * 6000, abs(y_in_ticks)),
+                (y_speed_sign * -6000, abs(y_in_ticks))
+            )
 
     def estimate_progress(self):
         with self.m1.port.lock:
@@ -270,7 +280,7 @@ class LineAction(object):
             ticks_to_mm(statistics.mean((m1a_pos, -m1b_pos))),
             ticks_to_mm(statistics.mean((m2a_pos, -m2b_pos)))
         )
-        actual = Point3(*shift_vector_angle(actual.x, actual.y, -math.pi/4))
+        actual = Point3(*shift_vector_angle(actual.y, actual.x, -math.pi/4))
         delta = Point3(*(abs(actual - intent) for intent, actual in zip(self.target[None], actual[None])))
         if self.timeout == 0 and all(d < 300 for d in delta):
             self.timeout = time.time()
