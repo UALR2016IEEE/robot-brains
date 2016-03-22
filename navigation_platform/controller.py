@@ -74,8 +74,8 @@ class Base(multiprocessing.Process):
 
             if not actions.empty() and action is None:
                 print('getting action!')
-                print
                 action = actions.get()
+                print('got action!')
             if action is None:
                 # dxy, dr, dt
                 estimates = 0, 0, 0
