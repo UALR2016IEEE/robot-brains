@@ -166,7 +166,9 @@ class Controller(Base):
                 if halt.is_set():
                     break
                 while not components.empty():
-                    navigator.add_component(*components.get())
+                    component = components.get()
+                    print("adding ", component)
+                    navigator.add_component(*component)
 
                 if render:
                     io.send_data(('robot-pos', navigator.get_position()))
@@ -188,7 +190,7 @@ class Controller(Base):
 
                 else:
                     estimates = Safe_Point3()
-                # print('running components')
+                print('running components')
                 navigator.run_components(lidar_data, estimates)
                 position = navigator.get_position()
                 # current_position[None] = position[None]

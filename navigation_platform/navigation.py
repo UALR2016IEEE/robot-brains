@@ -86,8 +86,10 @@ class Base(object):
         return mb
 
     def slam(self):
+        print("SLAM Initialized")
         while True:
             lidar, estimated_velocity = yield
+            print('SLAMMING')
             self.slam_object.update(lidar, estimated_velocity)
             self.position.x, self.position.y, self.position.r = self.slam_object.getpos()
             self.position.r = math.radians(self.position.r)
@@ -102,6 +104,7 @@ class Base(object):
     def run_components(self, lidar_data, estimated_velocity):
         for key, component in self.components.items():
             try:
+                print("running", key, component)
                 component.send((lidar_data, estimated_velocity))
             except StopIteration:
                 self.components.pop(key)
