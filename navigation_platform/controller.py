@@ -75,7 +75,6 @@ class Base(multiprocessing.Process):
             if not actions.empty() and action is None:
                 print('getting action!')
                 action = actions.get()
-                print('got action!')
             if action is None:
                 # dxy, dr, dt
                 estimates = 0, 0, 0
@@ -171,8 +170,9 @@ class Controller(Base):
 
                 if not actions.empty() and action is None:
                     print('getting action!')
-                    action = actions.get()
+                    input("waiting")
 
+                    action = actions.get()()
                 if action is not None:
                     if not action.started:
                         print('staring action!')

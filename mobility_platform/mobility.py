@@ -135,7 +135,7 @@ class Mobility(Base):
             return actual
 
 
-        return HardwareAction(start=start, estimate_progress=estimate_progress, target=vector)
+        return lambda: HardwareAction(start=start, estimate_progress=estimate_progress, target=vector)
 
     def rotate(self, angle: float, stop=True):
         wheel_arc = WHEEL_ARC * (angle / (math.pi * 2))
