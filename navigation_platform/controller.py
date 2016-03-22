@@ -143,6 +143,8 @@ class Controller(Base):
     def hardware_nav_interface(nav: type, initial_position, position_queue: multiprocessing.Queue, sim_controller,
                       halt: multiprocessing.Event, components: multiprocessing.Queue, actions: multiprocessing.Queue,
                       render: bool, stat_lock):
+        from status_platform import status
+        status.lock = stat_lock
         print('initial pos', initial_position.mm2pix())
         navigator = nav(position=initial_position)
         lidar = hardware.RPi_Lidar(sim_controller, "/dev/ttyAMA0")
@@ -175,7 +177,7 @@ class Controller(Base):
                     input("waiting")
 
                     action = actions.get()
-                    action.set_status(stat_lock)
+                    action.set_status(status)
                     print('staring action!')
                     action.start()
                 if action is not None:
