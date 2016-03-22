@@ -32,8 +32,10 @@ class Controller:
         action = self.mob.exec_line(Point3(200, 0))
 
         self.nav.set_action(action)
-        while True:
-            print(action.estimate_progress(), self.nav.get_pos())
+        self.nav.start()
+        for position in self.nav.get_pos():
+            if position:
+                print(action.estimate_progress(), position)
         # await self.audit_motion()
 
         # action_list = [self.mob.exec_line(self.conversion.pix2mm(625)), self.mob.rotate(-90), self.mob.exec_line(self.conversion.pix2mm(250)), self.mob.rotate(90), self.mob.exec_line(self.conversion.pix2mm(125)), self.mob.rotate(-90), self.mob.exec_line(self.conversion.pix2mm(100))]
