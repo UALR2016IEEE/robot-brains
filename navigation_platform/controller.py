@@ -144,6 +144,7 @@ class Controller(Base):
         print('initial pos', initial_position.mm2pix())
         navigator = nav(position=initial_position)
         lidar = hardware.RPi_Lidar(sim_controller, "/dev/ttyAMA0")
+        lidar.set_motor_duty(90)
         action = None
         navigator.set_position(initial_position)
         no_action = False
@@ -189,4 +190,4 @@ class Controller(Base):
             # current_position[None] = position[None]
             position_queue.put(position)
             # print('saving map')
-
+        lidar.set_motor_duty(0)
