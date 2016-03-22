@@ -30,12 +30,10 @@ class Controller:
 
     async def fsm(self):
         action = self.mob.exec_line(Point3(200, 0))
-        try:
-            action.start()
-        except:
-            self.mob.stop()
 
-        # self.nav.set_action(action)
+        self.nav.set_action(action)
+        while True:
+            print(action.estimate_progress(), self.nav.get_pos())
         # await self.audit_motion()
 
         # action_list = [self.mob.exec_line(self.conversion.pix2mm(625)), self.mob.rotate(-90), self.mob.exec_line(self.conversion.pix2mm(250)), self.mob.rotate(90), self.mob.exec_line(self.conversion.pix2mm(125)), self.mob.rotate(-90), self.mob.exec_line(self.conversion.pix2mm(100))]
