@@ -34,4 +34,3 @@ class RPi_Lidar(Lidar):
             rate = await self.get_current_speed()
             if not round(abs(rate - rot_per_sec), -1):
                 return
-            

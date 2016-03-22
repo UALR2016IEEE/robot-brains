@@ -87,6 +87,15 @@ def ticks_to_mm(ticks):
 def mm_to_ticks(mm):
     return int(mm / ROTATION_PER_TICK)
 
+def shift_vector_angle(x, y, shift):
+    angle = math.atan2(y, x)
+    mag = math.sqrt(x**2 + y**2)
+    s_angle = shift + angle
+    x_new = mag * math.cos(s_angle)
+    y_new = mag * math.sin(s_angle)
+    return x_new, y_new
+
+
 class Mobility(Base):
     def __init__(self, *args, **kwargs):
         self.m1 = RoboClaw(status, 0x80)
@@ -96,6 +105,7 @@ class Mobility(Base):
     def exec_line(self, vector: Point3, stop=True):
         x_in_ticks = mm_to_ticks(vector.x)
         y_in_ticks = mm_to_ticks(vector.y)
+        x_in_ticks, y_in_ticks = shift_vector_angle(x_in_ticks, y_in_ticks, math.pi / 4)
 
         def start(action):
             with self.m1.port.lock:
@@ -112,8 +122,9 @@ class Mobility(Base):
                 ticks_to_mm(statistics.mean((m1a_pos, -m1b_pos))),
                 ticks_to_mm(statistics.mean((m2a_pos, -m2b_pos)))
             )
+            actual = Point3(*shift_vector_angle(actual.x, actual.y, -math.pi/4))
             delta = Point3(*(abs(actual - intent) for intent, actual in zip(action.target[None], actual[None])))
-            if all(d < 300 for d in delta):
+            if self.timeout == 0 and all(d < 300 for d in delta):
                 self.timeout = time.time()
             if self.timeout != 0:
                 if time.time() - self.timeout > 2 or all(d < 10 for d in delta):
