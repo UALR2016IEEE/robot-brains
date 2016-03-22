@@ -115,8 +115,8 @@ class Point3(object):
 
     def pickle(self):
         return {
-            'x': self.x,
-            'y': self.y,
+            'x': self.y,
+            'y': self.x,
             'r': self.r
         }
 
@@ -128,7 +128,7 @@ class Point3(object):
 
     def __getitem__(self, *args):
         if args[0] is None:
-            return self.x, self.y, self.r
+            return self.y, self.x, self.r
         else:
             item, = args
 
@@ -143,7 +143,7 @@ class Point3(object):
 
     def __setitem__(self, *args):
         if len(args) == 3:
-            self.x, self.y, self.r = args
+            self.y, self.x, self.r = args
         else:
             key, value = args
         if key == 0:
