@@ -12,6 +12,9 @@ wiringpi.pwmWrite(PWM_PIN, 0)
 
 
 class RPi_Lidar(Lidar):
+    def __del__(self):
+        self.set_motor_duty(0)
+
     def connect(self, hw_addr: str):
         self.set_motor_duty(0)
         super(RPi_Lidar, self).connect(hw_addr)
