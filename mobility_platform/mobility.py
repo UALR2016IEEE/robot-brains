@@ -281,7 +281,6 @@ class LineAction(object):
             ticks_to_mm(statistics.mean((m1a_pos, -m1b_pos)))
         )
         actual_point_shifted = Point3(*shift_vector_angle(actual_point.y, actual_point.x, -math.pi/4))
-        print(list(zip(self.target[None], actual_point_shifted[None])))
         delta = Point3(*(abs(actual - intent) for intent, actual in zip(self.target[None], actual_point_shifted[None])))
         if self.timeout == 0 and all(d < 300 for d in delta):
             self.timeout = time.time()

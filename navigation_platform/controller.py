@@ -53,7 +53,6 @@ class Base(multiprocessing.Process):
         action = None
         navigator.set_position(initial_position)
         no_action = False
-
         if render:
             import status_io.client
             io = status_io.client.IOHandler()
@@ -161,6 +160,7 @@ class Controller(Base):
             io.send_data(('grid-colors', sim_controller.grid.get_pygame_grid()))
             io.send_data(('robot-pos', initial_position))
         lidar.set_motor_duty(90)
+        last_dxy = Safe_Point3()
         try:
             for lidar_data in lidar.get_scan():
                 if halt.is_set():
@@ -183,7 +183,8 @@ class Controller(Base):
                 if action is not None:
                     dx_dy = action.estimate_progress()
                     dt = time.time() - scan_time
-                    estimates = (dx_dy, 0, dt)
+                    estimates = Safe_Point3(*(new - old for new, old in zip(dx_dy[None], last_dxy[None])))
+                    last_dxy = dx_dy
                     scan_time = time.time()
                     if action.complete:
                         action = None
