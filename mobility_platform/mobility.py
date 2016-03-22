@@ -87,13 +87,13 @@ def ticks_to_mm(ticks):
 def mm_to_ticks(mm):
     return int(mm / ROTATION_PER_TICK)
 
-def shift_vector_angle(x, y, shift):
+def shift_vector_angle(y, x, shift):
     angle = math.atan2(y, x)
     mag = math.sqrt(x**2 + y**2)
     s_angle = shift + angle
     x_new = mag * math.cos(s_angle)
     y_new = mag * math.sin(s_angle)
-    return x_new, y_new
+    return y_new, x_new
 
 
 class Mobility(Base):
@@ -255,7 +255,7 @@ class LineAction(object):
     def start(self):
         x_in_ticks = mm_to_ticks(self.target.x)
         y_in_ticks = mm_to_ticks(self.target.y)
-        x_in_ticks, y_in_ticks = map(int, shift_vector_angle(x_in_ticks, y_in_ticks, math.pi / 4))
+        y_in_ticks, x_in_ticks = map(int, shift_vector_angle(y_in_ticks, x_in_ticks, math.pi / 4))
         x_speed_sign = 1 if x_in_ticks > 0 else -1
         y_speed_sign = 1 if y_in_ticks > 0 else -1
         with self.m1.port.lock:
@@ -277,8 +277,8 @@ class LineAction(object):
             m1a_pos, m1b_pos = self.m1.get_motor_positions()
             m2a_pos, m2b_pos = self.m2.get_motor_positions()
         actual = Point3(
-            ticks_to_mm(statistics.mean((m1a_pos, -m1b_pos))),
-            ticks_to_mm(statistics.mean((m2a_pos, -m2b_pos)))
+            ticks_to_mm(statistics.mean((m2a_pos, -m2b_pos))),
+            ticks_to_mm(statistics.mean((m1a_pos, -m1b_pos)))
         )
         actual = Point3(*shift_vector_angle(actual.y, actual.x, -math.pi/4))
         delta = Point3(*(abs(actual - intent) for intent, actual in zip(self.target[None], actual[None])))
