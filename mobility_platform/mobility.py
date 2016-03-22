@@ -124,10 +124,10 @@ class Mobility(Base):
             )
             actual = Point3(*shift_vector_angle(actual.x, actual.y, -math.pi/4))
             delta = Point3(*(abs(actual - intent) for intent, actual in zip(action.target[None], actual[None])))
-            if self.timeout == 0 and all(d < 300 for d in delta):
-                self.timeout = time.time()
-            if self.timeout != 0:
-                if time.time() - self.timeout > 2 or all(d < 10 for d in delta):
+            if action.timeout == 0 and all(d < 300 for d in delta):
+                action.timeout = time.time()
+            if action.timeout != 0:
+                if time.time() - action.timeout > 2 or all(d < 10 for d in delta):
                     action.complete = True
                     with self.m1.port.lock:
                         self.m1.set_motor_pwm(0, 0)
