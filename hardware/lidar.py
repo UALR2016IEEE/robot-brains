@@ -233,8 +233,6 @@ class Lidar(Base):
                     angles.append(angle)
                     distances.append(distance)
                     qualities.append(quality)
-                else:
-                    yield
         except GeneratorExit:
             self.stop()
 
