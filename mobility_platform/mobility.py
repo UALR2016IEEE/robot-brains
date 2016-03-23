@@ -263,13 +263,13 @@ class LineAction(object):
             self.m2.reset_motor_positions()
             self.m1.set_motor_positions(
                 12000,
-                (x_speed_sign * 6000, abs(x_in_ticks)),
-                (x_speed_sign * -6000, abs(x_in_ticks))
+                (x_speed_sign * 2000, abs(x_in_ticks)),
+                (x_speed_sign * -2000, abs(x_in_ticks))
             )
             self.m2.set_motor_positions(
                 12000,
-                (y_speed_sign * 6000, abs(y_in_ticks)),
-                (y_speed_sign * -6000, abs(y_in_ticks))
+                (y_speed_sign * 2000, abs(y_in_ticks)),
+                (y_speed_sign * -2000, abs(y_in_ticks))
             )
 
     def estimate_progress(self):
