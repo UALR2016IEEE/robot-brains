@@ -3,6 +3,7 @@ from mobility_platform.mobility import Base as mob_base
 from navigation_platform.controller import Base as nav_base
 from utils import Point3
 import math
+import status_io
 from utils.conversion import Conversion
 
 POINT_THREASHOLD = (0, 0)
@@ -29,9 +30,19 @@ class Controller:
         self.pos_intention = self.mob.exec_line(delta_vector)
         await self.audit_motion()
 
+    @staticmethod
+    def renderer():
+        io = status_io.IOHandler()
+        io.start('144.167.148.247', 9998)
+        io.send_data(('lidar-test', None))
+        while True:
+            lidar, estimated_velocity = yield
+            io.send_data(('lidar-test-points', lidar))
+
     async def fsm(self):
         action = self.mob.exec_line(Point3(0, 1000))
         self.nav.set_action(action)
+        self.nav.add_component('lidar render', self.renderer)
         self.nav.start()
         from status_platform import status
         status.lock = self.stat_lock
