@@ -97,7 +97,7 @@ class Base(object):
             #print('slam pos', self.position, 'estimates', estimated_velocity)
 
     def add_component(self, name: str, func: types.FunctionType):
-        self.components[name] = func()
+        self.components[name] = func(self)
         for component in self.components.values():
             component.send(None)
 
