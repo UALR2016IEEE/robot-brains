@@ -62,7 +62,7 @@ class Base(multiprocessing.Process):
             io.send_data(('grid-colors', sim_controller.grid.get_pygame_grid()))
             io.send_data(('robot-pos', initial_position))
 
-        for lidar_data in lidar.get_scan():
+        for lidar_data in lidar.scanner():
             if halt.is_set():
                 break
             while not components.empty():
@@ -151,7 +151,7 @@ class Controller(Base):
         navigator.set_position(initial_position)
         no_action = False
         scan_time = time.time()
-        if render:
+        if False:
             import status_io.client
             io = status_io.client.IOHandler()
             io.start('localhost', 9998)
@@ -162,7 +162,7 @@ class Controller(Base):
         lidar.set_motor_duty(90)
         last_dxy = Safe_Point3()
         try:
-            for lidar_data in lidar.get_scan():
+            for lidar_data in lidar.scanner():
                 if halt.is_set():
                     break
                 while not components.empty():
@@ -170,7 +170,7 @@ class Controller(Base):
                     print("adding ", component)
                     navigator.add_component(*component)
 
-                if render:
+                if False:
                     io.send_data(('robot-pos', navigator.get_position()))
                     io.send_data(('lidar-points', (navigator.get_position(), lidar_data)))
 

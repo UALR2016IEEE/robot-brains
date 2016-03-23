@@ -89,12 +89,12 @@ class Base(object):
         print("SLAM Initialized")
         while True:
             lidar, estimated_velocity = yield
-            print('SLAMMING')
-            self.slam_object.update(lidar, estimated_velocity)
+            self.slam_object.update(lidar)
+            #print("Getting Position")
             self.position.x, self.position.y, self.position.r = self.slam_object.getpos()
             self.position.r = math.radians(self.position.r)
             self.trajectory.append((self.position.x, self.position.y))
-            print('slam pos', self.position, 'estimates', estimated_velocity)
+            #print('slam pos', self.position, 'estimates', estimated_velocity)
 
     def add_component(self, name: str, func: types.FunctionType):
         self.components[name] = func(self)
@@ -104,7 +104,6 @@ class Base(object):
     def run_components(self, lidar_data, estimated_velocity):
         for key, component in self.components.items():
             try:
-                print("running", key, component)
                 component.send((lidar_data, estimated_velocity))
             except StopIteration:
                 self.components.pop(key)
