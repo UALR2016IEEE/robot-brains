@@ -3,6 +3,7 @@ from mobility_platform.mobility import Base as mob_base
 from navigation_platform.controller import Base as nav_base
 from utils import Point3
 import math
+import simulate.controller
 import status_io
 from utils.conversion import Conversion
 
@@ -32,15 +33,21 @@ class Controller:
 
     @staticmethod
     def renderer(navigation_platform):
+        print("Initializing Renderer")
         io = status_io.IOHandler()
         print('Binding to renderer')
         io.start('144.167.148.247', 9998)
-        print('Initilizing renderer')
-        io.send_data(('lidar-test', None))
+        sim_controller = simulate.controller.Controller(navigation_platform.get_position())
+        sim_controller.init_grid()
+        io.send_data(('full-simulation', None))
+        io.send_data(('grid-colors', sim_controller.grid.get_pygame_grid()))
+        io.send_data(('robot-pos', navigation_platform.get_position()))
+        print("Renderer Ready")
         yield
         while True:
             lidar, estimated_velocity = yield
-            io.send_data(('lidar-test-points', lidar))
+            io.send_data(('robot-pos', navigation_platform.get_position()))
+            io.send_data(('lidar-points', (navigation_platform.get_position(), lidar)))
 
     async def fsm(self):
         action = self.mob.exec_line(Point3(0, 1000))
