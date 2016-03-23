@@ -32,8 +32,8 @@ class Controller:
     async def fsm(self):
         action = self.mob.exec_line(Point3(0, 1000))
         self.nav.set_action(action)
-        action.set_status(self.stat_lock)
         self.nav.start()
+        action.set_status(self.stat_lock)
         while True:
             position = await self.nav.get_pos()
             print(action.estimate_progress(), position)
