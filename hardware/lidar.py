@@ -221,6 +221,7 @@ class Lidar(Base):
         distances = [distance]
         try:
             while True:
+                print(self._lidar.inWaiting())
                 if self._lidar.inWaiting() >= info_len:
                     payload = self.read(info_len)
                     quality, angle, distance, start = self._unpack_scan(payload)

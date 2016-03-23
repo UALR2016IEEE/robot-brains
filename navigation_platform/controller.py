@@ -181,7 +181,6 @@ class Controller(Base):
                         action = None
                 else:
                     estimates = Safe_Point3()
-                print('running components')
                 navigator.run_components(lidar_data, estimates)
                 position = navigator.get_position()
                 # current_position[None] = position[None]

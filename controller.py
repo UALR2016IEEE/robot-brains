@@ -59,7 +59,8 @@ class Controller:
         action.set_status(status)
         while True:
             #position = await self.nav.get_pos()
-            print(action.estimate_progress())
+            pass
+            #print(action.estimate_progress())
         # await self.audit_motion()
 
         # action_list = [self.mob.exec_line(self.conversion.pix2mm(625)), self.mob.rotate(-90), self.mob.exec_line(self.conversion.pix2mm(250)), self.mob.rotate(90), self.mob.exec_line(self.conversion.pix2mm(125)), self.mob.rotate(-90), self.mob.exec_line(self.conversion.pix2mm(100))]
