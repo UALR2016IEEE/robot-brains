@@ -38,7 +38,7 @@ class Base(multiprocessing.Process):
 
     def start(self):
         super(Base, self).start()
-        self.add_component('SLAM', self.nav.slam())
+        self.add_component('SLAM', self.nav.slam)
 
     def stop(self):
         self.halt.set()
