@@ -17,7 +17,7 @@ def main(render):
     nav = NavControl(Navigation, None, stat_lock, render)
     #nav.start()
     mob = Mobility(profile=config['robot characteristics'])
-    controller = Controller(nav, mob)
+    controller = Controller(nav, mob, stat_lock)
     controller.start()
 
 

@@ -10,9 +10,10 @@ ANGLE_THREASHOLD = 3
 
 
 class Controller:
-    def __init__(self, nav_plat: nav_base, mob_plat: mob_base):
+    def __init__(self, nav_plat: nav_base, mob_plat: mob_base, stat_lock):
         self.nav = nav_plat
         self.mob = mob_plat
+        self.stat_lock = stat_lock
         self.local = Point3()
         self.tasks = [self.fsm()]
         self.loop = asyncio.get_event_loop()
@@ -30,8 +31,8 @@ class Controller:
 
     async def fsm(self):
         action = self.mob.exec_line(Point3(0, 1000))
-
         self.nav.set_action(action)
+        action.set_status(self.stat_lock)
         self.nav.start()
         while True:
             position = await self.nav.get_pos()
