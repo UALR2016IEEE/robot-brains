@@ -154,6 +154,11 @@ class Controller(Base):
         scan_time = time.time()
         lidar.set_motor_duty(90)
         last_dxy = Safe_Point3()
+
+        while not components.empty():
+            component = components.get()
+            print("adding ", component)
+            navigator.add_component(*component)
         try:
             for lidar_data in lidar.scanner():
                 if halt.is_set():
