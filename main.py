@@ -34,7 +34,6 @@ if __name__ == "__main__":
 
         if arg_mock:
             import mock
-
             mock.mock(render=arg_render)
         else:
             main(arg_render)

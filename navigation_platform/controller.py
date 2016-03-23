@@ -1,4 +1,5 @@
 import asyncio
+import math
 import multiprocessing
 import time
 from utils.data_structures_threadsafe import Point3 as Safe_Point3
@@ -127,7 +128,7 @@ class Controller(Base):
             self, target=self.hardware_nav_interface, args=
             (
                 self.nav,
-                Safe_Point3(),
+                Safe_Point3(2263, 164, math.radians(90)),
                 self.pos,
                 None,
                 self.halt,
@@ -151,28 +152,17 @@ class Controller(Base):
         navigator.set_position(initial_position)
         no_action = False
         scan_time = time.time()
-        if False:
-            import status_io.client
-            io = status_io.client.IOHandler()
-            io.start('localhost', 9998)
-
-            io.send_data(('full-simulation', None))
-            io.send_data(('grid-colors', sim_controller.grid.get_pygame_grid()))
-            io.send_data(('robot-pos', initial_position))
         lidar.set_motor_duty(90)
         last_dxy = Safe_Point3()
         try:
             for lidar_data in lidar.scanner():
                 if halt.is_set():
                     break
+
                 while not components.empty():
                     component = components.get()
                     print("adding ", component)
                     navigator.add_component(*component)
-
-                if False:
-                    io.send_data(('robot-pos', navigator.get_position()))
-                    io.send_data(('lidar-points', (navigator.get_position(), lidar_data)))
 
                 if not actions.empty() and action is None:
                     print('getting action!')
@@ -180,6 +170,7 @@ class Controller(Base):
                     action.set_status(status)
                     print('staring action!')
                     action.start()
+
                 if action is not None:
                     dx_dy = action.estimate_progress()
                     dt = time.time() - scan_time
@@ -188,7 +179,6 @@ class Controller(Base):
                     scan_time = time.time()
                     if action.complete:
                         action = None
-
                 else:
                     estimates = Safe_Point3()
                 print('running components')
@@ -197,6 +187,7 @@ class Controller(Base):
                 # current_position[None] = position[None]
                 position_queue.put(position)
                 # print('saving map')
+
         except Exception as e:
             lidar.set_motor_duty(0)
             raise e
