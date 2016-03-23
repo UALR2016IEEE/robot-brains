@@ -37,10 +37,10 @@ class Controller:
         io = status_io.IOHandler()
         print('Binding to renderer')
         io.start('144.167.148.247', 9998)
-        sim_controller = simulate.controller.Controller(navigation_platform.get_position())
-        sim_controller.init_grid()
+        # sim_controller = simulate.controller.Controller(navigation_platform.get_position())
+        # sim_controller.init_grid()
         io.send_data(('full-simulation', None))
-        io.send_data(('grid-colors', sim_controller.grid.get_pygame_grid()))
+        # io.send_data(('grid-colors', sim_controller.grid.get_pygame_grid()))
         io.send_data(('robot-pos', navigation_platform.get_position()))
         print("Renderer Ready")
         yield
