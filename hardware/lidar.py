@@ -229,7 +229,7 @@ class Lidar(Base):
                         angles = []
                         qualities = []
                         distances = []
-                    angles.append(angle)
+                    angles.append(angle - 90)
                     distances.append(distance)
                     qualities.append(quality)
         except GeneratorExit:
