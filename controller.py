@@ -30,19 +30,10 @@ class Controller:
         self.pos_intention = self.mob.exec_line(delta_vector)
         await self.audit_motion()
 
-    @staticmethod
-    def renderer():
-        io = status_io.IOHandler()
-        io.start('144.167.148.247', 9998)
-        io.send_data(('lidar-test', None))
-        while True:
-            lidar, estimated_velocity = yield
-            io.send_data(('lidar-test-points', lidar))
-
     async def fsm(self):
         action = self.mob.exec_line(Point3(0, 1000))
         self.nav.set_action(action)
-        self.nav.add_component('lidar render', self.renderer())
+        self.nav.add_component('lidar render', renderer())
         self.nav.start()
         from status_platform import status
         status.lock = self.stat_lock
@@ -67,3 +58,12 @@ class Controller:
             action = self.mob.rotate(delta.r)
             self.nav.set_action(action)
             await asyncio.Condition().wait_for(action.complete, timeout=0.5)
+
+
+def renderer():
+    io = status_io.IOHandler()
+    io.start('144.167.148.247', 9998)
+    io.send_data(('lidar-test', None))
+    while True:
+        lidar, estimated_velocity = yield
+        io.send_data(('lidar-test-points', lidar))
