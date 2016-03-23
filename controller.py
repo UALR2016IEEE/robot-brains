@@ -33,7 +33,9 @@ class Controller:
         action = self.mob.exec_line(Point3(0, 1000))
         self.nav.set_action(action)
         self.nav.start()
-        action.set_status(self.stat_lock)
+        from status_platform import status
+        status.lock = self.stat_lock
+        action.set_status(status)
         while True:
             position = await self.nav.get_pos()
             print(action.estimate_progress(), position)
