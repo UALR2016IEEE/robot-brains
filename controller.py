@@ -42,7 +42,7 @@ class Controller:
     async def fsm(self):
         action = self.mob.exec_line(Point3(0, 1000))
         self.nav.set_action(action)
-        self.nav.add_component('lidar render', self.renderer)
+        self.nav.add_component('lidar render', self.renderer())
         self.nav.start()
         from status_platform import status
         status.lock = self.stat_lock
