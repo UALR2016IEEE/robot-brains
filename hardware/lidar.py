@@ -238,7 +238,7 @@ class Lidar(Base):
         except GeneratorExit:
             self.stop()
 
-    async def get_scan(self):
+    async def get_scan_async(self):
         scanner = self.scanner()
         await asyncio.sleep(0.6)
         while True:
@@ -247,6 +247,15 @@ class Lidar(Base):
                 scanner.close()
                 return data
             await asyncio.sleep(0.1)
+
+    def get_scan(self):
+        scanner = self.scanner()
+        while True:
+            data = next(scanner)
+            if data:
+                scanner.close()
+                return data
+            yield
 
     def _unpack_scan(self, payload):
         quality, angle, distance = struct.unpack("<BHH", payload)
