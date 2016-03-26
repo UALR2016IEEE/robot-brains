@@ -1,4 +1,5 @@
 import math
+import statistics
 import numpy as np
 from scipy.stats import linregress
 
@@ -44,7 +45,7 @@ class Brain:
         right_scan = scan[..., (math.pi / 4) < scan[1] < (7 * math.pi / 4)]
         left_angle, *tail = linregress(*pol2cart(left_scan[0], left_scan[1]))
         right_angle, *tail = linregress(*pol2cart(right_scan[0], left_scan[1]))
-        slope = math.mean([left_angle, right_angle])
+        slope = statistics.mean([left_angle, right_angle])
         action = self.mob.rotate(math.atan(slope))
         action.set_status(status)
         action.start()
