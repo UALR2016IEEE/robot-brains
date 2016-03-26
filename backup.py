@@ -46,7 +46,7 @@ class Brain:
         left_angle, *tail = linregress(*pol2cart(left_scan[0], left_scan[1]))
         right_angle, *tail = linregress(*pol2cart(right_scan[0], left_scan[1]))
         slope = statistics.mean([left_angle, right_angle])
-        action = self.mob.rotate(math.atan(slope))
+        action = self.mob.rotate(-math.atan(slope))
         action.set_status(status)
         action.start()
         while not action.complete():

@@ -285,14 +285,15 @@ class RotateAction(HardwareAction):
     def start(self):
         wheel_arc = WHEEL_ARC * (self.target / (math.pi * 2))
         wheel_arc_in_ticks = mm_to_ticks(wheel_arc)
+        speed_sign = -1 if wheel_arc_in_ticks > 0 else 1
         with self.m1.port.lock:
             self.m1.reset_motor_positions()
             self.m2.reset_motor_positions()
             self.m1.set_motor_positions(
-                12000, (-2000, wheel_arc_in_ticks), (-2000, wheel_arc_in_ticks)
+                12000, (speed_sign * 2000), abs(wheel_arc_in_ticks), (speed_sign * 2000), abs(wheel_arc_in_ticks)
             )
             self.m2.set_motor_positions(
-                12000, (-2000, wheel_arc_in_ticks), (-2000, wheel_arc_in_ticks)
+                12000, (speed_sign * 2000), abs(wheel_arc_in_ticks), (speed_sign * 2000), abs(wheel_arc_in_ticks)
             )
 
     def estimate_progress(self):
