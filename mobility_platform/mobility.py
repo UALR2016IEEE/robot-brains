@@ -76,7 +76,7 @@ class Base(object):
         self.current_task.start()
 
 ENCODER_TICKS = 979.62
-WHEEL_BASE = 10
+WHEEL_BASE = 265/2
 WHEEL_ARC = math.pi * WHEEL_BASE
 WHEEL_DIAMETER = 32
 WHEEL_CIRCUMFERENCE = math.pi*WHEEL_DIAMETER
@@ -289,24 +289,25 @@ class RotateAction(HardwareAction):
             self.m1.reset_motor_positions()
             self.m2.reset_motor_positions()
             self.m1.set_motor_positions(
-                12000, (6000, wheel_arc_in_ticks), (6000, wheel_arc_in_ticks)
+                12000, (-2000, wheel_arc_in_ticks), (-2000, wheel_arc_in_ticks)
             )
             self.m2.set_motor_positions(
-                12000, (6000, wheel_arc_in_ticks), (6000, wheel_arc_in_ticks)
+                12000, (-2000, wheel_arc_in_ticks), (-2000, wheel_arc_in_ticks)
             )
 
     def estimate_progress(self):
         with self.m1.port.lock:
             m1a_pos, m1b_pos = self.m1.get_motor_positions()
             m2a_pos, m2b_pos = self.m2.get_motor_positions()
-        actual = ticks_to_mm(statistics.mean((m1a_pos, m1b_pos, m2a_pos, m2b_pos)))
-        delta = abs(actual - self.target)
-        if self.timeout == 0 and delta < math.pi / 7:
+        actual_ticks_arc = -ticks_to_mm(statistics.mean((m1a_pos, m1b_pos, m2a_pos, m2b_pos)))
+        actual_angle = (actual_ticks_arc / WHEEL_ARC) * (math.pi * 2)
+        delta = abs(actual_angle - self.target)
+        if self.timeout == 0 and delta < math.pi / 24:
             self.timeout = time.time()
         if self.timeout != 0:
-            if time.time() - self.timeout > 2 or delta < math.pi / 10:
+            if time.time() - self.timeout > 2 or delta < math.pi / 120:
                 self.complete = True
                 self.stop()
-        return actual
+        return m1a_pos, m2b_pos, m2a_pos, m2b_pos
 
 
