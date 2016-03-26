@@ -2,6 +2,7 @@ import math
 import time
 import types
 import statistics
+from abc import abstractmethod
 import multiprocessing
 
 from utils import Point3, Point2
@@ -103,35 +104,6 @@ class Mobility(Base):
     def exec_line(self, vector: Point3, stop=True):
         return LineAction(target=vector)
 
-    def rotate(self, angle: float, stop=True):
-        wheel_arc = WHEEL_ARC * (angle / (math.pi * 2))
-        wheel_arc_in_ticks = mm_to_ticks(wheel_arc)
-
-        def start(action):
-            with self.m1.port.lock:
-                self.m1.reset_motor_positions()
-                self.m2.reset_motor_positions()
-                self.m1.set_motor_positions(
-                    12000, (6000, wheel_arc_in_ticks), (6000, wheel_arc_in_ticks)
-                )
-                self.m2.set_motor_positions(
-                    12000, (6000, wheel_arc_in_ticks), (6000, wheel_arc_in_ticks)
-                )
-
-        def estimate_progress(action):
-            with self.m1.port.lock:
-                m1a_pos, m1b_pos = self.m1.get_motor_positions()
-                m2a_pos, m2b_pos = self.m2.get_motor_positions()
-            actual = ticks_to_mm(statistics.mean((m1a_pos, m1b_pos, -m2a_pos, -m2b_pos)))
-            if abs(actual - action.target) > math.pi / 7:
-                action.complete = True
-                with self.m1.port.lock:
-                    self.m1.set_motor_pwm(0, 0)
-                    self.m2.set_motor_pwm(0, 0)
-            return actual
-
-
-        return LineAction(start=start, estimate_progress=estimate_progress)
 
     def stop(self, enable=True):
         with self.m1.port.lock:
@@ -242,7 +214,7 @@ class Action(object):
         return self.d_xy, self.d_theta, dt
 
 
-class LineAction(object):
+class HardwareAction(object):
     def __init__(self, target):
         self.target = target
         self.complete = False
@@ -252,6 +224,16 @@ class LineAction(object):
         self.m1 = RoboClaw(status, 0x80)
         self.m2 = RoboClaw(status, 0x81)
 
+    @abstractmethod
+    def start(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def estimate_progress(self):
+        raise NotImplementedError
+
+
+class LineAction(HardwareAction):
     def start(self):
         x_in_ticks = mm_to_ticks(self.target.x)
         y_in_ticks = mm_to_ticks(self.target.y)
@@ -292,5 +274,35 @@ class LineAction(object):
                     self.m2.set_motor_pwm(0, 0)
         return actual_point_shifted
 
+
+class RotateAction(HardwareAction):
+    def start(self):
+        wheel_arc = WHEEL_ARC * (self.target / (math.pi * 2))
+        wheel_arc_in_ticks = mm_to_ticks(wheel_arc)
+        with self.m1.port.lock:
+            self.m1.reset_motor_positions()
+            self.m2.reset_motor_positions()
+            self.m1.set_motor_positions(
+                12000, (6000, wheel_arc_in_ticks), (6000, wheel_arc_in_ticks)
+            )
+            self.m2.set_motor_positions(
+                12000, (6000, wheel_arc_in_ticks), (6000, wheel_arc_in_ticks)
+            )
+
+    def estimate_progress(self):
+        with self.m1.port.lock:
+            m1a_pos, m1b_pos = self.m1.get_motor_positions()
+            m2a_pos, m2b_pos = self.m2.get_motor_positions()
+        actual = ticks_to_mm(statistics.mean((m1a_pos, m1b_pos, m2a_pos, m2b_pos)))
+        delta = abs(actual - self.target)
+        if self.timeout == 0 and delta < math.pi / 7:
+            self.timeout = time.time()
+        if self.timeout != 0:
+            if time.time() - self.timeout > 2 or delta < math.pi / 10:
+                self.complete = True
+                with self.m1.port.lock:
+                    self.m1.set_motor_pwm(0, 0)
+                    self.m2.set_motor_pwm(0, 0)
+        return actual
 
 
