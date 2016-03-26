@@ -76,7 +76,7 @@ class Base(object):
         self.current_task.start()
 
 ENCODER_TICKS = 979.62
-WHEEL_BASE = 265/2
+WHEEL_BASE = 265
 WHEEL_ARC = math.pi * WHEEL_BASE
 WHEEL_DIAMETER = 32
 WHEEL_CIRCUMFERENCE = math.pi*WHEEL_DIAMETER
@@ -245,20 +245,16 @@ class LineAction(HardwareAction):
         x_in_ticks = mm_to_ticks(self.target.x)
         y_in_ticks = mm_to_ticks(self.target.y)
         y_in_ticks, x_in_ticks = map(int, shift_vector_angle(y_in_ticks, x_in_ticks, math.pi / 4))
-        x_speed_sign = 1 if x_in_ticks > 0 else -1
-        y_speed_sign = 1 if y_in_ticks > 0 else -1
         with self.m1.port.lock:
-            self.m1.reset_motor_positions()
-            self.m2.reset_motor_positions()
             self.m1.set_motor_positions(
                 12000,
-                (x_speed_sign * 2000, abs(x_in_ticks)),
-                (x_speed_sign * -2000, abs(x_in_ticks))
+                (2000, x_in_ticks),
+                (2000, -x_in_ticks)
             )
             self.m2.set_motor_positions(
                 12000,
-                (y_speed_sign * 2000, abs(y_in_ticks)),
-                (y_speed_sign * -2000, abs(y_in_ticks))
+                (2000, y_in_ticks),
+                (2000, -y_in_ticks)
             )
 
     def estimate_progress(self):

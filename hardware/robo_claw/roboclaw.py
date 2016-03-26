@@ -17,6 +17,7 @@ class RoboClaw:
         self.port = serial_port
         self._crc = 0
         self.address = address
+        self.rel_pos = self.get_motor_positions()
 
     def write(self, data):
         self.port.write([22])
@@ -27,6 +28,8 @@ class RoboClaw:
     def read(self, length):
         return self.port.read(length)
 
+    def set_relitive_position(self):
+        self.rel_pos = self.get_raw_motor_positions()
 
     def send_command(self, command):
         sent_data = self.write(command)
@@ -84,7 +87,17 @@ class RoboClaw:
         return motor1_current, motor2_current
 
     def set_motor_positions(self, accel, m1, m2, buffered=False):
-        raw_data = struct.pack(">BIiIiI?", constants.MIXEDSPEEDACCELDIST, 12000, *m1, *m2, not buffered)
+        self.set_relitive_position()
+        m1_rel_pos, m2_rel_pos = self.rel_pos
+        m1 = accel, m1[0], accel, m1[1] + m1_rel_pos
+        m2 = accel, m2[0], accel, m2[1] + m2_rel_pos
+        raw_data = struct.pack(
+            ">BIIIiIIIi?",
+            constants.MIXEDSPEEDACCELDECCELPOS,
+            *m1,
+            *m2,
+            not buffered
+        )
         self.send_command(raw_data)
 
     def set_m1_position(self, accel, speed, position, buffer=False):
@@ -125,6 +138,9 @@ class RoboClaw:
         self.send_command(bytes([constants.RESETENC]))
 
     def get_motor_positions(self):
+        return (x - y for x, y in zip(self.get_raw_motor_positions(), self.rel_pos))
+
+    def get_raw_motor_positions(self):
         # Recive Format:
         # [Enc1(4 bytes),
         # Status(1 bytes),
