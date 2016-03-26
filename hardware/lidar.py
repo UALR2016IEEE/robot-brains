@@ -172,7 +172,7 @@ class Lidar(Base):
         self.write(const.Commands.Reset)
         sleep(0.01)
         self.flush()
-
+ 
     def self_test(self):
         self.flush()
         self.write(const.Commands.Health)
@@ -208,7 +208,7 @@ class Lidar(Base):
         assert r_mode == 1
         for i in range(100):
             if self._lidar.inWaiting() < info_len:
-                sleep(0.01)
+                sleep(0.1)
             else:
                 break
         else:
@@ -221,18 +221,20 @@ class Lidar(Base):
         distances = [distance]
         try:
             while True:
-                print(self._lidar.inWaiting())
-                if self._lidar.inWaiting() >= info_len:
-                    payload = self.read(info_len)
-                    quality, angle, distance, start = self._unpack_scan(payload)
-                    if start:
-                        yield np.array((distances, np.deg2rad(angles), qualities))
-                        angles = []
-                        qualities = []
-                        distances = []
-                    angles.append(angle)
-                    distances.append(distance)
-                    qualities.append(quality)
+                if self._lidar.inWaiting() > 4000:
+                    print("LIDAR OVERFLOW WARNING")
+                while self._lidar.inWaiting() < info_len:
+                    pass
+                payload = self.read(info_len)
+                quality, angle, distance, start = self._unpack_scan(payload)
+                if start:
+                    yield np.array((distances, np.deg2rad(angles), qualities))
+                    angles = []
+                    qualities = []
+                    distances = []
+                angles.append(angle + 90)
+                distances.append(distance)
+                qualities.append(quality)
         except GeneratorExit:
             self.stop()
 

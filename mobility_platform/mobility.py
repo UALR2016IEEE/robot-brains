@@ -290,7 +290,7 @@ class LineAction(object):
                 with self.m1.port.lock:
                     self.m1.set_motor_pwm(0, 0)
                     self.m2.set_motor_pwm(0, 0)
-        return delta
+        return actual_point_shifted
 
 
 

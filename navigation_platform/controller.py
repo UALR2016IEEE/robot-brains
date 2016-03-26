@@ -128,7 +128,7 @@ class Controller(Base):
             self, target=self.hardware_nav_interface, args=
             (
                 self.nav,
-                Safe_Point3(2263, 164, math.radians(90)),
+                Safe_Point3(2263, 164, math.radians(0)),
                 self.pos,
                 None,
                 self.halt,
@@ -152,15 +152,19 @@ class Controller(Base):
         navigator.set_position(initial_position)
         no_action = False
         scan_time = time.time()
-        lidar.set_motor_duty(90)
-        last_dxy = Safe_Point3()
+        lidar.set_motor_duty(100)
+        last_xy = Safe_Point3()
 
         while not components.empty():
             component = components.get()
             print("adding ", component)
             navigator.add_component(*component)
         try:
+            scan_toss_counter = 0
             for lidar_data in lidar.scanner():
+                while scan_toss_counter < 20:
+                    scan_toss_counter += 1
+                    continue
                 if halt.is_set():
                     break
 
@@ -177,10 +181,13 @@ class Controller(Base):
                     action.start()
 
                 if action is not None:
-                    dx_dy = action.estimate_progress()
+                    x_y = action.estimate_progress()
                     dt = time.time() - scan_time
-                    estimates = Safe_Point3(*(new - old for new, old in zip(dx_dy[None], last_dxy[None])))
-                    last_dxy = dx_dy
+                    delta_dxy = Safe_Point3(*(new - old for new, old in zip(x_y[None], last_xy[None])))
+                    delta_mag = delta_dxy.magnitude()
+                    estimates = (delta_mag, 0, dt)
+                    print(estimates)
+                    last_xy = x_y
                     scan_time = time.time()
                     if action.complete:
                         action = None
