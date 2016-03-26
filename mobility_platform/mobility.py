@@ -230,6 +230,11 @@ class HardwareAction(object):
     def start(self):
         raise NotImplementedError
 
+    def stop(self):
+        with self.m1.port.lock:
+            self.m1.set_motor_pwm(0, 0)
+            self.m2.set_motor_pwm(0, 0)
+
     @abstractmethod
     def estimate_progress(self):
         raise NotImplementedError
@@ -271,9 +276,8 @@ class LineAction(HardwareAction):
         if self.timeout != 0:
             if time.time() - self.timeout > 2 or all(d < 10 for d in delta):
                 self.complete = True
-                with self.m1.port.lock:
-                    self.m1.set_motor_pwm(0, 0)
-                    self.m2.set_motor_pwm(0, 0)
+                self.stop()
+
         return actual_point_shifted
 
 
@@ -302,9 +306,7 @@ class RotateAction(HardwareAction):
         if self.timeout != 0:
             if time.time() - self.timeout > 2 or delta < math.pi / 10:
                 self.complete = True
-                with self.m1.port.lock:
-                    self.m1.set_motor_pwm(0, 0)
-                    self.m2.set_motor_pwm(0, 0)
+                self.stop()
         return actual
 
 
