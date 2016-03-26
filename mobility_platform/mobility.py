@@ -104,6 +104,8 @@ class Mobility(Base):
     def exec_line(self, vector: Point3, stop=True):
         return LineAction(target=vector)
 
+    def rotate(self, angle, stop=True):
+        return RotateAction(target=angle)
 
     def stop(self, enable=True):
         with self.m1.port.lock:
