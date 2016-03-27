@@ -33,7 +33,7 @@ class Brain:
             self.io.start('144.167.148.247', 9998)
             self.io.send_data(('lidar-test', None))
 
-    def move(self, direction, sub_steps=10):
+    def move(self, direction, sub_steps=3):
         x_component, y_component = direction
         sub_unit = unit / sub_steps
         for sub_line in range(sub_steps):
@@ -50,7 +50,7 @@ class Brain:
         scan_agg = next(scanner)
         #self.io.send_data(('lidar-test-points', np.array([[120], [math.pi / 2], [1]])))
         #return
-        for id, scan in zip(range(5), scanner):
+        for id, scan in zip(range(1), scanner):
             self.io.send_data(('lidar-test-points', scan))
             scan_agg = np.concatenate((scan, scan_agg), axis=1)
         scan_agg = scan_agg[..., scan_agg[0] != 0]
@@ -66,7 +66,7 @@ class Brain:
             print(action.target[None], action.estimate_progress()[None])
         scanner = self.lidar.scanner()
         scan_agg = next(scanner)
-        for id, scan in zip(range(5), scanner):
+        for id, scan in zip(range(1), scanner):
             scan_agg = np.concatenate((scan, scan_agg), axis=1)
         scan_agg = scan_agg[..., scan_agg[0] != 0]
         left_scan = scan_agg[..., np.logical_and(17 * math.pi / 12 < scan_agg[1], scan_agg[1] < 19 * math.pi / 12)]
