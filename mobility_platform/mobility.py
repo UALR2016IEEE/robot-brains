@@ -302,6 +302,6 @@ class RotateAction(HardwareAction):
             if time.time() - self.timeout > 2 or delta < math.pi / 120:
                 self.complete = True
                 self.stop()
-        return m1a_pos, m2b_pos, m2a_pos, m2b_pos
+        return actual_angle
 
 
