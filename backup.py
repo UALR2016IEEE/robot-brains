@@ -2,6 +2,7 @@ import math
 import statistics
 import numpy as np
 
+import status_io
 from hardware import RPi_Lidar
 from utils import Point3
 from mobility_platform import Mobility
@@ -16,10 +17,15 @@ def main():
     brain.align_center()
 
 class Brain:
-    def __init__(self):
+    def __init__(self, render=False):
         self.mob = Mobility(None)
         self.lidar = RPi_Lidar(None, "/dev/ttyAMA0")
         self.lidar.set_motor_duty(90)
+        self.io = status_io.IOHandler()
+        self.render = render
+        if render:
+            self.io.start('144.167.148.247', 9998)
+            self.io.send_data(('lidar-test', None))
 
     def move(self, direction, sub_steps=10):
         x_component, y_component = direction
@@ -36,8 +42,10 @@ class Brain:
         print("scanning")
         for scan in self.lidar.get_scan():
             pass
-        import pdb; pdb.set_trace()
+        if self.render:
+            self.io.send_data(('lidar-test-points', scan))
         left_point = scan[0][get_closest_point(scan[1], 3 * math.pi / 2)]
+        import pdb; pdb.set_trace()
         right_point = scan[0][get_closest_point(scan[1], math.pi / 2)]
         action = self.mob.exec_line(Point3(left_point - right_point))
         action.set_status(status)
