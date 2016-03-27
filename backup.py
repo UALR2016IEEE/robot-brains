@@ -70,10 +70,14 @@ class Brain:
             scan_agg = np.concatenate((scan, scan_agg), axis=1)
         scan_agg = scan_agg[..., scan_agg[0] != 0]
         import pdb; pdb.set_trace()
-        left_scan = scan[..., np.where(np.logical_and(3 * math.pi / 4 < scan[1], scan[1] < 5 * math.pi / 4))]
-        right_scan = scan[..., np.where(np.logical_and(math.pi / 4 < scan[1], scan[1] < 7 * math.pi / 4))]
+        left_scan = scan_agg[..., np.where(
+            np.logical_and(3 * math.pi / 4 < scan_agg[1], scan_agg[1] < 5 * math.pi / 4)
+        )]
+        right_scan = scan_agg[..., np.where(
+            np.logical_and(math.pi / 4 < scan_agg[1], scan_agg[1] < 7 * math.pi / 4)
+        )]
         left_angle, *tail = np.polyfit(*pol2cart(left_scan[0], left_scan[1]), 1)
-        right_angle, *tail = np.polyfit(*pol2cart(right_scan[0], left_scan[1]), 1)
+        right_angle, *tail = np.polyfit(*pol2cart(right_scan[0], right_scan[1]), 1)
         slope = statistics.mean([left_angle, right_angle])
         action = self.mob.rotate(-math.atan(slope))
         action.set_status(status)
@@ -85,10 +89,11 @@ class Brain:
 def get_closest_point(array, value):
     return np.argmin(np.abs(array - value))
 
-def pol2cart(rho, phi):
+
+def pol2cart(rho, phi) -> (np.array, np.array):
     x = rho * np.cos(phi)
     y = rho * np.sin(phi)
-    return(x, y)
+    return x, y
 
 if __name__ == "__main__":
     main("render" in sys.argv, "debug" in sys.argv)
