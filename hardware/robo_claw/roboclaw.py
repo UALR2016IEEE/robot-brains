@@ -1,3 +1,5 @@
+import atexit
+import warnings
 import time
 import serial
 import struct
@@ -13,11 +15,22 @@ class ChecksumError(Exception):
 
 
 class RoboClaw:
+    REGISTER_ROBOCLAWS = {}
     def __init__(self, serial_port: serial.Serial, address):
+        self.REGISTER_ROBOCLAWS[(serial_port, address)] = self
         self.port = serial_port
         self._crc = 0
         self.address = address
         self.rel_pos = self.get_motor_positions()
+
+    @atexit.register
+    @staticmethod
+    def cleanup():
+        for (port, address), claw in RoboClaw.REGISTER_ROBOCLAWS.items():
+            try:
+                claw.set_motor_duty(0, 0)
+            except:
+                warnings.warn("RoboClaw @{}:{} failed to properly shutdown".format(port.port, hex(address)))
 
     def write(self, data):
         self.port.write([22])
