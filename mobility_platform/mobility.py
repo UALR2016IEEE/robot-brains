@@ -247,12 +247,12 @@ class LineAction(HardwareAction):
         y_in_ticks, x_in_ticks = map(int, shift_vector_angle(y_in_ticks, x_in_ticks, math.pi / 4))
         with self.m1.port.lock:
             self.m1.set_motor_positions(
-                12000,
+                8000,
                 (2000, x_in_ticks),
                 (2000, -x_in_ticks)
             )
             self.m2.set_motor_positions(
-                12000,
+                8000,
                 (2000, y_in_ticks),
                 (2000, -y_in_ticks)
             )
@@ -280,7 +280,7 @@ class LineAction(HardwareAction):
 class RotateAction(HardwareAction):
     def start(self):
         wheel_arc = WHEEL_ARC * (self.target / (math.pi * 2))
-        wheel_arc_in_ticks = mm_to_ticks(wheel_arc)
+        wheel_arc_in_ticks = -mm_to_ticks(wheel_arc)
         with self.m1.port.lock:
             self.m1.set_motor_positions(
                 12000, (2000, wheel_arc_in_ticks), (2000, wheel_arc_in_ticks)

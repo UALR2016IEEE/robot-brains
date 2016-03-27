@@ -24,13 +24,12 @@ class RoboClaw:
         self.set_relitive_position()
 
     @atexit.register
-    @staticmethod
     def cleanup():
         for (port, address), claw in RoboClaw.REGISTER_ROBOCLAWS.items():
             try:
-                claw.set_motor_duty(0, 0)
-            except:
-                warnings.warn("RoboClaw @{}:{} failed to properly shutdown".format(port.port, hex(address)))
+                claw.set_motor_pwm(0, 0)
+            except Exception as e:
+                warnings.warn("RoboClaw @{}:{} failed to properly shutdown because:\n{}".format(port.port, hex(address), e))
 
     def write(self, data):
         self.port.write([22])
