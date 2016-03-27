@@ -48,7 +48,7 @@ class RoboClaw:
         crc = self.checksum(sent_data)
         self.port.write(struct.pack(">H", crc))
         self.port.write([22])
-        raw_return_code =  self.read(1)
+        raw_return_code = self.read(1)
         return_code, = struct.unpack(">B", raw_return_code)
         if return_code != 0xFF:
             raise CommandNotReceived()
@@ -110,7 +110,12 @@ class RoboClaw:
             *m2,
             not buffered
         )
-        self.send_command(raw_data)
+        try:
+            self.send_command(raw_data)
+        except struct.error:
+            raise CommandNotReceived(
+                "Sent position command with:\n\tm1_params:{}\n\tm2_params:{}\nCommand not recieved".format(m1, m2)
+            )
 
     def set_m1_position(self, accel, speed, position, buffer=False):
         raw_data = struct.pack(
