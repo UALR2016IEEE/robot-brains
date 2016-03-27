@@ -1,7 +1,6 @@
 import math
 import statistics
 import numpy as np
-from scipy.stats import linregress
 
 from hardware import RPi_Lidar
 from utils import Point3
@@ -12,13 +11,15 @@ status.lock = Lock()
 
 unit = 304.8
 def main():
+    print("starting brain")
     brain = Brain()
-    brain.move(1, 0)
+    brain.align_center()
 
 class Brain:
     def __init__(self):
         self.mob = Mobility(None)
-        self.lidar = RPi_Lidar(None)
+        self.lidar = RPi_Lidar(None, "/dev/ttyAMA0")
+        self.lidar.set_motor_duty(90)
 
     def move(self, direction, sub_steps=10):
         x_component, y_component = direction
@@ -32,7 +33,10 @@ class Brain:
             self.align_center()
 
     def align_center(self):
-        scan = yield from self.lidar.get_scan()
+        print("scanning")
+        for scan in self.lidar.get_scan():
+            pass
+        import pdb; pdb.set_trace()
         left_point = scan[0][get_closest_point(scan[1], 3 * math.pi / 2)]
         right_point = scan[0][get_closest_point(scan[1], math.pi / 2)]
         action = self.mob.exec_line(Point3(left_point - right_point))
@@ -40,11 +44,12 @@ class Brain:
         action.start()
         while not action.complete():
             pass
-        scan = yield from self.lidar.get_scan()
+        for scan in self.lidar.get_scan():
+            pass
         left_scan = scan[..., (3 * math.pi / 4) < scan[1] < (5 * math.pi / 4)]
         right_scan = scan[..., (math.pi / 4) < scan[1] < (7 * math.pi / 4)]
-        left_angle, *tail = linregress(*pol2cart(left_scan[0], left_scan[1]))
-        right_angle, *tail = linregress(*pol2cart(right_scan[0], left_scan[1]))
+        left_angle, *tail = np.polyfit(*pol2cart(left_scan[0], left_scan[1]), 1)
+        right_angle, *tail = np.polyfit(*pol2cart(right_scan[0], left_scan[1]), 1)
         slope = statistics.mean([left_angle, right_angle])
         action = self.mob.rotate(-math.atan(slope))
         action.set_status(status)
