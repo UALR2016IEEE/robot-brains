@@ -3,13 +3,13 @@ import multiprocessing
 import numpy as np
 import json
 
-from navigation_platform.controller import Controller as NavControl
-from navigation_platform.navigation import Navigation as Navigation
-from mobility_platform.mobility import Mobility
-from controller import Controller
-
 
 def main(render):
+    from navigation_platform.controller import Controller as NavControl
+    from navigation_platform.navigation import Navigation as Navigation
+    from mobility_platform.mobility import Mobility
+    from controller import Controller
+
     with open('config.json', 'r') as f:
         config = json.load(f)
 
