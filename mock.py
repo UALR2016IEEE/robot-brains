@@ -6,6 +6,7 @@ import simulate.controller
 import status_io.client
 from controller import Controller
 from mobility_platform.mobility import Base as Mobility
+from navigation_platform.composer import Base as Composer
 from navigation_platform.controller import Base as NavControl
 from navigation_platform.navigation import Base as Navigation
 from utils.conversion import Conversion
@@ -23,7 +24,25 @@ def mock(render=False):
 
     position = Point3(100, 440, math.radians(270)).pix2mm()
 
-    if mode == 'lidar_test':
+    if mode == 'path_test':
+        comp = Composer()
+        io = status_io.client.IOHandler()
+        if render:
+            io.start('localhost', 9998)
+
+        # generate map
+        sim_controller = simulate.controller.Controller(position)
+        sim_controller.init_grid()
+
+        # send the map to the server
+        if render:
+            io.send_data(('full-simulation', None))
+            io.send_data(('grid-colors', sim_controller.grid.get_pygame_grid()))
+            io.send_data(('add-points', comp.points))
+            path = comp.find_path('yellow_drop', 'victim_offroad_left_upper')
+            io.send_data(('activate-points', path))
+
+    elif mode == 'lidar_test':
         io = status_io.client.IOHandler()
 
         if render:
@@ -49,7 +68,7 @@ def mock(render=False):
                 # send the test points to the renderer for rendering
                 io.send_data(('lidar-test-points', scan))
 
-    if mode == 'kori':
+    elif mode == 'kori':
         sim_controller = simulate.controller.Controller(position)
         sim_controller.init_grid()
 

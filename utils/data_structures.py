@@ -36,6 +36,13 @@ class Point2(object):
     def magnitude(self):
         return math.sqrt(self.x ** 2 + self.y ** 2)
 
+    def get_angle_to(self, other):
+        a = math.atan2(-(other.y - self.y), (other.x - self.x))
+        # atan2 can return negative from the x-axis
+        if a < 0:
+            a += 2.0 * math.pi
+        return a
+
     def pickle(self):
         return {
             'x': self.x,
@@ -112,6 +119,13 @@ class Point3(object):
     def magnitude(self):
         return math.sqrt(self.x ** 2 + self.y ** 2)
 
+    def get_angle_to(self, other):
+        a = math.atan2(-(other.y - self.y), (other.x - self.x))
+        # atan2 can return negative from the x-axis
+        if a < 0:
+            a += 2.0 * math.pi
+        return a
+
     def pickle(self):
         return {
             'x': self.x,
@@ -158,3 +172,17 @@ class Point3(object):
         yield self.y
         yield self.x
         yield self.r
+
+
+class Vertex(object):
+    def __init__(self, name='', point=Point2()):
+        self.name = name
+        self.point = point
+        self.edges = []
+
+
+class Edge(object):
+    def __init__(self, v1=Point2(), v2=Point2()):
+        self.start = v1
+        self.end = v2
+        self.length = self.start.distance(self.end)
