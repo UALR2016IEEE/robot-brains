@@ -232,7 +232,7 @@ class Lidar(Base):
                     angles = []
                     qualities = []
                     distances = []
-                angles.append((360 - angle + 90 + math.pi) % (2 * math.pi) - math.pi)
+                angles.append((360 - angle + 0 + math.pi) % (2 * math.pi) - math.pi)
                 distances.append(distance)
                 qualities.append(quality)
         except GeneratorExit:
@@ -252,9 +252,10 @@ class Lidar(Base):
         scanner = self.scanner()
         while True:
             data = next(scanner)
-            if data:
+            if data is not None:
                 scanner.close()
-                return data
+                yield data
+                raise StopIteration()
             yield
 
     def _unpack_scan(self, payload):

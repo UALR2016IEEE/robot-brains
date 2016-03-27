@@ -21,7 +21,7 @@ class RoboClaw:
         self.port = serial_port
         self._crc = 0
         self.address = address
-        self.rel_pos = self.get_motor_positions()
+        self.set_relitive_position()
 
     @atexit.register
     @staticmethod
