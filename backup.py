@@ -19,21 +19,21 @@ def main(render, debug):
     if debug:
         for scan in brain.lidar.scanner():
             brain.io.send_data(('lidar-test-points', scan))
-    brain.move((1, 0))
+    for i in range(3):
+        brain.move((1, 0))
 
 class Brain:
     def __init__(self, render=False):
         self.mob = Mobility(None)
         self.lidar = RPi_Lidar(None, "/dev/ttyAMA0")
         self.lidar.set_motor_duty(90)
-        time.sleep(2)
         self.io = status_io.IOHandler()
         self.render = render
         if render:
             self.io.start('144.167.148.247', 9998)
             self.io.send_data(('lidar-test', None))
 
-    def move(self, direction, sub_steps=3):
+    def move(self, direction, sub_steps=1):
         x_component, y_component = direction
         sub_unit = unit / sub_steps
         for sub_line in range(sub_steps):
@@ -43,6 +43,7 @@ class Brain:
             while not action.complete:
                 print(action.target[None], action.estimate_progress()[None])
             self.align_center()
+            self.align_angle()
 
     def align_center(self):
         print("scanning")
@@ -64,6 +65,8 @@ class Brain:
         action.start()
         while not action.complete:
             print(action.target[None], action.estimate_progress()[None])
+
+    def align_angle(self):
         scanner = self.lidar.scanner()
         scan_agg = next(scanner)
         for id, scan in zip(range(1), scanner):

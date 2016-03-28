@@ -29,7 +29,7 @@ class RoboClaw:
             try:
                 claw.set_motor_pwm(0, 0)
             except Exception as e:
-                warnings.warn("RoboClaw @{}:{} failed to properly shutdown because:\n{}".format(port.port, hex(address), e))
+                warnings.warn("RoboClaw @{}:{} failed to properly shutdown because:\n{}".format(port.port, hex(address), str(e)))
 
     def write(self, data):
         self.port.write([22])
