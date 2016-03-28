@@ -19,8 +19,8 @@ def main(render, debug):
     if debug:
         for scan in brain.lidar.scanner():
             brain.io.send_data(('lidar-test-points', scan))
-    for i in range(3):
-        brain.move((1, 0))
+    brain.move((2, 0), sub_steps=2, align=False)
+    brain.move_until_proc(500)
 
 class Brain:
     def __init__(self, render=False):
@@ -48,7 +48,7 @@ class Brain:
         front_dist = np.min(front_scan[0])
         self.move((1, 0), front_dist, 2)
 
-    def move(self, direction, dist=unit, sub_steps=1):
+    def move(self, direction, dist=unit, sub_steps=1, align=True):
         x_component, y_component = direction
         sub_unit = dist / sub_steps
         for sub_line in range(sub_steps):
@@ -57,8 +57,9 @@ class Brain:
             action.start()
             while not action.complete:
                 print(action.target[None], action.estimate_progress()[None])
-            self.align_center()
-            self.align_angle()
+            if align:
+                self.align_center()
+                self.align_angle()
 
     def get_x_scans(self, x):
         scanner = self.lidar.scanner()
