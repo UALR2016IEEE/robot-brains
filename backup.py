@@ -33,9 +33,24 @@ class Brain:
             self.io.start('144.167.148.247', 9998)
             self.io.send_data(('lidar-test', None))
 
-    def move(self, direction, sub_steps=1):
+    def move_until_proc(self, front_dist):
+        scan = self.get_x_scans(5)
+        front_scan_polar = scan[..., np.logical_and(17 * math.pi / 12 < scan[1], scan[1] < 19 * math.pi / 12)]
+        front_scan = pol2cart(front_scan_polar)
+        front_dist = np.min(front_scan[0])
+        moves = front_dist // unit
+        approach = front_dist % unit
+        for move in range(moves):
+            self.move((1, 0))
+        scan = self.get_x_scans(5)
+        front_scan_polar = scan[..., np.logical_and(17 * math.pi / 12 < scan[1], scan[1] < 19 * math.pi / 12)]
+        front_scan = pol2cart(front_scan_polar)
+        front_dist = np.min(front_scan[0])
+        self.move((1, 0), front_dist, 2)
+
+    def move(self, direction, dist=unit, sub_steps=1):
         x_component, y_component = direction
-        sub_unit = unit / sub_steps
+        sub_unit = dist / sub_steps
         for sub_line in range(sub_steps):
             action = self.mob.exec_line(Point3(sub_unit * y_component, sub_unit * x_component))
             action.set_status(status)
@@ -45,20 +60,21 @@ class Brain:
             self.align_center()
             self.align_angle()
 
-    def align_center(self):
-        print("scanning")
+    def get_x_scans(self, x):
         scanner = self.lidar.scanner()
         scan_agg = next(scanner)
-        #self.io.send_data(('lidar-test-points', np.array([[120], [math.pi / 2], [1]])))
-        #return
-        for id, scan in zip(range(1), scanner):
-            self.io.send_data(('lidar-test-points', scan))
+        for id, scan in zip(range(x-1), scanner):
             scan_agg = np.concatenate((scan, scan_agg), axis=1)
-        scan_agg = scan_agg[..., scan_agg[0] != 0]
+        return scan_agg[..., scan_agg[0] != 0]
+
+
+    def align_center(self):
+        print("scanning")
+        scan = self.get_x_scans(2)
         if self.render:
-            self.io.send_data(('lidar-test-points', scan_agg))
-        left_point = scan_agg[0][get_closest_point(scan_agg[1], 3 * math.pi / 2)]
-        right_point = scan_agg[0][get_closest_point(scan_agg[1], math.pi / 2)]
+            self.io.send_data(('lidar-test-points', scan))
+        left_point = scan[0][get_closest_point(scan[1], 3 * math.pi / 2)]
+        right_point = scan[0][get_closest_point(scan[1], math.pi / 2)]
         span = left_point + right_point
         action = self.mob.exec_line(Point3(span/2 - right_point))
         action.set_status(status)
@@ -67,13 +83,9 @@ class Brain:
             print(action.target[None], action.estimate_progress()[None])
 
     def align_angle(self):
-        scanner = self.lidar.scanner()
-        scan_agg = next(scanner)
-        for id, scan in zip(range(1), scanner):
-            scan_agg = np.concatenate((scan, scan_agg), axis=1)
-        scan_agg = scan_agg[..., scan_agg[0] != 0]
-        left_scan = scan_agg[..., np.logical_and(17 * math.pi / 12 < scan_agg[1], scan_agg[1] < 19 * math.pi / 12)]
-        right_scan = scan_agg[..., np.logical_and(5 * math.pi / 12 < scan_agg[1], scan_agg[1] < 7 * math.pi / 12)]
+        scan = self.get_x_scans(2)
+        left_scan = scan[..., np.logical_and(17 * math.pi / 12 < scan[1], scan[1] < 19 * math.pi / 12)]
+        right_scan = scan[..., np.logical_and(5 * math.pi / 12 < scan[1], scan[1] < 7 * math.pi / 12)]
         left_angle, *tail = np.polyfit(*pol2cart(left_scan[0], left_scan[1]), 1)
         right_angle, *tail = np.polyfit(*pol2cart(right_scan[0], right_scan[1]), 1)
         slope = statistics.mean([left_angle, right_angle])
