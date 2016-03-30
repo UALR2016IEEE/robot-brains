@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import struct
 import serial
 import time
 
@@ -38,7 +39,8 @@ class StatusClass(serial.Serial):
 
     def button_state(self):
         self.write(b'b')
-        return int(self.read(1))
+        state, = struct.unpack('>?', self.read())
+        return state
 
 
 status = StatusClass("/dev/ttyUSB0")
