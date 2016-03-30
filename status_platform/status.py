@@ -3,11 +3,12 @@ import serial
 import time
 
 import wiringpi2 as wiringpi
-from wiringpi2 import INPUT, OUTPUT
+INPUT = 1
+OUTPUT = 0
 pi_rev = wiringpi.piBoardRev()
 wiringpi.wiringPiSetupPhys()
 MUX_PIN = 7
-wiringpi.setPinMode(MUX_PIN, OUTPUT)
+wiringpi.pinMode(MUX_PIN, OUTPUT)
 wiringpi.digitalWrite(MUX_PIN, 0)
 
 class StatusClass(serial.Serial):
