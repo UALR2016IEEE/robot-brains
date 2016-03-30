@@ -3,7 +3,7 @@ __author__ = 'StaticVOiDance'
 
 import atexit
 from .lidar import Lidar
-from .constants import  *
+from .constants import *
 
 import wiringpi2 as wiringpi
 pi_rev = wiringpi.piBoardRev()
