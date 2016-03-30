@@ -1,7 +1,7 @@
 import atexit
 import warnings
 import time
-import serial
+from status_platform.status import StatusClass
 import struct
 from hardware.robo_claw import constants
 
@@ -16,7 +16,7 @@ class ChecksumError(Exception):
 
 class RoboClaw:
     REGISTER_ROBOCLAWS = {}
-    def __init__(self, serial_port: serial.Serial, address):
+    def __init__(self, serial_port: StatusClass, address):
         self.REGISTER_ROBOCLAWS[(serial_port, address)] = self
         self.port = serial_port
         self._crc = 0
@@ -32,7 +32,6 @@ class RoboClaw:
                 warnings.warn("RoboClaw @{}:{} failed to properly shutdown because:\n{}".format(port.port, hex(address), str(e)))
 
     def write(self, data):
-        self.port.write([22])
         sent_data = struct.pack(">B{}s".format(len(data)), self.address, data)
         self.port.write(sent_data)
         return sent_data
@@ -44,18 +43,19 @@ class RoboClaw:
         self.rel_pos = self.get_raw_motor_positions()
 
     def send_command(self, command):
-        sent_data = self.write(command)
-        crc = self.checksum(sent_data)
-        self.port.write(struct.pack(">H", crc))
-        self.port.write([22])
+        with self.port.UART_mux():
+            sent_data = self.write(command)
+            crc = self.checksum(sent_data)
+            self.port.write(struct.pack(">H", crc))
+
         raw_return_code = self.read(1)
         return_code, = struct.unpack(">B", raw_return_code)
         if return_code != 0xFF:
             raise CommandNotReceived()
 
     def ask(self, command, length):
-        sent_data = self.write(struct.pack(">B", command))
-        self.port.write([22])
+        with self.port.UART_mux():
+            sent_data = self.write(struct.pack(">B", command))
         fulldata = self.read(length)
         data, checksum = struct.unpack(">{}sH".format(length-2), fulldata)
         check = self.checksum(list(sent_data + data))
