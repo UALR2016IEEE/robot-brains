@@ -20,7 +20,12 @@ def main(render, debug):
         for scan in brain.lidar.scanner():
             brain.io.send_data(('lidar-test-points', scan))
     brain.move((2, 0), sub_steps=2, align=False)
-    brain.move_until_proc(500)
+    brain.align_center()
+    brain.align_angle()
+    brain.move((1, 0))
+    brain.move_until_proc(150)
+    import pdb; pdb.set_trace()
+    brain.rotate_180()
 
 class Brain:
     def __init__(self, render=False):
@@ -33,19 +38,19 @@ class Brain:
             self.io.start('144.167.148.247', 9998)
             self.io.send_data(('lidar-test', None))
 
-    def move_until_proc(self, front_dist):
+    def move_until_proc(self, front_prox):
         scan = self.get_x_scans(5)
-        front_scan_polar = scan[..., np.logical_and(17 * math.pi / 12 < scan[1], scan[1] < 19 * math.pi / 12)]
-        front_scan = pol2cart(front_scan_polar)
-        front_dist = np.min(front_scan[0])
-        moves = front_dist // unit
+        front_scan_polar = scan[..., np.logical_or(23 * math.pi / 12 < scan[1], scan[1] <  math.pi / 12)]
+        front_scan = pol2cart(front_scan_polar[0], front_scan_polar[1])
+        front_dist = int(np.min(front_scan[0])) - front_prox
+        moves = int(front_dist / unit)
         approach = front_dist % unit
         for move in range(moves):
             self.move((1, 0))
         scan = self.get_x_scans(5)
-        front_scan_polar = scan[..., np.logical_and(17 * math.pi / 12 < scan[1], scan[1] < 19 * math.pi / 12)]
-        front_scan = pol2cart(front_scan_polar)
-        front_dist = np.min(front_scan[0])
+        front_scan_polar = scan[..., np.logical_or(23 * math.pi / 12 < scan[1], scan[1] < math.pi / 12)]
+        front_scan = pol2cart(front_scan_polar[0], front_scan_polar[1])
+        front_dist = np.min(front_scan[0]) - front_prox
         self.move((1, 0), front_dist, 2)
 
     def move(self, direction, dist=unit, sub_steps=1, align=True):
@@ -60,6 +65,12 @@ class Brain:
             if align:
                 self.align_center()
                 self.align_angle()
+
+    def rotate_180(self):
+        self.align_center()
+        self.align_angle(180)
+        self.align_angle()
+        
 
     def get_x_scans(self, x):
         scanner = self.lidar.scanner()
@@ -83,7 +94,7 @@ class Brain:
         while not action.complete:
             print(action.target[None], action.estimate_progress()[None])
 
-    def align_angle(self):
+    def align_angle(self, angle_offset=0):
         scan = self.get_x_scans(2)
         left_scan = scan[..., np.logical_and(17 * math.pi / 12 < scan[1], scan[1] < 19 * math.pi / 12)]
         right_scan = scan[..., np.logical_and(5 * math.pi / 12 < scan[1], scan[1] < 7 * math.pi / 12)]
@@ -91,7 +102,7 @@ class Brain:
         right_angle, *tail = np.polyfit(*pol2cart(right_scan[0], right_scan[1]), 1)
         slope = statistics.mean([left_angle, right_angle])
         print("Angle divergence:", left_angle - right_angle)
-        action = self.mob.rotate(math.atan(slope))
+        action = self.mob.rotate(math.atan(slope) + angle_offset)
         action.set_status(status)
         action.start()
         while not action.complete:

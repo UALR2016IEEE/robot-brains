@@ -17,10 +17,10 @@ class ChecksumError(Exception):
 class RoboClaw:
     REGISTER_ROBOCLAWS = {}
     def __init__(self, serial_port: serial.Serial, address):
-        self.REGISTER_ROBOCLAWS[(serial_port, address)] = self
         self.port = serial_port
         self._crc = 0
         self.address = address
+        self.REGISTER_ROBOCLAWS[(serial_port, address)] = self
         self.set_relitive_position()
 
     @atexit.register
@@ -99,6 +99,8 @@ class RoboClaw:
         return motor1_current, motor2_current
 
     def set_motor_positions(self, accel, m1, m2, buffered=False):
+        if m1 == 0 and m2 == 0:
+            return
         self.set_relitive_position()
         m1_rel_pos, m2_rel_pos = self.rel_pos
         m1 = accel, m1[0], accel, m1[1] + m1_rel_pos
@@ -112,7 +114,8 @@ class RoboClaw:
         )
         try:
             self.send_command(raw_data)
-        except struct.error:
+        except (CommandNotReceived, struct.error):
+            import pdb; pdb.set_trace()
             raise CommandNotReceived(
                 "Sent position command with:\n\tm1_params:{}\n\tm2_params:{}\nCommand not recieved".format(m1, m2)
             )
@@ -171,8 +174,8 @@ class RoboClaw:
         overflow =  status & 0b00000100
         direction = status & 0b00000010
         m1_position = direction * -1 * m1_position_unsigned
-        # if underflow or overflow:
-        #     raise OverflowError
+        if underflow or overflow:
+             print('Roboclaw Overflow')
 
         raw_data = self.ask(constants.GETM2ENC, 7)
         m2_position_unsigned, status = struct.unpack(struct_formatter, raw_data)
@@ -180,8 +183,8 @@ class RoboClaw:
         overflow =  status & 0b00000100
         direction = status & 0b00000010
         m2_position = direction * -1 * m2_position_unsigned
-        # if underflow or overflow:
-        #     raise OverflowError
+        if underflow or overflow:
+             print("Roboclaw overflow")
 
         return m1_position_unsigned, m2_position_unsigned
 

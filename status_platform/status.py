@@ -9,7 +9,7 @@ class StatusClass(serial.Serial):
 
 status = StatusClass("/dev/ttyUSB0")
 status.baudrate = 115200
-status.timeout = 0.2
+status.timeout = 0.5
 time.sleep(2)
 
 
