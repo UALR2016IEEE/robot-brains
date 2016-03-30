@@ -26,17 +26,19 @@ class StatusClass(serial.Serial):
 
     def claw(self, open=False):
         if open:
-            self.write("5")
+            self.write(b"5")
         else:
-            self.write("2")
+            self.write(b"2")
 
     def rail(self, lower=False):
         if lower:
-            self.write("6")
+            self.write(b"6")
         else:
-            self.write("7")
+            self.write(b"7")
 
-
+    def button_state(self):
+        self.write(b'b')
+        return int(self.read(1))
 
 
 status = StatusClass("/dev/ttyUSB0")
