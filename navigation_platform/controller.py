@@ -1,7 +1,11 @@
 import asyncio
 import math
+import statistics
 import multiprocessing
 import time
+
+import numpy as np
+
 from utils.data_structures_threadsafe import Point3 as Safe_Point3
 
 import hardware
@@ -128,7 +132,6 @@ class Controller(Base):
             self, target=self.hardware_nav_interface, args=
             (
                 self.nav,
-                Safe_Point3(2263, 164, math.radians(0)),
                 self.pos,
                 None,
                 self.halt,
@@ -140,14 +143,16 @@ class Controller(Base):
         )
 
     @staticmethod
-    def hardware_nav_interface(nav: type, initial_position, position_queue: multiprocessing.Queue, sim_controller,
+    def hardware_nav_interface(nav: type, position_queue: multiprocessing.Queue, sim_controller,
                       halt: multiprocessing.Event, components: multiprocessing.Queue, actions: multiprocessing.Queue,
                       render: bool, stat_lock):
         from status_platform import status
         status.lock = stat_lock
+
+        lidar = hardware.RPi_Lidar(sim_controller, "/dev/ttyAMA0")
+        initial_position = Locator(lidar).locate()
         print('initial pos', initial_position.mm2pix())
         navigator = nav(position=initial_position)
-        lidar = hardware.RPi_Lidar(sim_controller, "/dev/ttyAMA0")
         action = None
         navigator.set_position(initial_position)
         no_action = False
@@ -203,3 +208,43 @@ class Controller(Base):
         except Exception as e:
             lidar.set_motor_duty(0)
             raise e
+
+
+class Locator:
+    def __init__(self, lidar):
+        self.lidar = lidar
+
+    def locate(self):
+        scan = self.get_x_scans(6)
+        angle_offset = self.align_angle(scan)
+        right_offset = self.align_span(scan, (math.pi / 2) + angle_offset)
+        rear_offset = self.align_span(scan , (math.pi) + angle_offset)
+        return Safe_Point3((2.438 * 1000) - right_offset, rear_offset, angle_offset)
+
+    def align_span(self, scan, angle_offset):
+        return scan[0][self.get_closest_point(scan[1], angle_offset)]
+
+    def align_angle(self, scan):
+        right_scan = scan[..., np.logical_and(5 * math.pi / 12 < scan[1], scan[1] < 7 * math.pi / 12)]
+        right_angle, *tail = np.polyfit(*self.pol2cart(right_scan[0], right_scan[1]), 1)
+        return right_angle
+
+
+
+    def get_x_scans(self, x):
+        scanner = self.lidar.scanner()
+        scan_agg = next(scanner)
+        for id, scan in zip(range(x-1), scanner):
+            scan_agg = np.concatenate((scan, scan_agg), axis=1)
+        return scan_agg[..., scan_agg[0] != 0]
+
+    @staticmethod
+    def get_closest_point(array, value):
+        return np.argmin(np.abs(array - value))
+
+    @staticmethod
+    def pol2cart(rho, phi) -> (np.array, np.array):
+        x = rho * np.cos(phi)
+        y = rho * np.sin(phi)
+        return x, y
+
