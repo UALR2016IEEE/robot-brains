@@ -19,23 +19,28 @@ def main(render, debug):
     if debug:
         for scan in brain.lidar.scanner():
             brain.io.send_data(('lidar-test-points', scan))
-    brain.move((2, 0), sub_steps=2, align=False)
+    #brain.move((1, 0), align=False)
+    #brain.move((1, 1), align=False)
+    #brain.move((0, 1), align=False)
+
     brain.align_center()
     brain.align_angle()
     brain.move((1, 0))
     brain.move_until_proc(150)
-    import pdb; pdb.set_trace()
-    brain.rotate_180()
+    #import pdb; pdb.set_trace()
+    #brain.rotate_180()
 
 class Brain:
     def __init__(self, render=False):
         self.mob = Mobility(None)
+        while not status.button_state():
+            pass
         self.lidar = RPi_Lidar(None, "/dev/ttyAMA0")
         self.lidar.set_motor_duty(90)
         self.io = status_io.IOHandler()
         self.render = render
         if render:
-            self.io.start('144.167.148.247', 9998)
+            self.io.start('144.167.151.20', 9998)
             self.io.send_data(('lidar-test', None))
 
     def move_until_proc(self, front_prox):
@@ -68,7 +73,11 @@ class Brain:
 
     def rotate_180(self):
         self.align_center()
-        self.align_angle(180)
+        action = self.mob.rotate(180)
+        action.set_status(status)
+        status.start()
+        while not action.complete():
+            pass
         self.align_angle()
         
 
