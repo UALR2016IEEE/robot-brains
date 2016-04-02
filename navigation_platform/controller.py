@@ -152,7 +152,7 @@ class Controller(Base):
         lidar = hardware.RPi_Lidar(sim_controller, "/dev/ttyAMA0")
         lidar.set_motor_duty(100)
         initial_position = Locator(lidar).locate()
-        print('initial pos', initial_position.mm2pix())
+        print('initial pos', initial_position)
         navigator = nav(position=initial_position)
         action = None
         navigator.set_position(initial_position)
@@ -226,10 +226,8 @@ class Locator:
 
     def align_angle(self, scan):
         right_scan = scan[..., np.logical_and(5 * math.pi / 12 < scan[1], scan[1] < 7 * math.pi / 12)]
-        right_angle, *tail = np.polyfit(*self.pol2cart(right_scan[0], right_scan[1]), 1)
-        return right_angle
-
-
+        slope, *tail = np.polyfit(*self.pol2cart(right_scan[0], right_scan[1]), 1)
+        return math.atan(slope)
 
     def get_x_scans(self, x):
         scanner = self.lidar.scanner()
