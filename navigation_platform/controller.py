@@ -150,6 +150,7 @@ class Controller(Base):
         status.lock = stat_lock
 
         lidar = hardware.RPi_Lidar(sim_controller, "/dev/ttyAMA0")
+        lidar.set_motor_duty(100)
         initial_position = Locator(lidar).locate()
         print('initial pos', initial_position.mm2pix())
         navigator = nav(position=initial_position)
@@ -157,7 +158,6 @@ class Controller(Base):
         navigator.set_position(initial_position)
         no_action = False
         scan_time = time.time()
-        lidar.set_motor_duty(100)
         last_xy = Safe_Point3()
 
         while not components.empty():
