@@ -1,6 +1,7 @@
 from utils.data_structures import Point2
 from utils.data_structures import Vertex
 from utils.astar import astar
+from utils.conversion import Conversion
 import math
 
 
@@ -9,6 +10,7 @@ class Base(object):
         self.points = {}
         self.init_graph()
         self.goal = None
+        self.conversion = Conversion()
 
     def init_graph(self):
         # define primary points first
@@ -158,7 +160,8 @@ class Base(object):
     def is_goal(self, v):
         return self.goal == v.name
 
-    def get_cost(self, v1, v2):
+    @staticmethod
+    def get_cost(v1, v2):
         return v1.point.distance(v2.point)
 
     def get_heuristic(self, v):
@@ -167,14 +170,42 @@ class Base(object):
     def find_path_from_current(self):
         pass
 
+    @staticmethod
+    def reduce_actions(actions):
+        current = 0
+        result = []
+        while current != len(actions):
+            if current != len(actions) - 1:
+                if actions[current][0] != actions[current + 1][0]:
+                    result.append(actions[current])
+                    current += 1
+                else:
+                    tmp = actions[current]
+                    while actions[current][0] == actions[current + 1][0] and current != len(actions):
+                        tmp[1] += actions[current + 1][1]
+                        current += 1
+                    current += 1
+                    result.append(tmp)
+            else:
+                # check if the last one is at the same angle
+                if result[-1][0] == actions[-1][0]:
+                    result[-1][1] += actions[-1][1]
+                else:
+                    result.append(actions[-1])
+                break
+        return result
+
     def find_path(self, v1, v2):
         self.goal = v2
         path = astar(self.points[v1], self.get_neighbors, self.is_goal, 0, self.get_cost, self.get_heuristic)
         path.insert(0, self.points[v1])
+        actions = []
         for idx in range(len(path)):
             if idx != len(path) - 1:
-                print('name', path[idx].name, 'to', path[idx + 1].name, 'p1', path[idx].point, 'p2', path[idx + 1].point, 'angle', math.degrees(path[idx].point.get_angle_to(path[idx + 1].point)), 'dist', path[idx].point.distance(path[idx + 1].point))
-        return path
+                # print('name', path[idx].name, 'to', path[idx + 1].name, 'p1', path[idx].point, 'p2', path[idx + 1].point, 'angle', math.degrees(path[idx].point.get_angle_to(path[idx + 1].point)), 'dist', path[idx].point.distance(path[idx + 1].point))
+                actions.append([math.degrees(path[idx].point.get_angle_to(path[idx + 1].point)), self.conversion.pix2mm(path[idx].point.distance(path[idx + 1].point))])
+        reduced = self.reduce_actions(actions)
+        return reduced
 
 
 class Composer(Base):
