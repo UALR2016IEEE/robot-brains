@@ -76,7 +76,7 @@ class Base(object):
         self.current_task.start()
 
 ENCODER_TICKS = 979.62
-WHEEL_BASE = 265
+WHEEL_BASE = 220
 WHEEL_ARC = math.pi * WHEEL_BASE
 WHEEL_DIAMETER = 32
 WHEEL_CIRCUMFERENCE = math.pi*WHEEL_DIAMETER
