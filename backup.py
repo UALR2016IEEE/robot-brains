@@ -79,7 +79,6 @@ class Brain:
         while not action.complete():
             pass
         self.align_angle()
-        
 
     def get_x_scans(self, x):
         scanner = self.lidar.scanner()
@@ -87,7 +86,6 @@ class Brain:
         for id, scan in zip(range(x-1), scanner):
             scan_agg = np.concatenate((scan, scan_agg), axis=1)
         return scan_agg[..., scan_agg[0] != 0]
-
 
     def align_center(self):
         print("scanning")
