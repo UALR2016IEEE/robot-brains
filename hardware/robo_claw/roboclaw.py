@@ -45,11 +45,12 @@ class RoboClaw:
 
     def send_command(self, command):
         with self.port.UART_mux():
-            sent_data = self.write(command)
+            sent_data = struct.pack(">B{}s".format(len(command)), self.address, command)
             crc = self.checksum(sent_data)
-            self.port.write(struct.pack(">H", crc))
-
-        raw_return_code = self.read(1)
+            crc_string = struct.pack(">H", crc)
+            self.port.write(sent_data)
+            self.port.write(crc_string)
+            raw_return_code = self.read(1)
         return_code, = struct.unpack(">B", raw_return_code)
         if return_code != 0xFF:
             raise CommandNotReceived()
@@ -57,7 +58,7 @@ class RoboClaw:
     def ask(self, command, length):
         with self.port.UART_mux():
             sent_data = self.write(struct.pack(">B", command))
-        fulldata = self.read(length)
+            fulldata = self.read(length)
         data, checksum = struct.unpack(">{}sH".format(length-2), fulldata)
         check = self.checksum(list(sent_data + data))
         if check != checksum:
@@ -159,6 +160,10 @@ class RoboClaw:
         self.send_command(bytes([constants.RESETENC]))
 
     def get_motor_positions(self):
+        try:
+            return (x - y for x, y in zip(self.get_raw_motor_positions(), self.rel_pos))
+        except:
+            pass
         return (x - y for x, y in zip(self.get_raw_motor_positions(), self.rel_pos))
 
     def get_raw_motor_positions(self):
@@ -191,7 +196,7 @@ class RoboClaw:
 
 
 if __name__ == "__main__":
-    port = serial.Serial("COM4", baudrate=115200, timeout=0.1)
+    port = serial.Serial("/dev/ttyAMA0", baudrate=115200, timeout=0.1)
     time.sleep(2)
     claw = RoboClaw(port, 0x80)
     print(claw.get_temps())

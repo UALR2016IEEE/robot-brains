@@ -4,8 +4,8 @@ import serial
 import time
 
 import wiringpi2 as wiringpi
-INPUT = 1
-OUTPUT = 0
+OUTPUT = 1
+INPUT = 0
 pi_rev = wiringpi.piBoardRev()
 wiringpi.wiringPiSetupPhys()
 MUX_PIN = 7
@@ -19,7 +19,7 @@ class StatusClass(serial.Serial):
 
     @contextmanager
     def UART_mux(self):
-        wiringpi2.digitalWrite(MUX_PIN, 1)
+        wiringpi.digitalWrite(MUX_PIN, 1)
         try:
             yield
         finally:

@@ -36,7 +36,7 @@ class Controller:
         print("Initializing Renderer")
         io = status_io.IOHandler()
         print('Binding to renderer')
-        io.start('144.167.148.247', 9998)
+        io.start('144.167.149.164', 9998)
         # sim_controller = simulate.controller.Controller(navigation_platform.get_position())
         # sim_controller.init_grid()
         io.send_data(('full-simulation', None))
@@ -53,9 +53,12 @@ class Controller:
         action = self.mob.exec_line(Point3(0, 1000))
         self.nav.set_action(action)
         self.nav.add_component('lidar render', self.renderer)
-        self.nav.start()
         from status_platform import status
         status.lock = self.stat_lock
+        while not status.button_state():
+            pass
+        # await asyncio.Condition.wait_for(status.button_state())
+        self.nav.start()
         action.set_status(status)
         while True:
             position = await self.nav.get_pos()

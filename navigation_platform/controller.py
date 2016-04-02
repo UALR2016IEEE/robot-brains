@@ -160,10 +160,9 @@ class Controller(Base):
             print("adding ", component)
             navigator.add_component(*component)
         try:
-            scan_toss_counter = 0
-            for lidar_data in lidar.scanner():
-                while scan_toss_counter < 20:
-                    scan_toss_counter += 1
+            for scan_counter, lidar_data in enumerate(lidar.scanner()):
+                if scan_counter < 20:
+                    print(scan_counter)
                     continue
                 if halt.is_set():
                     break
@@ -198,7 +197,9 @@ class Controller(Base):
                 # current_position[None] = position[None]
                 position_queue.put(position)
                 # print('saving map')
-
+                if scan_counter > 120:
+                    break
+            navigator.save_map()
         except Exception as e:
             lidar.set_motor_duty(0)
             raise e

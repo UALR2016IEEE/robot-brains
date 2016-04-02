@@ -223,8 +223,8 @@ class HardwareAction(object):
         self.timeout = 0
 
     def set_status(self, status):
-        self.m1 = RoboClaw(status, 0x80)
-        self.m2 = RoboClaw(status, 0x81)
+        self.m1 = RoboClaw(status, 0x81)
+        self.m2 = RoboClaw(status, 0x80)
 
     @abstractmethod
     def start(self):
@@ -248,13 +248,13 @@ class LineAction(HardwareAction):
         with self.m1.port.lock:
             self.m1.set_motor_positions(
                 8000,
-                (2000, x_in_ticks),
-                (2000, -x_in_ticks)
+                (400, x_in_ticks),
+                (400, -x_in_ticks)
             )
             self.m2.set_motor_positions(
                 8000,
-                (2000, y_in_ticks),
-                (2000, -y_in_ticks)
+                (400, y_in_ticks),
+                (400, -y_in_ticks)
             )
 
     def estimate_progress(self):

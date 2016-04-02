@@ -21,9 +21,9 @@ class Base(object):
             self.config = json.load(f)
 
         self.slam_object = RMHCSlam(self.laser, self.config['map characteristics']['map size pixels'],
-                                    self.config['map characteristics']['map size meters'], map_quality=30,
-                                    sigma_xy_mm=200, sigma_theta_degrees=40,
-                                    max_search_iter=500, init_x=self.position.x, init_y=self.position.y,
+                                    self.config['map characteristics']['map size meters'], map_quality=50,
+                                    sigma_xy_mm=0, sigma_theta_degrees=0,
+                                    max_search_iter=100, init_x=self.position.x, init_y=self.position.y,
                                     init_r=math.degrees(self.position.r), hole_width_mm=40)
         # self.slam_object = RMHCSlam(self.laser, 960, 2.438, map_quality=10, sigma_xy_mm=100, sigma_theta_degrees=20, max_search_iter=1000, init_x=self.position.x / 960, init_y=self.position.y / 960, init_r=math.degrees(self.position.r), hole_width_mm=100)
         self.trajectory = []
@@ -68,14 +68,14 @@ class Base(object):
         # print(mb)
 
         # Save map and trajectory as PNG file
-        image = np.asarray(Image.frombuffer('L', (960, 960), map_bytes, 'raw', 'L', 0, 1))
-        # image.save('test_image_nav.png')
-        self.lidar_map.append(image)
+        image = Image.frombuffer('L', (960, 960), map_bytes, 'raw', 'L', 0, 1)
+        image.save('test_image_nav.png')
+        # self.lidar_map.append(image)
 
         # convert to b/w
-        mb[mb >= 127] = 255
-        mb[mb < 127] = 0
-        self.reduced_map.append(mb)
+        # mb[mb >= 127] = 255
+        # mb[mb < 127] = 0
+        # self.reduced_map.append(mb)
         print('map saved')
 
     def get_map(self):
@@ -88,13 +88,13 @@ class Base(object):
     def slam(self):
         print("SLAM Initialized")
         while True:
-            lidar, estimated_velocity = yield
-            self.slam_object.update(lidar)
+            lidar, estimates = yield
+            self.slam_object.update(lidar, estimates)
             #print("Getting Position")
             self.position.x, self.position.y, self.position.r = self.slam_object.getpos()
             self.position.r = math.radians(self.position.r)
             self.trajectory.append((self.position.x, self.position.y))
-            #print('slam pos', self.position, 'estimates', estimated_velocity)
+            print('slam pos', self.position)
 
     def add_component(self, name: str, func: types.FunctionType):
         self.components[name] = func(self)

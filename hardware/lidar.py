@@ -198,7 +198,11 @@ class Lidar(Base):
         self.write(const.Commands.Stop_Scan)
         sleep(0.1)
 
-    def scanner(self):
+    def scanner(self, flip=False, offset=90):
+        if flip:
+            scan_translation = lambda angle: 360 - angle + offset
+        else:
+            scan_translation = lambda angle: angle + offset
         self.stop()
         self.flush()
         self.write(const.Commands.Start_Scan)
@@ -232,9 +236,10 @@ class Lidar(Base):
                     angles = []
                     qualities = []
                     distances = []
-                angles.append((360 - angle + 270) % 360)
-                distances.append(distance)
-                qualities.append(quality)
+                if distance > 0:
+                    angles.append(scan_translation(angle) % 360)
+                    distances.append(distance)
+                    qualities.append(quality)
         except GeneratorExit:
             self.stop()
 
