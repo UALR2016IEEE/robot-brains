@@ -124,8 +124,17 @@ class Brain:
         # rear_offset = self.align_span(scan , (math.pi) + angle_offset)
 
     def get_angle(self, scan, ref):
+        left_ref, right_ref = ref
+        left_scan = scan[..., np.logical_and(17 * math.pi / 12 < scan[1], scan[1] < 19 * math.pi / 12)]
         right_scan = scan[..., np.logical_and(5 * math.pi / 12 < scan[1], scan[1] < 7 * math.pi / 12)]
-        slope, *tail = np.polyfit(*pol2cart(right_scan[0], right_scan[1]), 1)
+        left_angle, *tail = np.polyfit(*pol2cart(left_scan[0], left_scan[1]), 1)
+        right_angle, *tail = np.polyfit(*pol2cart(right_scan[0], right_scan[1]), 1)
+        if left_ref and right_ref:
+            slope = statistics.mean((left_angle, right_angle))
+        elif left_ref:
+            slope = left_angle
+        else:
+            slope = right_angle
         return math.atan(slope)
 
     def do_action(self, action):
@@ -138,17 +147,7 @@ class Brain:
         return scan[0][get_closest_point(scan[1], angle_offset)]
 
     def align_angle(self, scan, ref=(0, 1)):
-        left_ref, right_ref = ref
-        left_scan = scan[..., np.logical_and(17 * math.pi / 12 < scan[1], scan[1] < 19 * math.pi / 12)]
-        right_scan = scan[..., np.logical_and(5 * math.pi / 12 < scan[1], scan[1] < 7 * math.pi / 12)]
-        left_angle, *tail = np.polyfit(*pol2cart(left_scan[0], left_scan[1]), 1)
-        right_angle, *tail = np.polyfit(*pol2cart(right_scan[0], right_scan[1]), 1)
-        if left_ref and right_ref:
-            slope = statistics.mean((left_angle, right_angle))
-        elif left_ref:
-            slope = left_angle
-        else:
-            slope = right_angle
+        slope = self.get_angle(scan, ref)
         action = self.mob.rotate(math.atan(slope))
         return action
 
