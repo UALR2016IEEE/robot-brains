@@ -40,7 +40,7 @@ class Brain:
         self.io = status_io.IOHandler()
         self.render = render
         if render:
-            self.io.start('144.167.151.20', 9998)
+            self.io.start('144.167.149.164', 9998)
             self.io.send_data(('lidar-test', None))
 
     def move_until_proc(self, front_prox):

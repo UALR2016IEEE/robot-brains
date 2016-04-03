@@ -217,7 +217,7 @@ class Locator:
     def locate(self):
         scan = self.get_x_scans(6)
         angle_offset = self.align_angle(scan)
-        right_offset = self.align_span(scan, (math.pi / 2) + angle_offset)
+        right_offset = self.align_span(scan, (3 * math.pi / 2) + angle_offset)
         rear_offset = self.align_span(scan , (math.pi) + angle_offset)
         return Safe_Point3((2.438 * 1000) - right_offset, rear_offset, angle_offset)
 
@@ -227,7 +227,7 @@ class Locator:
     def align_angle(self, scan):
         right_scan = scan[..., np.logical_and(5 * math.pi / 12 < scan[1], scan[1] < 7 * math.pi / 12)]
         slope, *tail = np.polyfit(*self.pol2cart(right_scan[0], right_scan[1]), 1)
-        return math.atan(slope)
+        return -math.atan(slope)
 
     def get_x_scans(self, x):
         scanner = self.lidar.scanner()

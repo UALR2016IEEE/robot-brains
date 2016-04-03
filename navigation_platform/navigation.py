@@ -21,9 +21,9 @@ class Base(object):
             self.config = json.load(f)
 
         self.slam_object = RMHCSlam(self.laser, self.config['map characteristics']['map size pixels'],
-                                    self.config['map characteristics']['map size meters'], map_quality=50,
-                                    sigma_xy_mm=0, sigma_theta_degrees=0,
-                                    max_search_iter=100, init_x=self.position.x, init_y=self.position.y,
+                                    self.config['map characteristics']['map size meters'], map_quality=150,
+                                    sigma_xy_mm=100, sigma_theta_degrees=20,
+                                    max_search_iter=50, init_x=self.position.x, init_y=self.position.y,
                                     init_r=math.degrees(self.position.r), hole_width_mm=40)
         # self.slam_object = RMHCSlam(self.laser, 960, 2.438, map_quality=10, sigma_xy_mm=100, sigma_theta_degrees=20, max_search_iter=1000, init_x=self.position.x / 960, init_y=self.position.y / 960, init_r=math.degrees(self.position.r), hole_width_mm=100)
         self.trajectory = []
