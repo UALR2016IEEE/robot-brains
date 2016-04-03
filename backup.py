@@ -19,8 +19,14 @@ def main(render, debug):
     if debug:
         for scan in brain.lidar.scanner():
             brain.io.send_data(('lidar-test-points', scan))
-    brain.align_from(math.pi, unit, flip=-1)
-    brain.align_from(1 * math.pi / 2, unit, flip=-1, axis='y')
+    #brain.align_from(math.pi, 1.4 * unit)
+    #brain.align_from(1 * math.pi / 2, 1.75 * unit, flip=1, axis='x')
+    #brain.align_from(3 * math.pi / 2, 0.5 * unit, flip=-1, axis='y')
+    #brain.align(ref=(1, 0))
+    #brain.move((1, 0), ref=(1, 1)) 
+    #brain.move((1, 0), dist=4 * unit, sub_steps=4, ref=(0, 1))
+    brain.align_from(0, 0.5 * unit, axis='x')
+    brain.align(ref=(1, 1))
 
 class Brain:
     def __init__(self, render=False):
@@ -50,7 +56,7 @@ class Brain:
         front_dist = np.min(front_scan[0]) - front_prox
         self.move((1, 0), front_dist, 2)
 
-    def move(self, direction, dist=unit, sub_steps=1, align=True):
+    def move(self, direction, dist=unit, sub_steps=1, align=True, ref=(1, 1)):
         x_component, y_component = direction
         sub_unit = dist / sub_steps
         for sub_line in range(sub_steps):
@@ -60,8 +66,14 @@ class Brain:
             while not action.complete:
                 print(action.target[None], action.estimate_progress()[None])
             if align:
-                self.align_center()
-                self.align_angle()
+                self.align(ref)
+
+    def align(self, ref):
+        scan = self.get_x_scans(3)
+        angle = self.align_angle(scan, ref=ref)
+        line = self.align_center(scan, offset=angle.target, ref=ref)
+        self.do_action(angle)
+        self.do_action(line)
 
     def rotate_180(self):
         self.align_center()
@@ -73,34 +85,37 @@ class Brain:
         self.align_angle()
 
     def get_x_scans(self, x):
-        scanner = self.lidar.scanner(offset=270)
+        scanner = self.lidar.scanner(flip=True, offset=270)
         scan_agg = next(scanner)
         for id, scan in zip(range(x-1), scanner):
             scan_agg = np.concatenate((scan, scan_agg), axis=1)
         return scan_agg[..., scan_agg[0] != 0]
 
-    def align_center(self):
-        print("scanning")
-        scan = self.get_x_scans(2)
-        if self.render:
-            self.io.send_data(('lidar-test-points', scan))
-        left_point = scan[0][get_closest_point(scan[1], 3 * math.pi / 2)]
-        right_point = scan[0][get_closest_point(scan[1], math.pi / 2)]
-        span = left_point + right_point
-        action = self.mob.exec_line(Point3(span/2 - right_point))
-        action.set_status(status)
-        action.start()
-        while not action.complete:
-            print(action.target[None], action.estimate_progress()[None])
+    def align_center(self, scan, offset=0, ref=(1, 1), width=unit):
+        left_ref, right_ref = ref
+        left_point = scan[0][get_closest_point(scan[1], (3 * math.pi / 2) - offset)]
+        right_point = scan[0][get_closest_point(scan[1], (math.pi / 2) - offset)]
+        left_delta = width /2 - left_point
+        right_delta = right_point - width / 2
+        import pdb; pdb.set_trace()
+        if left_ref and right_ref:
+            shift = statistics.mean((left_delta, right_delta))
+        elif left_ref:
+            shift = left_delta
+        else:
+            shift = right_delta
+        action = self.mob.exec_line(Point3(0, shift))
+        return action
 
     def align_from(self, angle, postion_from, flip=1, axis='x'):
         scan = self.get_x_scans(3)
         angle_offset = self.get_angle(scan)
-        pos_offset = flip * (self.align_span(scan, angle - angle_offset) - postion_from)
+        print(angle_offset)
+        pos_offset = flip * (postion_from - self.align_span(scan, angle - angle_offset))
         action = self.mob.rotate(angle_offset)
         self.do_action(action)
         if axis == 'x':
-            action = self.mob.exec_line(Point3(0, axis))
+            action = self.mob.exec_line(Point3(0, pos_offset))
         if axis == 'y':
             action = self.mob.exec_line(Point3(pos_offset))
         self.do_action(action)
@@ -108,40 +123,35 @@ class Brain:
         # left_offset = self.align_span(scan, (3 * math.py / 2) + angle_offset)
         # rear_offset = self.align_span(scan , (math.pi) + angle_offset)
 
-
-    def get_angle(self, scan):
+    def get_angle(self, scan, ref):
         right_scan = scan[..., np.logical_and(5 * math.pi / 12 < scan[1], scan[1] < 7 * math.pi / 12)]
-        slope, *tail = np.polyfit(*self.pol2cart(right_scan[0], right_scan[1]), 1)
-        return -math.atan(slope)
+        slope, *tail = np.polyfit(*pol2cart(right_scan[0], right_scan[1]), 1)
+        return math.atan(slope)
 
     def do_action(self, action):
         action.set_status(status)
         action.start()
         while not action.complete:
-            pass
+            print(action.target, action.estimate_progress())
 
     def align_span(self, scan, angle_offset):
-        return scan[0][self.get_closest_point(scan[1], angle_offset)]
+        return scan[0][get_closest_point(scan[1], angle_offset)]
 
-
-    def align_angle(self, scan):
-        right_scan = scan[..., np.logical_and(5 * math.pi / 12 < scan[1], scan[1] < 7 * math.pi / 12)]
-        slope, *tail = np.polyfit(*self.pol2cart(right_scan[0], right_scan[1]), 1)
-        return -math.atan(slope)
-
-    def align_angle(self, angle_offset=0):
-        scan = self.get_x_scans(2)
+    def align_angle(self, scan, ref=(0, 1)):
+        left_ref, right_ref = ref
         left_scan = scan[..., np.logical_and(17 * math.pi / 12 < scan[1], scan[1] < 19 * math.pi / 12)]
         right_scan = scan[..., np.logical_and(5 * math.pi / 12 < scan[1], scan[1] < 7 * math.pi / 12)]
         left_angle, *tail = np.polyfit(*pol2cart(left_scan[0], left_scan[1]), 1)
         right_angle, *tail = np.polyfit(*pol2cart(right_scan[0], right_scan[1]), 1)
-        slope = statistics.mean([left_angle, right_angle])
-        print("Angle divergence:", left_angle - right_angle)
-        action = self.mob.rotate(math.atan(slope) + angle_offset)
-        action.set_status(status)
-        action.start()
-        while not action.complete:
-            print(action.target, action.estimate_progress())
+        if left_ref and right_ref:
+            slope = statistics.mean((left_angle, right_angle))
+        elif left_ref:
+            slope = left_angle
+        else:
+            slope = right_angle
+        action = self.mob.rotate(math.atan(slope))
+        return action
+
 
 
 def get_closest_point(array, value):
