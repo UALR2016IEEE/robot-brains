@@ -20,12 +20,12 @@ def main(render, debug):
         for scan in brain.lidar.scanner():
             brain.io.send_data(('lidar-test-points', scan))
     #brain.align_from(math.pi, 1.4 * unit)
-    #brain.align_from(1 * math.pi / 2, 1.75 * unit, flip=1, axis='x')
-    #brain.align_from(3 * math.pi / 2, 0.5 * unit, flip=-1, axis='y')
+    #brain.align_from(1 * math.pi / 2, 1.75 * unit, flip=1, axis='x', ref=(0, 1))
+    #brain.align_from(3 * math.pi / 2, 0.5 * unit, flip=-1, axis='y', ref=(0, 1))
     #brain.align(ref=(1, 0))
     #brain.move((1, 0), ref=(1, 1)) 
     #brain.move((1, 0), dist=4 * unit, sub_steps=4, ref=(0, 1))
-    brain.align_from(0, 0.5 * unit, axis='x')
+    brain.align_from(0, 0.5 * unit, axis='x', ref=(0, 1), flip=-1)
     brain.align(ref=(1, 1))
 
 class Brain:
@@ -97,7 +97,6 @@ class Brain:
         right_point = scan[0][get_closest_point(scan[1], (math.pi / 2) - offset)]
         left_delta = width /2 - left_point
         right_delta = right_point - width / 2
-        import pdb; pdb.set_trace()
         if left_ref and right_ref:
             shift = statistics.mean((left_delta, right_delta))
         elif left_ref:
@@ -107,10 +106,9 @@ class Brain:
         action = self.mob.exec_line(Point3(0, shift))
         return action
 
-    def align_from(self, angle, postion_from, flip=1, axis='x'):
+    def align_from(self, angle, postion_from, ref, flip=1, axis='x'):
         scan = self.get_x_scans(3)
-        angle_offset = self.get_angle(scan)
-        print(angle_offset)
+        angle_offset = self.get_angle(scan, ref=ref)
         pos_offset = flip * (postion_from - self.align_span(scan, angle - angle_offset))
         action = self.mob.rotate(angle_offset)
         self.do_action(action)
