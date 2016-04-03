@@ -41,20 +41,14 @@ class Brain:
             self.io.start('144.167.149.164', 9998)
             self.io.send_data(('lidar-test', None))
 
-    def move_until_proc(self, front_prox):
-        scan = self.get_x_scans(5)
-        front_scan_polar = scan[..., np.logical_or(23 * math.pi / 12 < scan[1], scan[1] <  math.pi / 12)]
-        front_scan = pol2cart(front_scan_polar[0], front_scan_polar[1])
-        front_dist = int(np.min(front_scan[0])) - front_prox
-        moves = int(front_dist / unit)
-        approach = front_dist % unit
-        for move in range(moves):
-            self.move((1, 0))
-        scan = self.get_x_scans(5)
-        front_scan_polar = scan[..., np.logical_or(23 * math.pi / 12 < scan[1], scan[1] < math.pi / 12)]
-        front_scan = pol2cart(front_scan_polar[0], front_scan_polar[1])
-        front_dist = np.min(front_scan[0]) - front_prox
-        self.move((1, 0), front_dist, 2)
+    def move_until_proc(self, front_prox=0.5*unit):
+        for attemp in range(3):
+            scan = self.get_x_scans(5)
+            front_scan_polar = scan[..., np.logical_or(23 * math.pi / 12 < scan[1], scan[1] <  math.pi / 12)]
+            front_scan = pol2cart(front_scan_polar[0], front_scan_polar[1])
+            front_dist = int(np.min(front_scan[0])) - front_prox
+            front_shift = front_scan[0][np.argmin(front_scan[1])]
+            self.do_action(self.mob.exec_line(Point3(-front_shift, front_dist)))
 
     def move(self, direction, dist=unit, sub_steps=1, align=True, ref=(1, 1)):
         x_component, y_component = direction
