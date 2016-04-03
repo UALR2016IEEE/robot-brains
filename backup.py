@@ -95,7 +95,7 @@ class Brain:
 
     def align_from(self, angle, postion_from, flip=1, axis='x'):
         scan = self.get_x_scans(3)
-        angle_offset = self.align_angle(scan)
+        angle_offset = self.get_angle(scan)
         pos_offset = flip * (self.align_span(scan, angle - angle_offset) - postion_from)
         action = self.mob.rotate(angle_offset)
         self.do_action(action)
@@ -107,6 +107,12 @@ class Brain:
 
         # left_offset = self.align_span(scan, (3 * math.py / 2) + angle_offset)
         # rear_offset = self.align_span(scan , (math.pi) + angle_offset)
+
+
+    def get_angle(self, scan):
+        right_scan = scan[..., np.logical_and(5 * math.pi / 12 < scan[1], scan[1] < 7 * math.pi / 12)]
+        slope, *tail = np.polyfit(*self.pol2cart(right_scan[0], right_scan[1]), 1)
+        return -math.atan(slope)
 
     def do_action(self, action):
         action.set_status(status)
