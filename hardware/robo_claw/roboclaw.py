@@ -160,10 +160,11 @@ class RoboClaw:
         self.send_command(bytes([constants.RESETENC]))
 
     def get_motor_positions(self):
-        try:
-            return (x - y for x, y in zip(self.get_raw_motor_positions(), self.rel_pos))
-        except:
-            pass
+        for attempt in range(2):
+            try:
+                return (x - y for x, y in zip(self.get_raw_motor_positions(), self.rel_pos))
+            except:
+                pass
         return (x - y for x, y in zip(self.get_raw_motor_positions(), self.rel_pos))
 
     def get_raw_motor_positions(self):

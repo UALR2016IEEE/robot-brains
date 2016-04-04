@@ -1,7 +1,7 @@
 import math
-import sys
-import time
-import statistics
+import sys 
+import time 
+import statistics 
 import numpy as np
 
 import status_io
@@ -19,14 +19,34 @@ def main(render, debug):
     if debug:
         for scan in brain.lidar.scanner():
             brain.io.send_data(('lidar-test-points', scan))
-    #brain.align_from(math.pi, 1.4 * unit)
-    #brain.align_from(1 * math.pi / 2, 1.75 * unit, flip=1, axis='x', ref=(0, 1))
-    #brain.align_from(3 * math.pi / 2, 0.5 * unit, flip=-1, axis='y', ref=(0, 1))
+    
+    brain.align_from(math.pi, 1.5 * unit, ref=(0, 1))
+    brain.align_from(1 * math.pi / 2, 1.75 * unit, flip=1, axis='y', ref=(0, 1))
+    brain.align_from(3 * math.pi / 2, 0.5 * unit, flip=-1, axis='y', ref=(0, 1))
     #brain.align(ref=(1, 0))
-    #brain.move((1, 0), ref=(1, 1)) 
-    #brain.move((1, 0), dist=4 * unit, sub_steps=4, ref=(0, 1))
-    brain.align_from(0, 0.5 * unit, axis='x', ref=(0, 1), flip=-1)
+    brain.move((1, 0), ref=(1, 1)) 
+    brain.move((1, 0), dist=4 * unit, sub_steps=4, ref=(0, 1))
+    brain.move_until_proc(ref=(0, 1), front_prox=unit*0.5)
     brain.align(ref=(1, 1))
+    status.claw(True)
+    status.rail(True)
+    brain.move_until_proc(ref=(1, 1))
+    status.claw(False)
+    time.sleep(1)
+    status.rail(False)
+    time.sleep(0.3)
+    #import pdb;pdb.set_trace()
+    brain.move((-1, 0), ref=(0, 1), dist=unit * .5, sub_steps=2)
+    brain.move((-1, 0), ref=(1, 1), dist=unit * 2, sub_steps=2)
+    brain.move((-1, 0), ref=(0, 1), dist=unit, sub_steps=1)
+    brain.move((-1, 0), ref=(1, 1), dist=unit, sub_steps=1)
+    brain.move((-1, 0), ref=(1, 0), dist=unit)
+    brain.do_action(brain.mob.rotate(math.pi))
+    brain.align(ref=(0, 1), scans=15)
+    brain.align_from(0, unit, axis='x', ref=(1, 1), flip=-1)
+    status.rail(False)
+    time.sleep(0.5)
+    status.claw(False)
 
 class Brain:
     def __init__(self, render=False):
@@ -41,14 +61,16 @@ class Brain:
             self.io.start('144.167.149.164', 9998)
             self.io.send_data(('lidar-test', None))
 
-    def move_until_proc(self, front_prox=0.5*unit):
-        for attemp in range(3):
-            scan = self.get_x_scans(5)
+    def move_until_proc(self, front_prox=95, ref=(1, 1)):
+        for attemp in range(1):
+            scan = self.get_x_scans(10)
             front_scan_polar = scan[..., np.logical_or(23 * math.pi / 12 < scan[1], scan[1] <  math.pi / 12)]
             front_scan = pol2cart(front_scan_polar[0], front_scan_polar[1])
             front_dist = int(np.min(front_scan[0])) - front_prox
-            front_shift = front_scan[0][np.argmin(front_scan[1])]
-            self.do_action(self.mob.exec_line(Point3(-front_shift, front_dist)))
+            #import pdb; pdb.set_trace()
+            front_shift = self.align_center(scan, ref=ref).target.y
+            #print(front_shift, front_dist)
+            self.do_action(self.mob.exec_line(Point3(front_shift, front_dist)))
 
     def move(self, direction, dist=unit, sub_steps=1, align=True, ref=(1, 1)):
         x_component, y_component = direction
@@ -62,8 +84,8 @@ class Brain:
             if align:
                 self.align(ref)
 
-    def align(self, ref):
-        scan = self.get_x_scans(3)
+    def align(self, ref, scans=7):
+        scan = self.get_x_scans(scans)
         angle = self.align_angle(scan, ref=ref)
         line = self.align_center(scan, offset=angle.target, ref=ref)
         self.do_action(angle)
@@ -91,17 +113,18 @@ class Brain:
         right_point = scan[0][get_closest_point(scan[1], (math.pi / 2) - offset)]
         left_delta = width /2 - left_point
         right_delta = right_point - width / 2
+        #import pdb; pdb.set_trace()
         if left_ref and right_ref:
             shift = statistics.mean((left_delta, right_delta))
         elif left_ref:
             shift = left_delta
         else:
             shift = right_delta
-        action = self.mob.exec_line(Point3(0, shift))
+        action = self.mob.exec_line(Point3(-shift))
         return action
 
     def align_from(self, angle, postion_from, ref, flip=1, axis='x'):
-        scan = self.get_x_scans(3)
+        scan = self.get_x_scans(5)
         angle_offset = self.get_angle(scan, ref=ref)
         pos_offset = flip * (postion_from - self.align_span(scan, angle - angle_offset))
         action = self.mob.rotate(angle_offset)
@@ -117,8 +140,8 @@ class Brain:
 
     def get_angle(self, scan, ref):
         left_ref, right_ref = ref
-        left_scan = scan[..., np.logical_and(17 * math.pi / 12 < scan[1], scan[1] < 19 * math.pi / 12)]
-        right_scan = scan[..., np.logical_and(5 * math.pi / 12 < scan[1], scan[1] < 7 * math.pi / 12)]
+        left_scan = scan[..., np.logical_and(14 * math.pi / 12 < scan[1], scan[1] < 22 * math.pi / 12)]
+        right_scan = scan[..., np.logical_and(2 * math.pi / 12 < scan[1], scan[1] < 10 * math.pi / 12)]
         left_angle, *tail = np.polyfit(*pol2cart(left_scan[0], left_scan[1]), 1)
         right_angle, *tail = np.polyfit(*pol2cart(right_scan[0], right_scan[1]), 1)
         if left_ref and right_ref:
@@ -139,7 +162,7 @@ class Brain:
         return scan[0][get_closest_point(scan[1], angle_offset)]
 
     def align_angle(self, scan, ref=(0, 1)):
-        slope = self.get_angle(scan, ref)
+        slope = self.get_angle(scan, ref) * 0.05
         action = self.mob.rotate(math.atan(slope))
         return action
 

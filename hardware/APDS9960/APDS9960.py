@@ -1,5 +1,5 @@
 import wiringpi2 as wiringpi
-import const
+from . import const
 
 
 class APDS9960:
