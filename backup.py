@@ -19,34 +19,74 @@ def main(render, debug):
     if debug:
         for scan in brain.lidar.scanner():
             brain.io.send_data(('lidar-test-points', scan))
-    
-    brain.align_from(math.pi, 1.5 * unit, ref=(0, 1))
-    brain.align_from(1 * math.pi / 2, 1.75 * unit, flip=1, axis='y', ref=(0, 1))
-    brain.align_from(3 * math.pi / 2, 0.5 * unit, flip=-1, axis='y', ref=(0, 1))
-    #brain.align(ref=(1, 0))
-    brain.move((1, 0), ref=(1, 1)) 
-    brain.move((1, 0), dist=4 * unit, sub_steps=4, ref=(0, 1))
-    brain.move_until_proc(ref=(0, 1), front_prox=unit*0.5)
-    brain.align(ref=(1, 1))
-    status.claw(True)
-    status.rail(True)
-    brain.move_until_proc(ref=(1, 1))
-    status.claw(False)
-    time.sleep(1)
-    status.rail(False)
-    time.sleep(0.3)
-    #import pdb;pdb.set_trace()
-    brain.move((-1, 0), ref=(0, 1), dist=unit * .5, sub_steps=2)
-    brain.move((-1, 0), ref=(1, 1), dist=unit * 2, sub_steps=2)
-    brain.move((-1, 0), ref=(0, 1), dist=unit, sub_steps=1)
-    brain.move((-1, 0), ref=(1, 1), dist=unit, sub_steps=1)
-    brain.move((-1, 0), ref=(1, 0), dist=unit)
-    brain.do_action(brain.mob.rotate(math.pi))
-    brain.align(ref=(0, 1), scans=15)
-    brain.align_from(0, unit, axis='x', ref=(1, 1), flip=-1)
-    status.rail(False)
-    time.sleep(0.5)
-    status.claw(False)
+
+    f = field(brain)
+    f.outfield()
+    #f.start()
+
+
+class field:
+    def __init__(self, brain):
+        self.brain = brain
+
+    def start(self):
+        self.brain.align_from(math.pi, 1.5 * unit, ref=(0, 1))
+
+    def channel_0(self):
+        self.brain.move((1, 0), ref=(1, 1), dist=unit*5, sub_steps=3)
+        self.brain.move_until_proc(ref=(1, 1))
+
+    def entry(self):
+        self.brain.align_from(1 * math.pi / 2, 1.75 * unit, flip=1, axis='y', ref=(0, 1))
+        self.brain.align_from(3 * math.pi / 2, 0.5 * unit, flip=-1, axis='y', ref=(0, 1))
+        self.brain.move((1, 0), ref=(1, 1))
+
+    def channel_1_start(self):
+        self.brain.move((1, 0), dist=4 * unit, sub_steps=4, ref=(0, 1))
+        self.brain.move_until_proc(ref=(0, 1), front_prox=unit*0.5)
+
+    def channel_2_start(self):
+        self.brain.align_from(math.pi / 2, unit, 1.5 * unit, flip=1, axis='y', ref=(0, 1))
+        self.brain.move((1, 0), ref=(1, 1), dist=unit*2)
+
+    def aquire_1(self):
+        self.brain.align(ref=(1, 1))
+        status.claw(True)
+        status.rail(True)
+        self.brain.move_until_proc(ref=(1, 1))
+        status.claw(False)
+        time.sleep(1)
+        status.rail(False)
+        time.sleep(0.3)
+        #import pdb;pdb.set_trace()
+
+    def return_1_backwards(self):
+        self.brain.move((-1, 0), ref=(0, 1), dist=unit * .5, sub_steps=2)
+        self.brain.move((-1, 0), ref=(1, 1), dist=unit * 2, sub_steps=2)
+        self.brain.move((-1, 0), ref=(0, 1), dist=unit, sub_steps=1)
+        self.brain.move((-1, 0), ref=(1, 1), dist=unit, sub_steps=1)
+        self.brain.move((-1, 0), ref=(1, 0), dist=unit)
+        self.brain.do_action(self.brain.mob.rotate(math.pi))
+        self.brain.align(ref=(0, 1), scans=15)
+        self.brain.align_from(0, unit, axis='x', ref=(1, 1), flip=-1)
+        status.rail(False)
+        time.sleep(0.5)
+        status.claw(False)
+
+    def return_2_backwards(self):
+        self.brain.move((-1, 0), ref=())
+
+    def outfield(self):
+        while True:
+            print(self.brain.victim_in_region())
+
+    def align_to_victem(self):
+        while True:
+            print(self.brain.victim_in_region(
+                x_region=(-960, -770),
+                y_region=(100, 250)
+            ))
+
 
 class Brain:
     def __init__(self, render=False):
@@ -123,6 +163,37 @@ class Brain:
         action = self.mob.exec_line(Point3(-shift))
         return action
 
+    def align_to_victim(self, scans=5, front_prox=95):
+        scan_polar_raw = self.get_x_scans(scans)
+        scan_polar = scan_polar_raw[..., np.logical_or(15 * math.pi / 8 > scan_polar_raw[1], math.pi / 8 > scan_polar_raw[1])]
+        poi = scan_polar[..., np.argmin(scan_polar[0])]
+        action = self.mob.rotate(-poi[1])
+        self.do_action(action)
+        front_dist = int(np.min(scan_polar[0])) - front_prox
+        self.do_action(self.mob.exec_line(Point3(0, front_dist)))
+
+    def victim_in_region(self, x_region=None, y_region=None, scans=10):
+        if not (x_region or y_region):
+            raise ValueError
+        scan_polar = self.get_x_scans(scans)
+        scan = pol2cart(scan_polar[0], scan_polar[1])
+        if x_region is not None:
+            scan = scan[...,
+                np.logical_and(
+                    scan[0] > x_region[0],
+                    scan[0] < x_region[1]
+                )
+            ]
+        if y_region is not None:
+            scan = scan[
+                np.logical_and(
+                    scan[1] > y_region[0],
+                    scan[1] < y_region[1]
+                )
+            ]
+        return list(np.shape(scan))[1] > 0
+
+
     def align_from(self, angle, postion_from, ref, flip=1, axis='x'):
         scan = self.get_x_scans(5)
         angle_offset = self.get_angle(scan, ref=ref)
@@ -175,7 +246,7 @@ def get_closest_point(array, value):
 def pol2cart(rho, phi) -> (np.array, np.array):
     x = rho * np.cos(phi)
     y = rho * np.sin(phi)
-    return x, y
+    return np.array((x, y))
 
 if __name__ == "__main__":
     main("render" in sys.argv, "debug" in sys.argv)
