@@ -233,8 +233,10 @@ class Brain:
         left_ref, right_ref = ref
         left_scan = scan[..., np.logical_and(14 * math.pi / 12 < scan[1], scan[1] < 22 * math.pi / 12)]
         right_scan = scan[..., np.logical_and(2 * math.pi / 12 < scan[1], scan[1] < 10 * math.pi / 12)]
-        left_angle, *tail = np.polyfit(*pol2cart(left_scan[0], left_scan[1]), 1)
-        right_angle, *tail = np.polyfit(*pol2cart(right_scan[0], right_scan[1]), 1)
+        left_cart_scan = pol2cart(left_scan[0], left_scan[1])
+        right_cart_scan = pol2cart(right_scan[0], right_scan[1])
+        left_angle, *tail = np.polyfit(*left_cart_scan, 1)
+        right_angle, *tail = np.polyfit(*right_cart_scan, 1)
         if left_ref and right_ref:
             slope = statistics.mean((left_angle, right_angle))
         elif left_ref:
