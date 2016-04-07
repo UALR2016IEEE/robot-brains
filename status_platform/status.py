@@ -28,22 +28,36 @@ class StatusClass(serial.Serial):
     def UART_mux(self):
         raise NotImplementedError
 
-    def claw(self, open=False):
-        if open:
-            self.write(b"5")
-        else:
-            self.write(b"2")
+    def prepare_pickup(self):
+        self.write(b"8")
+        self._wait_until()
+        if self.read(1) != b"8":
+            raise serial.SerialTimeoutException()
 
-    def rail(self, lower=False):
-        if lower:
-            self.write(b"6")
-        else:
-            self.write(b"7")
+    def pickup(self):
+        self.write(b"7")
+        self._wait_until()
+        if self.read(1) != b"7":
+            raise serial.SerialException()
+        
+
+    def let_down(self):
+        self.write(b"6")
+        self._wait_until()
+        if self.read(1) != b"6":
+            raise serial.SerialException()
 
     def button_state(self):
         self.write(b'b')
         state, = struct.unpack('>?', self.read())
         return state
+
+    def _wait_until(self, tmo=1):
+        start = time.time()
+        while not self.inWaiting():
+            if time.time() - start > tmo:
+                raise serial.SerialTimeoutException()
+        return
 
 class RPStatusClass(StatusClass):
     @contextmanager
