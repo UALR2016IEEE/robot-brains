@@ -6,6 +6,7 @@ import numpy as np
 
 import status_io
 from hardware import RPi_Lidar
+from hardware.APDS9960 import APDS9960
 from utils import Point3
 from mobility_platform import Mobility
 from multiprocessing import Lock
@@ -21,8 +22,16 @@ def main(render, debug):
             brain.io.send_data(('lidar-test-points', scan))
 
     f = field(brain)
-    f.outfield()
-    #f.start()
+    #f.outfield()
+    import pdb;pdb.set_trace()
+    f.start()
+    f.entry()
+    f.channel_1_start()
+    f.aquire_1()
+    if brain.get_red_or_yellow() == 'red':
+        f.return_2_backwards()
+    else:
+        f.return_1_backwards()
 
 
 class field:
@@ -50,14 +59,13 @@ class field:
         self.brain.move((1, 0), ref=(1, 1), dist=unit*2)
 
     def aquire_1(self):
+        import pdb; pdb.set_trace()
         self.brain.align(ref=(1, 1))
-        status.claw(True)
-        status.rail(True)
+        status.prepare_pickup()
         self.brain.move_until_proc(ref=(1, 1))
-        status.claw(False)
-        time.sleep(1)
-        status.rail(False)
-        time.sleep(0.3)
+
+        status.pickup()
+        #import pdb;pdb.set_trace()
 
     def return_1_backwards(self):
         self.brain.move((-1, 0), ref=(0, 1), dist=unit * .5, sub_steps=2)
@@ -68,9 +76,7 @@ class field:
         self.brain.do_action(self.brain.mob.rotate(math.pi))
         self.brain.align(ref=(0, 1), scans=15)
         self.brain.align_from(0, unit, axis='x', ref=(1, 1), flip=-1)
-        status.rail(False)
-        time.sleep(0.5)
-        status.claw(False)
+        status.let_down()
 
     def return_2_backwards(self):
         self.brain.move((-1, 0), ref=())
@@ -97,11 +103,24 @@ class Brain:
             pass
         self.lidar = RPi_Lidar(None, "/dev/ttyAMA0")
         self.lidar.set_motor_duty(90)
+        self.adps = APDS9960()
+        self.adps.initialize()
+        self.adps.enablePower()
+        self.adps.enable_light_sensor()
         self.io = status_io.IOHandler()
         self.render = render
         if render:
             self.io.start('144.167.149.164', 9998)
             self.io.send_data(('lidar-test', None))
+
+    def get_red_or_yellow(self):
+        for _ in range(10):
+            red = self.adps.readRedLight()
+            green = self.adps.readGreenLight()
+        if green > 0.75 * red:
+            return 'yellow'
+        else:
+            return 'red'
 
     def move_until_proc(self, front_prox=95, ref=(1, 1)):
         for attemp in range(1):
