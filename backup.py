@@ -58,7 +58,6 @@ class field:
         time.sleep(1)
         status.rail(False)
         time.sleep(0.3)
-        #import pdb;pdb.set_trace()
 
     def return_1_backwards(self):
         self.brain.move((-1, 0), ref=(0, 1), dist=unit * .5, sub_steps=2)
@@ -78,9 +77,12 @@ class field:
 
     def outfield(self):
         while True:
-            print(self.brain.victim_in_region())
+            print(self.brain.victim_in_region(
+                x_region=(-960, -770),
+                y_region=(100, 250)
+            ))
 
-    def align_to_victem(self):
+    def align_to_victim(self):
         while True:
             print(self.brain.victim_in_region(
                 x_region=(-960, -770),
@@ -173,6 +175,7 @@ class Brain:
         self.do_action(self.mob.exec_line(Point3(0, front_dist)))
 
     def victim_in_region(self, x_region=None, y_region=None, scans=10):
+        import pdb; pdb.set_trace()
         if not (x_region or y_region):
             raise ValueError
         scan_polar = self.get_x_scans(scans)
@@ -185,7 +188,7 @@ class Brain:
                 )
             ]
         if y_region is not None:
-            scan = scan[
+            scan = scan[...,
                 np.logical_and(
                     scan[1] > y_region[0],
                     scan[1] < y_region[1]
