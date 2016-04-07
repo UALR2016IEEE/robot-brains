@@ -76,9 +76,9 @@ class Base(object):
         self.current_task.start()
 
 ENCODER_TICKS = 979.62
-WHEEL_BASE = 250
+WHEEL_BASE = 245 
 WHEEL_ARC = math.pi * WHEEL_BASE
-WHEEL_DIAMETER = 32
+WHEEL_DIAMETER = 36
 WHEEL_CIRCUMFERENCE = math.pi*WHEEL_DIAMETER
 ROTATION_PER_TICK = WHEEL_CIRCUMFERENCE / ENCODER_TICKS
 
@@ -245,16 +245,17 @@ class LineAction(HardwareAction):
         x_in_ticks = mm_to_ticks(self.target.x)
         y_in_ticks = mm_to_ticks(self.target.y)
         y_in_ticks, x_in_ticks = map(int, shift_vector_angle(y_in_ticks, x_in_ticks, math.pi / 4))
+        speed = 3000
         with self.m1.port.lock:
             self.m1.set_motor_positions(
                 8000,
-                (1000, x_in_ticks),
-                (1000, -x_in_ticks)
+                (speed, x_in_ticks),
+                (speed, -x_in_ticks)
             )
             self.m2.set_motor_positions(
                 8000,
-                (1000, y_in_ticks),
-                (1000, -y_in_ticks)
+                (speed, y_in_ticks),
+                (speed, -y_in_ticks)
             )
 
     def estimate_progress(self):
@@ -270,7 +271,7 @@ class LineAction(HardwareAction):
         if self.timeout == 0 and all(d < 300 for d in delta):
             self.timeout = time.time()
         if self.timeout != 0:
-            if time.time() - self.timeout > 2 or all(d < 10 for d in delta):
+            if time.time() - self.timeout > 2 or all(d < 2 for d in delta):
                 self.complete = True
                 self.stop()
 
@@ -281,12 +282,13 @@ class RotateAction(HardwareAction):
     def start(self):
         wheel_arc = WHEEL_ARC * (self.target / (math.pi * 2))
         wheel_arc_in_ticks = -mm_to_ticks(wheel_arc)
+        speed = 2000
         with self.m1.port.lock:
             self.m1.set_motor_positions(
-                12000, (2000, wheel_arc_in_ticks), (2000, wheel_arc_in_ticks)
+                12000, (speed, wheel_arc_in_ticks), (speed, wheel_arc_in_ticks)
             )
             self.m2.set_motor_positions(
-                12000, (2000, wheel_arc_in_ticks), (2000, wheel_arc_in_ticks)
+                12000, (speed, wheel_arc_in_ticks), (speed, wheel_arc_in_ticks)
             )
 
     def estimate_progress(self):

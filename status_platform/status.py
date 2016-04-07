@@ -52,7 +52,7 @@ class StatusClass(serial.Serial):
         state, = struct.unpack('>?', self.read())
         return state
 
-    def _wait_until(self, tmo=1):
+    def _wait_until(self, tmo=6):
         start = time.time()
         while not self.inWaiting():
             if time.time() - start > tmo:
