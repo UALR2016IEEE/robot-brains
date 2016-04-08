@@ -22,6 +22,7 @@ def main(render, debug):
     brain = Brain(render)
     if debug:
         for scan in brain.lidar.scanner():
+            #brain.io.send_data(('lidar-test-points', pol2cart(scan[0], scan[1])))
             brain.io.send_data(('lidar-test-points', scan))
 
     f = Field(brain)
@@ -114,8 +115,9 @@ class Brain:
         self.io = status_io.IOHandler()
         self.render = render
         if render:
-            self.io.start('144.167.149.164', 9998)
+            self.io.start('144.167.148.23', 9998)
             self.io.send_data(('lidar-test', None))
+            #self.io.send_data(('lidar-cart', None))
 
     def get_red_or_yellow(self):
         for _ in range(10):
@@ -170,7 +172,9 @@ class Brain:
         scan_agg = next(scanner)
         for id, scan in zip(range(x - 1), scanner):
             scan_agg = np.concatenate((scan, scan_agg), axis=1)
-        return scan_agg[..., scan_agg[0] != 0]
+        scan = scan_agg[..., scan_agg[0] != 0]
+        self.io.send_data(('lidar-test-points', scan))
+        return scan
 
     def align_center(self, scan, offset=0, ref=(1, 1), width=unit):
         left_ref, right_ref = ref
@@ -225,7 +229,7 @@ class Brain:
         scan = self.get_x_scans(5)
         angle_offset = self.get_angle(scan, ref=ref)
         pos_offset = flip * (postion_from - self.align_span(scan, angle - angle_offset))
-        action = self.mob.rotate(angle_offset)
+        action = self.mob.rotate(-angle_offset)
         self.do_action(action)
         if axis == 'x':
             action = self.mob.exec_line(Point3(0, pos_offset))
@@ -242,6 +246,8 @@ class Brain:
         right_scan = scan[..., np.logical_and(2 * math.pi / 12 < scan[1], scan[1] < 10 * math.pi / 12)]
         left_cart_scan = pol2cart(left_scan[0], left_scan[1])
         right_cart_scan = pol2cart(right_scan[0], right_scan[1])
+        #if self.render:
+        #   self.io.send_data(('lidar-test-points', np.concatenate((left_cart_scan, right_cart_scan), axis=1)))
         left_angle, *tail = np.polyfit(*left_cart_scan, 1)
         right_angle, *tail = np.polyfit(*right_cart_scan, 1)
         if left_ref and right_ref:
@@ -250,7 +256,9 @@ class Brain:
             slope = left_angle
         else:
             slope = right_angle
-        return math.atan(slope)
+        angle = math.atan(slope)
+        print('calc angle:', math.degrees(angle))
+        return angle
 
     def do_action(self, action):
         action.set_status(status)
@@ -262,8 +270,8 @@ class Brain:
         return scan[0][get_closest_point(scan[1], angle_offset)]
 
     def align_angle(self, scan, ref=(0, 1)):
-        slope = self.get_angle(scan, ref) * 0.05
-        action = self.mob.rotate(math.atan(slope))
+        angle = self.get_angle(scan, ref)
+        action = self.mob.rotate(-angle)
         return action
 
 
