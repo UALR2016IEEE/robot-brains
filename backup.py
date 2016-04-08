@@ -33,7 +33,7 @@ def main(render, debug):
     f.entry()
     f.channel_1_start()
     f.acquire_1()
-    if brain.get_red_or_yellow() == 'red':
+    if brain.get_red_or_yellow() == 'yellow':
         f.return_1_backwards()
         brain.do_action(brain.mob.rotate(math.pi))
         f.score()
@@ -62,7 +62,7 @@ class Field:
 
     def channel_1_start(self):
         self.brain.move((1, 0), dist=4 * unit, sub_steps=4, ref=(0, 1))
-        self.brain.move_until_proximity(ref=(0, 1), front_proximity=unit * 0.5)
+        self.brain.move_until_proximity(ref=(0, 1), front_proximity=unit * 0.45)
 
     def channel_2_start(self):
         self.brain.align_from(3 * math.pi / 2, unit, 1.5 * unit, flip=1, axis='y', ref=(0, 1))
@@ -84,7 +84,7 @@ class Field:
         self.brain.move((-1, 0), ref=(0, 1), dist=unit, sub_steps=1)
         self.brain.move((-1, 0), ref=(1, 1), dist=unit, sub_steps=1)
         self.brain.move((-1, 0), ref=(1, 0), dist=unit)
-        self.brain.align_from(math.pi, unit * 1.3, axis='x', ref=(1, 0))
+        self.brain.align_from(math.pi, unit * 1.4, axis='x', ref=(1, 0))
         
     def score(self):
         self.brain.align(ref=(0, 1), scans=15)
@@ -131,6 +131,7 @@ class Brain:
         self.adps.enable_light_sensor()
         red = self.adps.readRedLight()
         green = self.adps.readGreenLight()
+        import pdb; pdb.set_trace()
         if green > 0.75 * red:
             return 'yellow'
         else:
@@ -249,7 +250,6 @@ class Brain:
         # rear_offset = self.align_span(scan , (math.pi) + angle_offset)
 
     def get_angle(self, scan, ref, t=0):
-        if t
         left_ref, right_ref = ref
         left_scan = scan[..., np.logical_and(2 * math.pi / 12 < scan[1], scan[1] < 10 * math.pi / 12)]
         right_scan = scan[..., np.logical_and(14 * math.pi / 12 < scan[1], scan[1] < 22 * math.pi / 12)]
@@ -268,7 +268,8 @@ class Brain:
         angle = math.atan(slope)
         print('calc angle:', math.degrees(angle))
         if abs(math.degrees(angle)) > 10 and t <= 3:
-            return self.get_angle(scan, ref, t=1+1)
+            import pdb; pdb.set_trace()
+            return self.get_angle(self.get_x_scans((t + 1) * 4), ref, t=1+1)
             
         return angle
 
