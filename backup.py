@@ -34,9 +34,15 @@ def main(render, debug):
     f.channel_1_start()
     f.acquire_1()
     if brain.get_red_or_yellow() == 'red':
-        f.return_2_backwards()
+        f.return_1_backwards()
+        brain.do_action(brain.mob.rotate(math.pi))
+        f.score()
     else:
         f.return_1_backwards()
+        brain.align_from(1 * math.pi / 2, 1.625 * unit, flip=-1, axis='y', ref=(1, 0))
+        brain.align_from(3 * math.pi / 2, 0.625 * unit, flip=1, axis='y', ref=(1, 0))
+        f.channel_0()
+        f.score()
 
 
 class Field:
@@ -48,7 +54,6 @@ class Field:
 
     def channel_0(self):
         self.brain.move((1, 0), ref=(1, 1), dist=unit * 5, sub_steps=3)
-        self.brain.move_until_proximity(ref=(1, 1))
 
     def entry(self):
         self.brain.align_from(3 * math.pi / 2, 1.75 * unit, flip=1, axis='y', ref=(0, 1))
@@ -73,12 +78,15 @@ class Field:
         # import pdb;pdb.set_trace()
 
     def return_1_backwards(self):
+        import pdb;pdb.set_trace()
         self.brain.move((-1, 0), ref=(0, 1), dist=unit * .5, sub_steps=2)
         self.brain.move((-1, 0), ref=(1, 1), dist=unit * 2, sub_steps=2)
         self.brain.move((-1, 0), ref=(0, 1), dist=unit, sub_steps=1)
         self.brain.move((-1, 0), ref=(1, 1), dist=unit, sub_steps=1)
         self.brain.move((-1, 0), ref=(1, 0), dist=unit)
-        self.brain.do_action(self.brain.mob.rotate(math.pi))
+        self.brain.align_from(math.pi, unit * 1.3, axis='x', ref=(1, 0))
+        
+    def score(self):
         self.brain.align(ref=(0, 1), scans=15)
         self.brain.align_from(0, unit, axis='x', ref=(1, 1), flip=-1)
         status.let_down()
@@ -120,9 +128,9 @@ class Brain:
             #self.io.send_data(('lidar-cart', None))
 
     def get_red_or_yellow(self):
-        for _ in range(10):
-            red = self.adps.readRedLight()
-            green = self.adps.readGreenLight()
+        self.adps.enable_light_sensor()
+        red = self.adps.readRedLight()
+        green = self.adps.readGreenLight()
         if green > 0.75 * red:
             return 'yellow'
         else:
@@ -240,7 +248,8 @@ class Brain:
         # left_offset = self.align_span(scan, (3 * math.py / 2) + angle_offset)
         # rear_offset = self.align_span(scan , (math.pi) + angle_offset)
 
-    def get_angle(self, scan, ref):
+    def get_angle(self, scan, ref, t=0):
+        if t
         left_ref, right_ref = ref
         left_scan = scan[..., np.logical_and(2 * math.pi / 12 < scan[1], scan[1] < 10 * math.pi / 12)]
         right_scan = scan[..., np.logical_and(14 * math.pi / 12 < scan[1], scan[1] < 22 * math.pi / 12)]
@@ -258,6 +267,9 @@ class Brain:
             slope = right_angle
         angle = math.atan(slope)
         print('calc angle:', math.degrees(angle))
+        if abs(math.degrees(angle)) > 10 and t <= 3:
+            return self.get_angle(scan, ref, t=1+1)
+            
         return angle
 
     def do_action(self, action):
