@@ -154,7 +154,10 @@ class RoboClaw:
                                m1_raw,
                                m2_raw
                                )
-        self.send_command(raw_data)
+        try:
+            self.send_command(raw_data)
+        except:
+            self.send_command(raw_data)
 
     def reset_motor_positions(self):
         self.send_command(bytes([constants.RESETENC]))

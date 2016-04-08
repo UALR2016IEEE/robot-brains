@@ -231,9 +231,8 @@ class HardwareAction(object):
         raise NotImplementedError
 
     def stop(self):
-        with self.m1.port.lock:
-            self.m1.set_motor_pwm(0, 0)
-            self.m2.set_motor_pwm(0, 0)
+        self.m1.set_motor_pwm(0, 0)
+        self.m2.set_motor_pwm(0, 0)
 
     @abstractmethod
     def estimate_progress(self):
