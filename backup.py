@@ -145,11 +145,18 @@ class Brain:
             action = self.mob.exec_line(Point3((dist - current_dist) * y_component, (dist - current_dist) * x_component))
             action.set_status(status)
             action.start()
-            while not action.complete and action.estimate_progress().magnitude() < max_step and abs(self.get_angle(self.get_x_scans(1), ref=ref)) < math.radians(3):
+
+            dist_good = True
+            angle_good = True
+
+            while not action.complete and dist_good and angle_good:
+                dist_good = action.estimate_progress().magnitude() < max_step
+                angle_good = abs(self.get_angle(self.get_x_scans(1), ref=ref)) < math.radians(3)
                 print(action.target[None], action.estimate_progress()[None])
+                print('dist', action.estimate_progress().magnitude(), 'angle', abs(self.get_angle(self.get_x_scans(1), ref=ref)))
             action.stop()
-            self.align(ref)
             current_dist += action.estimate_progresss().magnitude()
+            self.align(ref)
             print('current_dist', current_dist, 'angle', math.degrees(self.get_angle(self.get_x_scans(1), ref=ref)))
 
     def move_until_proximity(self, front_proximity=95, ref=(1, 1)):
