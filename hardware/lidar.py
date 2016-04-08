@@ -198,7 +198,7 @@ class Lidar(Base):
         self.write(const.Commands.Stop_Scan)
         sleep(0.1)
 
-    def scanner(self, flip=False, offset=90):
+    def _scanner(self, flip=False, offset=90):
         if flip:
             scan_translation = lambda angle: 360 - angle + offset
         else:
@@ -236,12 +236,19 @@ class Lidar(Base):
                     angles = []
                     qualities = []
                     distances = []
+                else:
+                    yield
                 if distance > 0:
                     angles.append(scan_translation(angle) % 360)
                     distances.append(distance)
                     qualities.append(quality)
         except GeneratorExit:
             self.stop()
+
+    def scanner(self, *args, **kwargs):
+        for scan in self._scanner(*args, **kwargs):
+            if scan is not None:
+                yield scan
 
     async def get_scan_async(self):
         scanner = self.scanner()

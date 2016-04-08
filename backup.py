@@ -2,6 +2,8 @@ import math
 import sys
 import time
 import statistics
+
+import itertools
 import numpy as np
 
 import status_io
@@ -141,23 +143,38 @@ class Brain:
         x_component, y_component = direction
         current_dist = 0
 
-        while current_dist < dist:
-            action = self.mob.exec_line(Point3((dist - current_dist) * y_component, (dist - current_dist) * x_component))
-            action.set_status(status)
-            action.start()
+        scanner = self.lidar._scanner()
+        while True:
+            scan_agg = next(scanner)
+            if scan_agg is not None:
+                break
+        scan_num = 5
+        curr_scan = 0
+        for scan in scanner:
+            if current_dist > dist:
+                break
+            if scan is not None:
+                scan_agg = np.concatenate((scan_agg, scan), axis=1)
+                curr_scan += 1
+            if curr_scan > scan_num:
+                scan_agg = scan_agg[..., scan_agg[0] != 0]
 
-            dist_good = True
-            angle_good = True
+                action = self.mob.exec_line(Point3((dist - current_dist) * y_component, (dist - current_dist) * x_component))
+                action.set_status(status)
+                action.start()
 
-            while not action.complete and dist_good and angle_good:
                 dist_good = action.estimate_progress().magnitude() < max_step
-                angle_good = abs(self.get_angle(self.get_x_scans(1), ref=ref)) < math.radians(3)
-                print(action.target[None], action.estimate_progress()[None])
-                print('dist', action.estimate_progress().magnitude(), 'angle', abs(self.get_angle(self.get_x_scans(1), ref=ref)))
-            action.stop()
-            current_dist += action.estimate_progresss().magnitude()
-            self.align(ref)
-            print('current_dist', current_dist, 'angle', math.degrees(self.get_angle(self.get_x_scans(1), ref=ref)))
+                angle_good = abs(self.get_angle(scan_agg, ref=ref)) < math.radians(3)
+
+                while not action.complete and dist_good and angle_good:
+                    dist_good = action.estimate_progress().magnitude() < max_step
+                    print(action.target[None], action.estimate_progress()[None])
+                    print('dist', action.estimate_progress().magnitude(), 'angle', abs(self.get_angle(scan_agg, ref=ref)))
+                action.stop()
+                current_dist += action.estimate_progress().magnitude()
+                self.align(ref)
+                print('current_dist', current_dist, 'angle', math.degrees(self.get_angle(scan_agg, ref=ref)))
+                curr_scan = 0
 
     def move_until_proximity(self, front_proximity=95, ref=(1, 1)):
         for attempt in range(1):
