@@ -56,7 +56,7 @@ class Field:
         self.brain.move((1, 0), ref=(1, 1))
 
     def channel_1_start(self):
-        self.brain.move((1, 0), dist=4 * unit, sub_steps=4, ref=(0, 1))
+        self.brain.move_with_align((1, 0), dist=4 * unit, ref=(0, 1))
         self.brain.move_until_proximity(ref=(0, 1), front_proximity=unit * 0.5)
 
     def channel_2_start(self):
@@ -127,6 +127,21 @@ class Brain:
             return 'yellow'
         else:
             return 'red'
+
+    def move_with_align(self, direction, max_step=100, dist=unit, ref=(1, 1)):
+        x_component, y_component = direction
+        current_dist = 0
+
+        while current_dist < dist:
+            action = self.mob.exec_line(Point3((dist - current_dist) * y_component, (dist - current_dist) * x_component))
+            action.set_status(status)
+            action.start()
+            while not action.complete and action.estimate_progress().magnitude() < max_step and abs(self.get_angle(self.get_x_scans(1), ref=ref)) < math.radians(3):
+                print(action.target[None], action.estimate_progress()[None])
+            action.stop()
+            self.align(ref)
+            current_dist += action.estimate_progresss().magnitude()
+            print('current_dist', current_dist, 'angle', math.degrees(self.get_angle(self.get_x_scans(1), ref=ref)))
 
     def move_until_proximity(self, front_proximity=95, ref=(1, 1)):
         for attempt in range(1):
@@ -225,10 +240,10 @@ class Brain:
             ]
         return list(np.shape(scan))[1] > 0
 
-    def align_from(self, angle, postion_from, ref, flip=1, axis='x'):
+    def align_from(self, angle, position_from, ref, flip=1, axis='x'):
         scan = self.get_x_scans(5)
         angle_offset = self.get_angle(scan, ref=ref)
-        pos_offset = flip * (postion_from - self.align_span(scan, angle - angle_offset))
+        pos_offset = flip * (position_from - self.align_span(scan, angle - angle_offset))
         action = self.mob.rotate(-angle_offset)
         self.do_action(action)
         if axis == 'x':
