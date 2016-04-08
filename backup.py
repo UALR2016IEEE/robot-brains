@@ -26,23 +26,26 @@ def main(render, debug):
             brain.io.send_data(('lidar-test-points', scan))
 
     f = Field(brain)
-    #f.outfield()
-    import pdb;pdb.set_trace()
+    f.outfield()
+    #import pdb;pdb.set_trace()
 
-    f.start()
-    f.entry()
-    f.channel_1_start()
-    f.acquire_1()
-    if brain.get_red_or_yellow() == 'yellow':
-        f.return_1_backwards()
-        brain.do_action(brain.mob.rotate(math.pi))
-        f.score()
-    else:
-        f.return_1_backwards()
-        brain.align_from(1 * math.pi / 2, 1.625 * unit, flip=-1, axis='y', ref=(1, 0))
-        brain.align_from(3 * math.pi / 2, 0.625 * unit, flip=1, axis='y', ref=(1, 0))
-        f.channel_0()
-        f.score()
+    #f.start()
+    #f.entry()
+    #f.channel_2_start()
+    #f.acquire_2()
+    #f.return_2_backwards()
+    #f.channel_1_start()
+    #f.acquire_1()
+    #if brain.get_red_or_yellow() == 'yellow':
+    #    f.return_1_backwards()
+    #    brain.do_action(brain.mob.rotate(math.pi))
+    #    f.score()
+    #else:
+    #    f.return_1_backwards()
+    #    brain.align_from(1 * math.pi / 2, 1.625 * unit, flip=-1, axis='y', ref=(1, 0))
+    #    brain.align_from(3 * math.pi / 2, 0.625 * unit, flip=1, axis='y', ref=(1, 0))
+    #    f.channel_0()
+    #    f.score()
 
 
 class Field:
@@ -65,17 +68,25 @@ class Field:
         self.brain.move_until_proximity(ref=(0, 1), front_proximity=unit * 0.45)
 
     def channel_2_start(self):
-        self.brain.align_from(3 * math.pi / 2, unit, 1.5 * unit, flip=1, axis='y', ref=(0, 1))
-        self.brain.move((1, 0), ref=(1, 1), dist=unit * 2)
+        self.brain.move((1, 0), ref=(0, 1), dist=unit)
+        self.brain.align_from(3 * math.pi / 2, 1.5 * unit, flip=1, axis='y', ref=(0, 1))
+        self.brain.do_action(self.brain.mob.rotate(math.pi))
+        self.brain.do_action(self.brain.align_angle(scan=self.brain.get_x_scans(5), ref=(1, 0)))
+        self.brain.move((1, 0), ref=(1, 1), dist=unit * 2.5, sub_steps=2)
 
     def acquire_1(self):
-        import pdb; pdb.set_trace()
         self.brain.align(ref=(1, 1))
         status.prepare_pickup()
 
         self.brain.move_until_proximity(ref=(1, 1))
         status.pickup()
-        # import pdb;pdb.set_trace()
+
+    def acquire_2(self):
+        import pdb; pdb.set_trace()
+        status.prepare_pickup()
+        
+        self.brain.move_until_proximity(ref=(1, 1))
+        status.pickup()
 
     def return_1_backwards(self):
         import pdb;pdb.set_trace()
@@ -92,7 +103,11 @@ class Field:
         status.let_down()
 
     def return_2_backwards(self):
-        self.brain.move((-1, 0), ref=())
+        self.brain.align_from(0, 1.5 * unit, axis='x', ref=(1, 1), flip=-1)
+        self.brain.move((-1, 0), dist=2.05 * unit, ref=(1, 0))
+        self.brain.align_from(math.pi / 2, 0.5 * unit, axis='y', ref=(1, 0))
+        self.brain.move((1, 0), ref=(1, 1))
+        self.brain.move((1, 0), ref=(0, 1))
 
     def outfield(self):
         while True:
@@ -125,7 +140,7 @@ class Brain:
         if render:
             self.io.start('144.167.148.23', 9998)
             self.io.send_data(('lidar-test', None))
-            #self.io.send_data(('lidar-cart', None))
+            self.io.send_data(('lidar-cart', None))
 
     def get_red_or_yellow(self):
         self.adps.enable_light_sensor()
@@ -182,7 +197,7 @@ class Brain:
         for id, scan in zip(range(x - 1), scanner):
             scan_agg = np.concatenate((scan, scan_agg), axis=1)
         scan = scan_agg[..., scan_agg[0] != 0]
-        self.io.send_data(('lidar-test-points', scan))
+        #self.io.send_data(('lidar-test-points', scan))
         return scan
 
     def align_center(self, scan, offset=0, ref=(1, 1), width=unit):
@@ -212,7 +227,6 @@ class Brain:
         self.do_action(self.mob.exec_line(Point3(0, front_dist)))
 
     def victim_in_region(self, x_region=None, y_region=None, scans=10):
-        import pdb; pdb.set_trace()
         if not (x_region or y_region):
             raise ValueError
         scan_polar = self.get_x_scans(scans)
@@ -232,6 +246,7 @@ class Brain:
                         scan[1] < y_region[1]
                 )
             ]
+        self.io.send_data(('lidar-test-points', scan))
         return list(np.shape(scan))[1] > 0
 
     def align_from(self, angle, postion_from, ref, flip=1, axis='x'):
@@ -255,8 +270,8 @@ class Brain:
         right_scan = scan[..., np.logical_and(14 * math.pi / 12 < scan[1], scan[1] < 22 * math.pi / 12)]
         left_cart_scan = pol2cart(left_scan[0], left_scan[1])
         right_cart_scan = pol2cart(right_scan[0], right_scan[1])
-        #if self.render:
-        #   self.io.send_data(('lidar-test-points', np.concatenate((left_cart_scan, right_cart_scan), axis=1)))
+        if self.render:
+           self.io.send_data(('lidar-test-points', np.concatenate((left_cart_scan, right_cart_scan), axis=1)))
         left_angle, *tail = np.polyfit(*left_cart_scan, 1)
         right_angle, *tail = np.polyfit(*right_cart_scan, 1)
         if left_ref and right_ref:
