@@ -51,8 +51,8 @@ class Field:
         self.brain.move_until_proximity(ref=(1, 1))
 
     def entry(self):
-        self.brain.align_from(1 * math.pi / 2, 1.75 * unit, flip=1, axis='y', ref=(0, 1))
-        self.brain.align_from(3 * math.pi / 2, 0.5 * unit, flip=-1, axis='y', ref=(0, 1))
+        self.brain.align_from(3 * math.pi / 2, 1.75 * unit, flip=1, axis='y', ref=(0, 1))
+        self.brain.align_from(1 * math.pi / 2, 0.5 * unit, flip=-1, axis='y', ref=(0, 1))
         self.brain.move((1, 0), ref=(1, 1))
 
     def channel_1_start(self):
@@ -60,7 +60,7 @@ class Field:
         self.brain.move_until_proximity(ref=(0, 1), front_proximity=unit * 0.5)
 
     def channel_2_start(self):
-        self.brain.align_from(math.pi / 2, unit, 1.5 * unit, flip=1, axis='y', ref=(0, 1))
+        self.brain.align_from(3 * math.pi / 2, unit, 1.5 * unit, flip=1, axis='y', ref=(0, 1))
         self.brain.move((1, 0), ref=(1, 1), dist=unit * 2)
 
     def acquire_1(self):
@@ -168,7 +168,7 @@ class Brain:
         self.align_angle()
 
     def get_x_scans(self, x):
-        scanner = self.lidar.scanner(flip=True, offset=270)
+        scanner = self.lidar.scanner()
         scan_agg = next(scanner)
         for id, scan in zip(range(x - 1), scanner):
             scan_agg = np.concatenate((scan, scan_agg), axis=1)
@@ -178,8 +178,8 @@ class Brain:
 
     def align_center(self, scan, offset=0, ref=(1, 1), width=unit):
         left_ref, right_ref = ref
-        left_point = scan[0][get_closest_point(scan[1], (3 * math.pi / 2) - offset)]
-        right_point = scan[0][get_closest_point(scan[1], (math.pi / 2) - offset)]
+        left_point = scan[0][get_closest_point(scan[1], (math.pi / 2) - offset)]
+        right_point = scan[0][get_closest_point(scan[1], (3 * math.pi / 2) - offset)]
         left_delta = width / 2 - left_point
         right_delta = right_point - width / 2
         # import pdb; pdb.set_trace()
@@ -195,7 +195,7 @@ class Brain:
     def align_to_victim(self, scans=5, front_prox=95):
         scan_polar_raw = self.get_x_scans(scans)
         scan_polar = scan_polar_raw[
-            ..., np.logical_or(15 * math.pi / 8 > scan_polar_raw[1], math.pi / 8 > scan_polar_raw[1])]
+            ..., np.logical_or(15 * math.pi / 8 < scan_polar_raw[1], scan_polar_raw[1] < math.pi / 8)]
         poi = scan_polar[..., np.argmin(scan_polar[0])]
         action = self.mob.rotate(-poi[1])
         self.do_action(action)
@@ -242,8 +242,8 @@ class Brain:
 
     def get_angle(self, scan, ref):
         left_ref, right_ref = ref
-        left_scan = scan[..., np.logical_and(14 * math.pi / 12 < scan[1], scan[1] < 22 * math.pi / 12)]
-        right_scan = scan[..., np.logical_and(2 * math.pi / 12 < scan[1], scan[1] < 10 * math.pi / 12)]
+        left_scan = scan[..., np.logical_and(2 * math.pi / 12 < scan[1], scan[1] < 10 * math.pi / 12)]
+        right_scan = scan[..., np.logical_and(14 * math.pi / 12 < scan[1], scan[1] < 22 * math.pi / 12)]
         left_cart_scan = pol2cart(left_scan[0], left_scan[1])
         right_cart_scan = pol2cart(right_scan[0], right_scan[1])
         #if self.render:
