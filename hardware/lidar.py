@@ -212,7 +212,7 @@ class Lidar(Base):
         assert r_mode == 1
         for i in range(100):
             if self._lidar.inWaiting() < info_len:
-                sleep(0.1)
+                sleep(0.01)
             else:
                 break
         else:
