@@ -135,7 +135,7 @@ class Brain:
             front_scan = pol2cart(front_scan_polar[0], front_scan_polar[1])
             front_dist = int(np.min(front_scan[0])) - front_proximity
             # import pdb; pdb.set_trace()
-            front_shift = self.align_center(scan, ref=ref).target.y
+            front_shift = self.align_center(scan, offset=self.get_angle(scan, ref), ref=ref).target.y
             # print(front_shift, front_dist)
             self.do_action(self.mob.exec_line(Point3(front_shift, front_dist)))
 
