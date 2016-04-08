@@ -22,30 +22,50 @@ def main(render, debug):
     brain = Brain(render)
     if debug:
         for scan in brain.lidar.scanner():
-            #brain.io.send_data(('lidar-test-points', pol2cart(scan[0], scan[1])))
-            brain.io.send_data(('lidar-test-points', scan))
+            brain.io.send_data(('lidar-test-points', pol2cart(scan[0], scan[1])))
+            #import pdb; pdb.set_trace()
+            #brain.io.send_data(('lidar-test-points', scan))
 
     f = Field(brain)
-    f.outfield()
-    #import pdb;pdb.set_trace()
+    #f.outfield()
+    import pdb; pdb.set_trace()
 
-    #f.start()
-    #f.entry()
-    #f.channel_2_start()
-    #f.acquire_2()
-    #f.return_2_backwards()
-    #f.channel_1_start()
-    #f.acquire_1()
-    #if brain.get_red_or_yellow() == 'yellow':
-    #    f.return_1_backwards()
-    #    brain.do_action(brain.mob.rotate(math.pi))
-    #    f.score()
-    #else:
-    #    f.return_1_backwards()
-    #    brain.align_from(1 * math.pi / 2, 1.625 * unit, flip=-1, axis='y', ref=(1, 0))
-    #    brain.align_from(3 * math.pi / 2, 0.625 * unit, flip=1, axis='y', ref=(1, 0))
-    #    f.channel_0()
-    #    f.score()
+    f.start()
+    f.entry()
+    f.channel_2_start()
+    f.acquire_2()
+    f.return_2_backwards()
+    if brain.get_red_or_yellow() == 'yellow':
+        f.score()
+        brain.move((-1, 0), ref=(0, 1), dist=unit * 0.5)
+        brain.do_action(brain.mob.rotate(math.pi))
+        brain.move((1, 0), ref=(1, 1))
+    else:
+        brain.do_action(brain.mob.rotate(math.pi))
+        brain.align_from(1 * math.pi / 2, 1.625 * unit, flip=-1, axis='y', ref=(1, 0))
+        brain.align_from(3 * math.pi / 2, 0.625 * unit, flip=1, axis='y', ref=(1, 0))
+        f.channel_0()
+        f.score()
+        brain.move((-1, 0), ref=(1, 1), dist=unit * 4, sub_steps=3)
+        brain.start()
+        brain.entry()
+    f.channel_1_start()
+    f.acquire_1()
+    if brain.get_red_or_yellow() == 'yellow':
+        f.return_1_backwards()
+        brain.do_action(brain.mob.rotate(math.pi))
+        f.score()
+        brain.move((-1, 0), ref=(0, 1), dist=unit * 0.5)
+        brain.align_from(math.pi / 2, 0.5 * unit, axis='y', ref=(1, 0), flip=-1)
+        brain.align_from(0, 0.5 * unit, axis='x', ref=(1, 0), flip=-1)
+    else:
+        f.return_1_backwards()
+        brain.align_from(1 * math.pi / 2, 1.625 * unit, flip=-1, axis='y', ref=(1, 0))
+        brain.align_from(3 * math.pi / 2, 0.625 * unit, flip=1, axis='y', ref=(1, 0))
+        f.channel_0()
+        f.score()
+        brain.move((-1, 0), ref=(1, 1), dist=unit * 4, sub_steps=3)
+        brain.align_from(math.pi, 0.5 * unit, axis='x', ref=(0, 1))
 
 
 class Field:
@@ -75,21 +95,21 @@ class Field:
         self.brain.move((1, 0), ref=(1, 1), dist=unit * 2.5, sub_steps=2)
 
     def acquire_1(self):
-        self.brain.align(ref=(1, 1))
+        self.brain.align(ref=(1, 1), scans=20)
         status.prepare_pickup()
 
         self.brain.move_until_proximity(ref=(1, 1))
         status.pickup()
 
     def acquire_2(self):
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         status.prepare_pickup()
         
         self.brain.move_until_proximity(ref=(1, 1))
         status.pickup()
 
     def return_1_backwards(self):
-        import pdb;pdb.set_trace()
+        #import pdb;pdb.set_trace()
         self.brain.move((-1, 0), ref=(0, 1), dist=unit * .5, sub_steps=2)
         self.brain.move((-1, 0), ref=(1, 1), dist=unit * 2, sub_steps=2)
         self.brain.move((-1, 0), ref=(0, 1), dist=unit, sub_steps=1)
@@ -104,7 +124,7 @@ class Field:
 
     def return_2_backwards(self):
         self.brain.align_from(0, 1.5 * unit, axis='x', ref=(1, 1), flip=-1)
-        self.brain.move((-1, 0), dist=2.05 * unit, ref=(1, 0))
+        self.brain.move((-1, 0), dist=2.07 * unit, ref=(1, 0))
         self.brain.align_from(math.pi / 2, 0.5 * unit, axis='y', ref=(1, 0))
         self.brain.move((1, 0), ref=(1, 1))
         self.brain.move((1, 0), ref=(0, 1))
@@ -112,15 +132,15 @@ class Field:
     def outfield(self):
         while True:
             print(self.brain.victim_in_region(
-                x_region=(-960, -770),
-                y_region=(100, 250)
+                x_region=(-200, 200),
+                y_region=(180, 400),
             ))
 
     def align_to_victim(self):
         while True:
             print(self.brain.victim_in_region(
-                    x_region=(-960, -770),
-                    y_region=(100, 250)
+                    #x_region=(-200, 200),#(-960, -770),
+                    y_region=(180, 400),#(100, 250)
             ))
 
 
@@ -146,7 +166,7 @@ class Brain:
         self.adps.enable_light_sensor()
         red = self.adps.readRedLight()
         green = self.adps.readGreenLight()
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         if green > 0.75 * red:
             return 'yellow'
         else:
@@ -227,10 +247,12 @@ class Brain:
         self.do_action(self.mob.exec_line(Point3(0, front_dist)))
 
     def victim_in_region(self, x_region=None, y_region=None, scans=10):
+        #import pdb; pdb.set_trace()
         if not (x_region or y_region):
             raise ValueError
         scan_polar = self.get_x_scans(scans)
         scan = pol2cart(scan_polar[0], scan_polar[1])
+        self.io.send_data(('lidar-test-points', scan))
         if x_region is not None:
             scan = scan[
                 ...,
@@ -246,7 +268,7 @@ class Brain:
                         scan[1] < y_region[1]
                 )
             ]
-        self.io.send_data(('lidar-test-points', scan))
+        #self.io.send_data(('lidar-test-points', scan))
         return list(np.shape(scan))[1] > 0
 
     def align_from(self, angle, postion_from, ref, flip=1, axis='x'):
@@ -282,8 +304,8 @@ class Brain:
             slope = right_angle
         angle = math.atan(slope)
         print('calc angle:', math.degrees(angle))
-        if abs(math.degrees(angle)) > 10 and t <= 3:
-            import pdb; pdb.set_trace()
+        if abs(math.degrees(angle)) > 15 and t <= 3:
+            #import pdb; pdb.set_trace()
             return self.get_angle(self.get_x_scans((t + 1) * 4), ref, t=1+1)
             
         return angle
