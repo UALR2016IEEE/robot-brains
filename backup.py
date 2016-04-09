@@ -22,12 +22,13 @@ def main(render, debug):
     brain = Brain(render)
     if debug:
         for scan in brain.lidar.scanner():
-            brain.io.send_data(('lidar-test-points', pol2cart(scan[0], scan[1])))
+            #brain.io.send_data(('lidar-test-points', pol2cart(scan[0], scan[1])))
             #import pdb; pdb.set_trace()
-            #brain.io.send_data(('lidar-test-points', scan))
+            brain.io.send_data(('lidar-test-points', scan))
 
     f = Field(brain)
-    #f.outfield()
+    f.outfield()
+    return
     import pdb; pdb.set_trace()
 
     f.start()
@@ -130,10 +131,11 @@ class Field:
         self.brain.move((1, 0), ref=(0, 1))
 
     def outfield(self):
+        self.brain.io.send_data(('lidar-box', ((-952, -650),(-111, 142))))
         while True:
             print(self.brain.victim_in_region(
-                x_region=(-200, 200),
-                y_region=(180, 400),
+                x_region=(-952, -650),
+                y_region=(-111, 142),
             ))
 
     def align_to_victim(self):
@@ -158,8 +160,9 @@ class Brain:
         self.io = status_io.IOHandler()
         self.render = render
         if render:
-            self.io.start('144.167.148.23', 9998)
-            self.io.send_data(('config', 'lidar-test lidar-cart no-lidar-lines'))
+            self.io.start('192.168.43.76', 9998)
+            #self.io.send_data(('config', 'lidar-test lidar-cart no-lidar-lines'))
+            self.io.send_data(('config', 'lidar-test no-lidar-lines'))
 
     def get_red_or_yellow(self):
         self.adps.enable_light_sensor()
@@ -250,8 +253,9 @@ class Brain:
         if not (x_region or y_region):
             raise ValueError
         scan_polar = self.get_x_scans(scans)
-        scan = pol2cart(scan_polar[0], scan_polar[1])
-        self.io.send_data(('lidar-test-points', scan))
+        scan = pol2cart(scan_polar[0], scan_polar[1]+ math.pi / 2)
+        np.savetxt('dump.csv', scan, delimiter=",")
+        self.io.send_data(('lidar-test-points', scan_polar))
         if x_region is not None:
             scan = scan[
                 ...,
