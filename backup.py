@@ -27,7 +27,7 @@ def main(render, debug):
             brain.io.send_data(('lidar-test-points', scan))
 
     f = Field(brain)
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     #brain.io.send_data(("lidar-box", VICTIM_3_1_POSITION))
     #f.acquire_3_1()
     #f.return_1_backwards()

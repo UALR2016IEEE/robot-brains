@@ -29,12 +29,14 @@ class StatusClass(serial.Serial):
         raise NotImplementedError
 
     def prepare_pickup(self):
+        self.flush()
         self.write(b"8")
         self._wait_until()
         if self.read(1) != b"8":
             raise serial.SerialTimeoutException()
 
     def pickup(self):
+        self.flush()
         self.write(b"7")
         self._wait_until()
         if self.read(1) != b"7":
@@ -42,6 +44,7 @@ class StatusClass(serial.Serial):
         
 
     def let_down(self):
+        self.flush()
         self.write(b"6")
         self._wait_until()
         if self.read(1) != b"6":
@@ -76,6 +79,6 @@ else:
     status = StatusClass("COM7")
 status.baudrate = 115200
 status.timeout = 0.5
-time.sleep(2)
+time.sleep(2.5)
 
 
