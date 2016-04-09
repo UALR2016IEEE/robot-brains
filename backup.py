@@ -27,9 +27,10 @@ def main(render, debug):
             brain.io.send_data(('lidar-test-points', scan))
 
     f = Field(brain)
-    f.outfield()
-    return
     import pdb; pdb.set_trace()
+
+    brain.align_to_victim()
+    return
 
     f.start()
     f.entry()
@@ -69,6 +70,7 @@ def main(render, debug):
         brain.align_from(math.pi, 0.5 * unit, axis='x', ref=(0, 1))
 
 
+VICTIM_3_1_POSITION = ((-952, -650), (-111, 142))
 class Field:
     def __init__(self, brain):
         self.brain = brain
@@ -131,19 +133,28 @@ class Field:
         self.brain.move((1, 0), ref=(0, 1))
 
     def outfield(self):
-        self.brain.io.send_data(('lidar-box', ((-952, -650),(-111, 142))))
-        while True:
-            print(self.brain.victim_in_region(
-                x_region=(-952, -650),
-                y_region=(-111, 142),
-            ))
+        if self.brain.victim_in_region(*VICTIM_3_1_POSITION):
+            self.acquire_3_1()
 
-    def align_to_victim(self):
-        while True:
-            print(self.brain.victim_in_region(
-                    #x_region=(-200, 200),#(-960, -770),
-                    y_region=(180, 400),#(100, 250)
-            ))
+
+    def align_to_victim(self, from_dist=95):
+        scan = self.brain.get_x_scans(10)
+        point = scan[..., np.argmin(scan[0])]
+        self.brain.do_action(self.brain.mob.rotate(point[1]))
+        self.brain.do_action(self.brain.mob.exec_line(Point3(0, 0.9 * (point - from_dist))))
+        status.prepare_pickup()
+        scan = self.brain.get_x_scans(10)
+        point = scan[..., np.argmin(scan[0])]
+        self.brain.do_action(self.brain.mob.rotate(point[1]))
+        self.brain.do_action(self.brain.mob.exec_line(Point3(0, point - from_dist)))
+        status.pickup()
+
+    def acquire_3_1(self):
+        x, y = self.brain.get_victim_in_region(*VICTIM_3_1_POSITION)
+        point = Point3(y, x)
+        self.brain.do_action(self.brain.mob.rotate(point.get_angle_to(Point3())))
+        self.brain.do_action(self.brain.mob.exec_line(Point3(0, point.magnitude() - 150)))
+        self.align_to_victim()
 
 
 class Brain:
@@ -254,7 +265,6 @@ class Brain:
             raise ValueError
         scan_polar = self.get_x_scans(scans)
         scan = pol2cart(scan_polar[0], scan_polar[1]+ math.pi / 2)
-        np.savetxt('dump.csv', scan, delimiter=",")
         self.io.send_data(('lidar-test-points', scan_polar))
         if x_region is not None:
             scan = scan[
@@ -273,6 +283,26 @@ class Brain:
             ]
         #self.io.send_data(('lidar-test-points', scan))
         return list(np.shape(scan))[1] > 0
+
+    def get_victim_position(self, x_region, y_region, scans=10):
+        scan_polar = self.get_x_scans(scans)
+        scan = pol2cart(scan_polar[0], scan_polar[1] + math.pi / 2)
+        scan = scan[
+            ...,
+            np.logical_and(
+                scan[0] > x_region[0],
+                scan[0] < x_region[1]
+            )
+        ]
+
+        scan = scan[...,
+                    np.logical_and(
+                        scan[1] > y_region[0],
+                        scan[1] < y_region[1]
+                    )
+        ]
+        return np.mean(scan, axis=1)
+
 
     def align_from(self, angle, postion_from, ref, flip=1, axis='x'):
         scan = self.get_x_scans(5)
