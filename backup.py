@@ -243,6 +243,7 @@ class Brain:
         poi = scan_polar[..., np.argmin(scan_polar[0])]
         action = self.mob.rotate(-poi[1])
         self.do_action(action)
+        front_dist = int(np.min(scan_polar[0])) - front_prox
         self.do_action(self.mob.exec_line(Point3(0, .9 * front_dist)))
         status.prepare_pickup()
         scan_polar_raw = self.get_x_scans(scans)
