@@ -40,8 +40,6 @@ class Point2(object):
     def get_angle_to(self, other):
         a = math.atan2(-(other.y - self.y), (other.x - self.x))
         # atan2 can return negative from the x-axis
-        if a < 0:
-            a += 2.0 * math.pi
         return a
 
     def pickle(self):
@@ -123,8 +121,6 @@ class Point3(object):
     def get_angle_to(self, other):
         a = math.atan2(-(other.y - self.y), (other.x - self.x))
         # atan2 can return negative from the x-axis
-        if a < 0:
-            a += 2.0 * math.pi
         return a
 
     def pickle(self):
