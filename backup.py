@@ -28,14 +28,17 @@ def main(render, debug):
 
     f = Field(brain)
     import pdb; pdb.set_trace()
-
-    brain.align_to_victim()
-    return
+    #brain.io.send_data(("lidar-box", VICTIM_3_1_POSITION))
+    #f.acquire_3_1()
+    #f.return_1_backwards()
+    #return
 
     f.start()
     f.entry()
     f.channel_2_start()
-    f.acquire_2()
+    brain.align(ref=(1, 1))
+    brain.align_to_victim()
+    brain.align(ref=(1, 1))
     f.return_2_backwards()
     if brain.get_red_or_yellow() == 'yellow':
         f.score()
@@ -47,12 +50,14 @@ def main(render, debug):
         brain.align_from(1 * math.pi / 2, 1.625 * unit, flip=-1, axis='y', ref=(1, 0))
         brain.align_from(3 * math.pi / 2, 0.625 * unit, flip=1, axis='y', ref=(1, 0))
         f.channel_0()
-        f.score()
+        f.score(ref=(1, 0))
         brain.move((-1, 0), ref=(1, 1), dist=unit * 4, sub_steps=3)
-        brain.start()
-        brain.entry()
+        f.start()
+        f.entry()
     f.channel_1_start()
-    f.acquire_1()
+    #brain.align(ref=(0, 1))
+    brain.align_to_victim(ref=True)
+    brain.align(ref=(1, 1))
     if brain.get_red_or_yellow() == 'yellow':
         f.return_1_backwards()
         brain.do_action(brain.mob.rotate(math.pi))
@@ -65,7 +70,7 @@ def main(render, debug):
         brain.align_from(1 * math.pi / 2, 1.625 * unit, flip=-1, axis='y', ref=(1, 0))
         brain.align_from(3 * math.pi / 2, 0.625 * unit, flip=1, axis='y', ref=(1, 0))
         f.channel_0()
-        f.score()
+        f.score(ref=(1, 0))
         brain.move((-1, 0), ref=(1, 1), dist=unit * 4, sub_steps=3)
         brain.align_from(math.pi, 0.5 * unit, axis='x', ref=(0, 1))
 
@@ -79,7 +84,8 @@ class Field:
         self.brain.align_from(math.pi, 1.5 * unit, ref=(0, 1))
 
     def channel_0(self):
-        self.brain.move((1, 0), ref=(1, 1), dist=unit * 5, sub_steps=3)
+        self.brain.move((1, 0), ref=(1, 1), dist=unit * 4, sub_steps=2)
+        self.brain.move((1, 0), ref=(1, 0), dist=unit)
 
     def entry(self):
         self.brain.align_from(3 * math.pi / 2, 1.75 * unit, flip=1, axis='y', ref=(0, 1))
@@ -92,10 +98,10 @@ class Field:
 
     def channel_2_start(self):
         self.brain.move((1, 0), ref=(0, 1), dist=unit)
-        self.brain.align_from(3 * math.pi / 2, 1.5 * unit, flip=1, axis='y', ref=(0, 1))
+        self.brain.align_from(3 * math.pi / 2, 1.6 * unit, flip=1, axis='y', ref=(0, 1))
         self.brain.do_action(self.brain.mob.rotate(math.pi))
         self.brain.do_action(self.brain.align_angle(scan=self.brain.get_x_scans(5), ref=(1, 0)))
-        self.brain.move((1, 0), ref=(1, 1), dist=unit * 2.5, sub_steps=2)
+        self.brain.move((1, 0), ref=(1, 1), dist=unit * 2.2, sub_steps=2)
 
     def acquire_1(self):
         self.brain.align(ref=(1, 1), scans=20)
@@ -117,12 +123,11 @@ class Field:
         self.brain.move((-1, 0), ref=(1, 1), dist=unit * 2, sub_steps=2)
         self.brain.move((-1, 0), ref=(0, 1), dist=unit, sub_steps=1)
         self.brain.move((-1, 0), ref=(1, 1), dist=unit, sub_steps=1)
-        self.brain.move((-1, 0), ref=(1, 0), dist=unit)
-        self.brain.align_from(math.pi, unit * 1.4, axis='x', ref=(1, 0))
+        self.brain.move((-1, 0), ref=(1, 0), dist=unit * 1.15)
         
-    def score(self):
-        self.brain.align(ref=(0, 1), scans=15)
-        self.brain.align_from(0, unit, axis='x', ref=(1, 1), flip=-1)
+    def score(self, ref=(0, 1)):
+        self.brain.align(ref=ref, scans=15)
+        self.brain.align_from(0, unit, axis='x', ref=ref, flip=-1)
         status.let_down()
 
     def return_2_backwards(self):
@@ -130,17 +135,15 @@ class Field:
         self.brain.move((-1, 0), dist=2.07 * unit, ref=(1, 0))
         self.brain.align_from(math.pi / 2, 0.5 * unit, axis='y', ref=(1, 0))
         self.brain.move((1, 0), ref=(1, 1))
-        self.brain.move((1, 0), ref=(0, 1))
+        self.brain.move((1, 0), dist=unit * 1.1,ref=(0, 1))
 
     def outfield(self):
         if self.brain.victim_in_region(*VICTIM_3_1_POSITION):
             self.acquire_3_1()
 
     def acquire_3_1(self):
-        x, y = self.brain.get_victim_in_region(*VICTIM_3_1_POSITION)
-        point = Point3(y, x)
-        self.brain.do_action(self.brain.mob.rotate(point.get_angle_to(Point3())))
-        self.brain.do_action(self.brain.mob.exec_line(Point3(0, point.magnitude() - 150)))
+        self.brain.do_action(self.brain.mob.rotate(-math.pi / 2))
+        self.brain.move((1, 0), dist=unit * 2.5, ref=(1, 0), sub_steps=4) 
         self.brain.align_to_victim()
 
 
@@ -236,21 +239,29 @@ class Brain:
         action = self.mob.exec_line(Point3(-shift))
         return action
 
-    def align_to_victim(self, scans=10, front_prox=95):
+    def align_to_victim(self, scans=10, front_prox=100, ref=False):
         scan_polar_raw = self.get_x_scans(scans)
         scan_polar = scan_polar_raw[
             ..., np.logical_or(15 * math.pi / 8 < scan_polar_raw[1], scan_polar_raw[1] < math.pi / 8)]
         poi = scan_polar[..., np.argmin(scan_polar[0])]
-        action = self.mob.rotate(-poi[1])
+        angle = poi[1]
+        if angle > math.pi:
+            angle -= 2 * math.pi
+        action = self.mob.rotate(-angle)
         self.do_action(action)
         front_dist = int(np.min(scan_polar[0])) - front_prox
         self.do_action(self.mob.exec_line(Point3(0, .9 * front_dist)))
-        status.prepare_pickup()
+        if ref:
+            self.align(ref=(1, 1))
         scan_polar_raw = self.get_x_scans(scans)
+        status.prepare_pickup()
         scan_polar = scan_polar_raw[
             ..., np.logical_or(15 * math.pi / 8 < scan_polar_raw[1], scan_polar_raw[1] < math.pi / 8)]
         poi = scan_polar[..., np.argmin(scan_polar[0])]
-        action = self.mob.rotate(-poi[1])
+        angle = poi[1]
+        if angle > math.pi:
+            angle -= 2 * math.pi
+        action = self.mob.rotate(-angle)
         self.do_action(action)
         front_dist = int(np.min(scan_polar[0])) - front_prox
         self.do_action(self.mob.exec_line(Point3(0, front_dist)))
