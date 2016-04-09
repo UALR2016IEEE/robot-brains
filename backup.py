@@ -159,8 +159,7 @@ class Brain:
         self.render = render
         if render:
             self.io.start('144.167.148.23', 9998)
-            self.io.send_data(('lidar-test', None))
-            self.io.send_data(('lidar-cart', None))
+            self.io.send_data(('config', 'lidar-test lidar-cart no-lidar-lines'))
 
     def get_red_or_yellow(self):
         self.adps.enable_light_sensor()
