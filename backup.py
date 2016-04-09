@@ -136,25 +136,12 @@ class Field:
         if self.brain.victim_in_region(*VICTIM_3_1_POSITION):
             self.acquire_3_1()
 
-
-    def align_to_victim(self, from_dist=95):
-        scan = self.brain.get_x_scans(10)
-        point = scan[..., np.argmin(scan[0])]
-        self.brain.do_action(self.brain.mob.rotate(point[1]))
-        self.brain.do_action(self.brain.mob.exec_line(Point3(0, 0.9 * (point - from_dist))))
-        status.prepare_pickup()
-        scan = self.brain.get_x_scans(10)
-        point = scan[..., np.argmin(scan[0])]
-        self.brain.do_action(self.brain.mob.rotate(point[1]))
-        self.brain.do_action(self.brain.mob.exec_line(Point3(0, point - from_dist)))
-        status.pickup()
-
     def acquire_3_1(self):
         x, y = self.brain.get_victim_in_region(*VICTIM_3_1_POSITION)
         point = Point3(y, x)
         self.brain.do_action(self.brain.mob.rotate(point.get_angle_to(Point3())))
         self.brain.do_action(self.brain.mob.exec_line(Point3(0, point.magnitude() - 150)))
-        self.align_to_victim()
+        self.brain.align_to_victim()
 
 
 class Brain:
@@ -249,7 +236,15 @@ class Brain:
         action = self.mob.exec_line(Point3(-shift))
         return action
 
-    def align_to_victim(self, scans=5, front_prox=95):
+    def align_to_victim(self, scans=10, front_prox=95):
+        scan_polar_raw = self.get_x_scans(scans)
+        scan_polar = scan_polar_raw[
+            ..., np.logical_or(15 * math.pi / 8 < scan_polar_raw[1], scan_polar_raw[1] < math.pi / 8)]
+        poi = scan_polar[..., np.argmin(scan_polar[0])]
+        action = self.mob.rotate(-poi[1])
+        self.do_action(action)
+        self.do_action(self.mob.exec_line(Point3(0, .9 * front_dist)))
+        status.prepare_pickup()
         scan_polar_raw = self.get_x_scans(scans)
         scan_polar = scan_polar_raw[
             ..., np.logical_or(15 * math.pi / 8 < scan_polar_raw[1], scan_polar_raw[1] < math.pi / 8)]
@@ -258,6 +253,7 @@ class Brain:
         self.do_action(action)
         front_dist = int(np.min(scan_polar[0])) - front_prox
         self.do_action(self.mob.exec_line(Point3(0, front_dist)))
+        status.pickup()
 
     def victim_in_region(self, x_region=None, y_region=None, scans=10):
         #import pdb; pdb.set_trace()
