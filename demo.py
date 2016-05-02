@@ -31,6 +31,7 @@ def main(render, debug):
     f = Field(brain)
     if render:
         brain.io.send_data(("lidar-box", GENERIC_VICTIM_REGION))
+        brain.io.send_data(('lidar-test-points', brain.get_x_scans(2)))
     time.sleep(4)
     mag, angle = brain.get_victim_position(*GENERIC_VICTIM_REGION)
     brain.do_action(brain.mob.exec_line(Point3(0.9 * mag * math.cos(angle), 0.9 * mag * math.sin(angle))))
