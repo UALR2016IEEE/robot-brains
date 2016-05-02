@@ -132,7 +132,7 @@ class Brain:
         self.io = status_io.IOHandler()
         self.render = render
         if render:
-            self.io.start('192.168.43.76', 9998)
+            self.io.start('144.167.151.226', 9998)
             # self.io.send_data(('config', 'lidar-test lidar-cart no-lidar-lines'))
             self.io.send_data(('config', 'lidar-test no-lidar-lines'))
 
