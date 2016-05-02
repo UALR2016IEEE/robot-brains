@@ -33,20 +33,22 @@ def main(render, debug):
         brain.io.send_data(("lidar-box", GENERIC_VICTIM_REGION))
         brain.io.send_data(('lidar-test-points', brain.get_x_scans(2)))
     time.sleep(4)
+    offset = 0
     while not brain.victim_in_region(*GENERIC_VICTIM_REGION):
         brain.do_action(brain.mob.rotate(math.pi / 8))
+        offset += math.pi / 8
     xo, yo = brain.get_victim_position(*GENERIC_VICTIM_REGION)
     angle = math.atan2(xo, yo)
     mag = math.hypot(xo, yo)
     y = (mag - 100) * math.cos(angle)
-    x = (-mag - 100) * math.sin(angle)
+    x = (mag - 100) * math.sin(angle)
     brain.do_action(brain.mob.rotate(angle))
     brain.do_action(brain.mob.exec_line(Point3(0, mag - 150)))
     status.prepare_pickup()
     brain.align_to_victim()
     status.pickup()
-    brain.do_action(brain.mob.rotate(-angle))
-    brain.do_action(brain.mob.exec_line(Point3(x, y)))
+    brain.do_action(brain.mob.rotate(-angle - offset))
+    brain.do_action(brain.mob.exec_line(Point3(x, -y)))
     status.let_down()
 
 
@@ -213,7 +215,7 @@ class Brain:
         action = self.mob.exec_line(Point3(-shift))
         return action
 
-    def align_to_victim(self, scans=10, front_prox=100, ref=False):
+    def align_to_victim(self, scans=10, front_prox=98, ref=False):
         scan_polar_raw = self.get_x_scans(scans)
         scan_polar = scan_polar_raw[
             ..., np.logical_or(15 * math.pi / 8 < scan_polar_raw[1], scan_polar_raw[1] < math.pi / 8)]
@@ -223,7 +225,7 @@ class Brain:
             angle -= 2 * math.pi
         action = self.mob.rotate(-angle)
         self.do_action(action)
-        front_dist = int(np.min(scan_polar[0])) - front_prox
+        front_dist = int(np.min(scan_polar[0])) - front_prox - 25
         self.do_action(self.mob.exec_line(Point3(0, .9 * front_dist)))
         if ref:
             self.align(ref=(1, 1))
