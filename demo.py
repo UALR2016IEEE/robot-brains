@@ -33,15 +33,20 @@ def main(render, debug):
         brain.io.send_data(("lidar-box", GENERIC_VICTIM_REGION))
         brain.io.send_data(('lidar-test-points', brain.get_x_scans(2)))
     time.sleep(4)
-    import pdb; pdb.set_trace()
-    x, y = brain.get_victim_position(*GENERIC_VICTIM_REGION)
-    brain.do_action(brain.mob.exec_line(Point3(0.9 * x, 0.9 * y)))
-    brain.do_action(brain.mob.rotate(Point3(x, y).get_angle_to(Point3())))
+    while not brain.victim_in_region(*GENERIC_VICTIM_REGION):
+        brain.do_action(brain.mob.rotate(math.pi / 8))
+    xo, yo = brain.get_victim_position(*GENERIC_VICTIM_REGION)
+    angle = math.atan2(xo, yo)
+    mag = math.hypot(xo, yo) - 200
+    y = mag * math.cos(angle)
+    x = -mag * math.sin(angle)
+    brain.do_action(brain.mob.exec_line(Point3(x, y)))
+    brain.do_action(brain.mob.rotate(angle))
     status.prepare_pickup()
     brain.align_to_victim()
     status.pickup()
-    brain.do_action(brain.mob.rotate(-Point3(x, y).get_angle_to(Point3())))
-    brain.do_action(brain.mob.exec_line(Point3(-0.9 * x, -0.9 * y)))
+    brain.do_action(brain.mob.rotate(-angle))
+    brain.do_action(brain.mob.exec_line(Point3(xo, -yo)))
     status.let_down()
 
 
