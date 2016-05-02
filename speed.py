@@ -34,9 +34,13 @@ def main(render, debug):
         brain.io.send_data(('lidar-test-points', brain.get_x_scans(2)))
     time.sleep(4)
     brain.do_action(brain.mob.exec_line(Point3(0, 1000)))
+    brain.align(ref=(1, 0), scans=1)
     brain.do_action(brain.mob.exec_line(Point3(1000, 0)))
+    brain.align(ref=(1, 0), scans=1)
     brain.do_action(brain.mob.exec_line(Point3(0, -1000)))
+    brain.align(ref=(1, 0), scans=1)
     brain.do_action(brain.mob.exec_line(Point3(-1000, 0)))
+    brain.align(ref=(1, 0), scans=1)
 
 
 class Field:
