@@ -33,7 +33,14 @@ def main(render, debug):
         brain.io.send_data(("lidar-box", GENERIC_VICTIM_REGION))
     time.sleep(4)
     mag, angle = brain.get_victim_position(*GENERIC_VICTIM_REGION)
+    brain.do_action(brain.mob.exec_line(Point3(0.9 * mag * math.cos(angle), 0.9 * mag * math.sin(angle))))
     brain.do_action(brain.mob.rotate(angle))
+    status.prepare_pickup()
+    brain.align_to_victim()
+    status.pickup()
+    brain.do_action(brain.mob.rotate(-angle))
+    brain.do_action(brain.mob.exec_line(Point3(-0.9 * mag * math.cos(angle), -0.9 * mag * math.sin(angle))))
+    status.let_down()
 
 
 
