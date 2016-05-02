@@ -35,6 +35,7 @@ def main(render, debug):
     time.sleep(4)
     brain.do_action(brain.mob.exec_line(Point3(0, 1000)))
     brain.align(ref=(1, 0), scans=1)
+    import pdb; pdb.set_trace()
     brain.do_action(brain.mob.exec_line(Point3(1000, 0)))
     brain.align(ref=(1, 0), scans=1)
     brain.do_action(brain.mob.exec_line(Point3(0, -1000)))
