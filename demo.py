@@ -31,7 +31,7 @@ def main(render, debug):
     f = Field(brain)
     if render:
         brain.io.send_data(("lidar-box", GENERIC_VICTIM_REGION))
-        brain.io.send_data(('lidar-test-points', brain.get_x_scans(2)))
+        #brain.io.send_data(('lidar-test-points', brain.get_x_scans(2)))
     time.sleep(4)
     offset = 0
     while not brain.victim_in_region(*GENERIC_VICTIM_REGION):
@@ -137,9 +137,9 @@ class Brain:
         self.io = status_io.IOHandler()
         self.render = render
         if render:
-            self.io.start('144.167.151.226', 9998)
+            self.io.start('144.167.148.60', 9998)
             # self.io.send_data(('config', 'lidar-test lidar-cart no-lidar-lines'))
-            self.io.send_data(('config', 'lidar-test no-lidar-lines'))
+            self.io.send_data(('config', 'lidar-test'))
 
     def get_red_or_yellow(self):
         self.adps.enable_light_sensor()
@@ -196,7 +196,7 @@ class Brain:
         for id, scan in zip(range(x - 1), scanner):
             scan_agg = np.concatenate((scan, scan_agg), axis=1)
         scan = scan_agg[..., scan_agg[0] != 0]
-        # self.io.send_data(('lidar-test-points', scan))
+        self.io.send_data(('lidar-test-points', scan))
         return scan
 
     def align_center(self, scan, offset=0, ref=(1, 1), width=unit):
