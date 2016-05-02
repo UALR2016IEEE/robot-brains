@@ -37,19 +37,17 @@ def main(render, debug):
         brain.do_action(brain.mob.rotate(math.pi / 8))
     xo, yo = brain.get_victim_position(*GENERIC_VICTIM_REGION)
     angle = math.atan2(xo, yo)
-    mag = math.hypot(xo, yo) - 200
-    y = mag * math.cos(angle)
-    x = -mag * math.sin(angle)
-    brain.do_action(brain.mob.exec_line(Point3(x, y)))
+    mag = math.hypot(xo, yo)
+    y = (mag - 100) * math.cos(angle)
+    x = (-mag - 100) * math.sin(angle)
     brain.do_action(brain.mob.rotate(angle))
+    brain.do_action(brain.mob.exec_line(Point3(0, mag - 150)))
     status.prepare_pickup()
     brain.align_to_victim()
     status.pickup()
     brain.do_action(brain.mob.rotate(-angle))
-    brain.do_action(brain.mob.exec_line(Point3(xo, -yo)))
+    brain.do_action(brain.mob.exec_line(Point3(x, y)))
     status.let_down()
-
-
 
 
 class Field:
