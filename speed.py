@@ -33,14 +33,15 @@ def main(render, debug):
         brain.io.send_data(("lidar-box", GENERIC_VICTIM_REGION))
         brain.io.send_data(('lidar-test-points', brain.get_x_scans(2)))
     time.sleep(4)
+    brain.align_angle(brain.get_x_scans(1), ref=(1, 0))
     brain.do_action(brain.mob.exec_line(Point3(0, 1000)))
-    brain.align(ref=(1, 0), scans=1)
+    brain.align_angle(brain.get_x_scans(1), ref=(1, 0))
     brain.do_action(brain.mob.exec_line(Point3(1000, 0)))
-    brain.align(ref=(1, 0), scans=1)
+    brain.align_angle(brain.get_x_scans(1), ref=(1, 0))
     brain.do_action(brain.mob.exec_line(Point3(0, -1000)))
-    brain.align(ref=(1, 0), scans=1)
+    brain.align_angle(brain.get_x_scans(1), ref=(1, 0))
     brain.do_action(brain.mob.exec_line(Point3(-1000, 0)))
-    brain.align(ref=(1, 0), scans=1)
+    brain.align_angle(brain.get_x_scans(1), ref=(1, 0))
 
 
 class Field:
